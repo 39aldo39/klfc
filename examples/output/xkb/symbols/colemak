@@ -1,0 +1,140 @@
+default partial
+xkb_symbols "basic" {
+    key.type[Group1] = "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <ESC> { [       Escape,    Caps_Lock,    Caps_Lock,    Caps_Lock,    Caps_Lock ] };
+    key <FK01> { [           F1, XF86AudioPlay, XF86AudioPause, XF86_Switch_VT_1, XF86_Switch_VT_1 ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I209>,clearMods=Shift), SwitchScreen(Screen=1, !same), SwitchScreen(Screen=1, !same) ] };
+    key <FK02> { [           F2, XF86AudioPrev, XF86AudioRewind ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I176>,clearMods=Shift) ] };
+    key <FK03> { [           F3, XF86AudioNext, XF86AudioForward ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I216>,clearMods=Shift) ] };
+    key <FK04> { [           F4, XF86AudioStop,    XF86Eject ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I169>,clearMods=Shift) ] };
+    key <FK05> { [           F5, XF86AudioMute,   XF86Reload ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I181>,clearMods=Shift) ] };
+    key <FK06> { [           F6, XF86AudioLowerVolume, XF86MonBrightnessDown ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I237>,clearMods=Shift) ] };
+    key <FK07> { [           F7, XF86AudioRaiseVolume, XF86MonBrightnessUp ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I238>,clearMods=Shift) ] };
+    key <FK08> { [           F8, XF86AudioMedia,    XF86Sleep ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I150>,clearMods=Shift) ] };
+    key <FK09> { [           F9, XF86HomePage,      XF86WWW ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I158>,clearMods=Shift) ] };
+    key <FK10> { [          F10,   XF86Search,     XF86Mail ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I163>,clearMods=Shift) ] };
+    key <FK11> { [          F11, XF86Explorer,  XF86Launch1 ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I156>,clearMods=Shift) ] };
+    key <FK12> { [          F12, XF86Calculator,  XF86Launch2 ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I157>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <TLDE> { [        grave,   asciitilde,   dead_tilde,   asciitilde,       Delete,       Delete,       Delete,       Delete ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<DELE>,clearMods=Shift), Redirect(key=<DELE>,clearMods=LevelThree), Redirect(key=<DELE>,clearMods=Shift+LevelThree) ] };
+    key <AE01> { [            1,       exclam,   exclamdown,  onesuperior,           F1,           F1,       exclam,       exclam ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK01>,clearMods=Shift) ] };
+    key <AE02> { [            2,           at,    masculine,  twosuperior,           F2,           F2,           at,           at ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK02>,clearMods=Shift) ] };
+    key <AE03> { [            3,   numbersign,  ordfeminine, threesuperior,           F3,           F3,   numbersign,   numbersign ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK03>,clearMods=Shift) ] };
+    key <AE04> { [            4,       dollar,         cent,     sterling,           F4,           F4,       dollar,     sterling ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK04>,clearMods=Shift) ] };
+    key <AE05> { [            5,      percent,     EuroSign,          yen,           F5,           F5,      percent,     EuroSign ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK05>,clearMods=Shift) ] };
+    key <AE06> { [            6,  asciicircum,      hstroke,      Hstroke,           F6,           F6,  asciicircum,  asciicircum ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK06>,clearMods=Shift) ] };
+    key <AE07> { [            7,    ampersand,          eth,          ETH,           F7,           F7,         KP_7,        U21D6 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK07>,clearMods=Shift) ] };
+    key <AE08> { [            8,     asterisk,        thorn,        THORN,           F8,           F8,         KP_8,        U21D1 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK08>,clearMods=Shift) ] };
+    key <AE09> { [            9,    parenleft, leftsinglequotemark, leftdoublequotemark,           F9,           F9,         KP_9,        U21D7 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK09>,clearMods=Shift) ] };
+    key <AE10> { [            0,   parenright, rightsinglequotemark, rightdoublequotemark,          F10,          F10,  KP_Multiply,  KP_Multiply ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK10>,clearMods=Shift) ] };
+    key <AE11> { [        minus,   underscore,       endash,       emdash,          F11,          F11,  KP_Subtract,  KP_Subtract ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK11>,clearMods=Shift) ] };
+    key <AE12> { [        equal,         plus,     multiply,     division,          F12,          F12,     KP_Equal,     KP_Equal ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<FK12>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND_ALPHABETIC";
+    key <AD01> { [            q,            Q,   adiaeresis,   Adiaeresis,       Escape,       Escape,         Home,      KP_Home ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<ESC>,clearMods=Shift), Redirect(key=<HOME>,clearMods=LevelThree) ] };
+    key <AD02> { [            w,            W,        aring,        Aring, XF86ScrollUp, XF86ScrollRight,           Up,        KP_Up ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=4), PtrBtn(button=6), Redirect(key=<UP>,clearMods=LevelThree) ] };
+    key <AD03> { [            f,            F,       atilde,       Atilde,     XF86Back,     XF86Back,          End,       KP_End ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<I166>,clearMods=Shift), Redirect(key=<END>,clearMods=LevelThree) ] };
+    key <AD04> { [            p,            P,       oslash,       Oslash,  XF86Forward,  XF86Forward,       Delete,    KP_Delete ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<I167>,clearMods=Shift), Redirect(key=<DELE>,clearMods=LevelThree) ] };
+    key <AD05> { [            g,            G,  dead_ogonek,   asciitilde,   Pointer_Up,   Pointer_Up,       Escape,       Escape ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+0,y=-8), MovePtr(x=+0,y=-8), Redirect(key=<ESC>,clearMods=LevelThree), Redirect(key=<ESC>,clearMods=Shift+LevelThree) ] };
+    key <AD06> { [            j,            J,      dstroke,      Dstroke,        Prior,        Prior,        Prior,     KP_Prior ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<PGUP>,clearMods=Shift), Redirect(key=<PGUP>,clearMods=LevelThree) ] };
+    key <AD07> { [            l,            L,      lstroke,      Lstroke,         Home,         Home,         KP_4,        U21D0 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<HOME>,clearMods=Shift) ] };
+    key <AD08> { [            u,            U,       uacute,       Uacute,           Up,           Up,         KP_5,     ifonlyif ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<UP>,clearMods=Shift) ] };
+    key <AD09> { [            y,            Y,   udiaeresis,   Udiaeresis,          End,          End,         KP_6,      implies ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<END>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <AD10> { [    semicolon,        colon,   odiaeresis,   Odiaeresis,       Delete,       Delete,       KP_Add,       KP_Add ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<DELE>,clearMods=Shift) ] };
+    key <AD11> { [  bracketleft,    braceleft, guillemotleft,        U2039,       Escape,       Escape,    parenleft,    braceleft ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<ESC>,clearMods=Shift) ] };
+    key <AD12> { [ bracketright,   braceright, guillemotright,        U203A,       Insert,       Insert,   parenright,   braceright ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<INS>,clearMods=Shift) ] };
+    key <BKSL> { [    backslash,          bar,   asciitilde,   asciitilde, XF86Favorites, XF86MyComputer,    backslash,          bar ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<I165>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND_ALPHABETIC";
+    key <AC01> { [            a,            A,       aacute,       Aacute,        Alt_L,        Alt_L,         Left,      KP_Left ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Alt), SetMods(mods=Alt), Redirect(key=<LEFT>,clearMods=LevelThree) ] };
+    key <AC02> { [            r,            R,   dead_grave,   asciitilde,         Down, XF86ScrollDown,         Down,      KP_Down ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=5), Redirect(key=<DOWN>,clearMods=LevelThree) ] };
+    key <AC03> { [            s,            S,       ssharp,   asciitilde,      Shift_L,      Shift_L,        Right,     KP_Right ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Shift), SetMods(mods=Shift), Redirect(key=<RGHT>,clearMods=LevelThree) ] };
+    key <AC04> { [            t,            T,   dead_acute, dead_doubleacute,    Control_L,    Control_L,    BackSpace,    BackSpace ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Control), SetMods(mods=Control), Redirect(key=<BKSP>,clearMods=LevelThree), Redirect(key=<BKSP>,clearMods=Shift+LevelThree) ] };
+    key <AC05> { [            d,            D, dead_diaeresis,   asciitilde, Pointer_Down, Pointer_Down,     KP_Begin,     KP_Begin ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+0,y=+8), MovePtr(x=+0,y=+8) ] };
+    key <AC06> { [            h,            H,   dead_caron,   asciitilde,         Next,         Next,         Next,      KP_Next ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<PGDN>,clearMods=Shift), Redirect(key=<PGDN>,clearMods=LevelThree) ] };
+    key <AC07> { [            n,            N,       ntilde,       Ntilde,         Left,         Left,         KP_1,        U21D9 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<LEFT>,clearMods=Shift) ] };
+    key <AC08> { [            e,            E,       eacute,       Eacute,         Down,         Down,         KP_2,        U21D3 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<DOWN>,clearMods=Shift) ] };
+    key <AC09> { [            i,            I,       iacute,       Iacute,        Right,        Right,         KP_3,        U21D8 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<RGHT>,clearMods=Shift) ] };
+    key <AC10> { [            o,            O,       oacute,       Oacute,    BackSpace,    BackSpace,     KP_Enter,     KP_Enter ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<BKSP>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <AC11> { [   apostrophe,     quotedbl,       otilde,       Otilde,         Menu,         Menu,   apostrophe,     quotedbl ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<MENU>,clearMods=Shift) ] };
+    key <LSGT> { [        minus,   underscore,       endash,       emdash, Pointer_EnableKeys, Pointer_EnableKeys, Pointer_EnableKeys, Pointer_EnableKeys ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), LockControls(ctrls=MouseKeys), LockControls(ctrls=MouseKeys), LockControls(ctrls=MouseKeys), LockControls(ctrls=MouseKeys) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND_ALPHABETIC";
+    key <AB01> { [            z,            Z,           ae,           AE,            z,            Z,            z,            Z ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB01>,mods=Control), Redirect(key=<AB01>,mods=Control), Redirect(key=<AB01>,mods=Control,clearMods=LevelThree), Redirect(key=<AB01>,mods=Control,clearMods=LevelThree) ] };
+    key <AB02> { [            x,            X, dead_circumflex,   asciitilde,            x,            x,            x,            x ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB02>,mods=Control), Redirect(key=<AB02>,mods=Control,clearMods=Shift), Redirect(key=<AB02>,mods=Control,clearMods=LevelThree), Redirect(key=<AB02>,mods=Control,clearMods=Shift+LevelThree) ] };
+    key <AB03> { [            c,            C,     ccedilla,     Ccedilla,            c,            c,            c,            c ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB03>,mods=Control), Redirect(key=<AB03>,mods=Control,clearMods=Shift), Redirect(key=<AB03>,mods=Control,clearMods=LevelThree), Redirect(key=<AB03>,mods=Control,clearMods=Shift+LevelThree) ] };
+    key <AB04> { [            v,            V,           oe,           OE,            v,            v,            v,            v ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB04>,mods=Control), Redirect(key=<AB04>,mods=Control,clearMods=Shift), Redirect(key=<AB04>,mods=Control,clearMods=LevelThree), Redirect(key=<AB04>,mods=Control,clearMods=Shift+LevelThree) ] };
+    key <AB05> { [            b,            B,   dead_breve,   asciitilde, Pointer_Button1, Pointer_Button1, Pointer_Button1, Pointer_Button1 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=1), PtrBtn(button=1), PtrBtn(button=1), PtrBtn(button=1) ] };
+    key <AB06> { [            k,            K, dead_abovering,   asciitilde, Pointer_Button2, Pointer_Button2,     Num_Lock,     Num_Lock ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=2), PtrBtn(button=2) ] };
+    key <AB07> { [            m,            M,  dead_macron,   asciitilde, Pointer_Button3, Pointer_Button3,         KP_0,        U21D5 ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=3), PtrBtn(button=3) ] };
+    key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <AB08> { [        comma,         less, dead_cedilla,   asciitilde, Pointer_Left, Pointer_Left,        comma,    semicolon ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=-8,y=+0), MovePtr(x=-8,y=+0) ] };
+    key <AB09> { [       period,      greater, dead_abovedot,   asciitilde, Pointer_Right, Pointer_Right,   KP_Decimal,        colon ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+8,y=+0), MovePtr(x=+8,y=+0) ] };
+    key <AB10> { [        slash,     question, questiondown,   asciitilde,    Multi_key,    Multi_key,    KP_Divide,    KP_Divide ] };
+    key <SPCE> { [        space,        space,        space, nobreakspace,       Return,       Return,        space, nobreakspace ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<RTRN>,clearMods=Shift) ] };
+    
+    key.type[group1] = "ONE_LEVEL";
+    key <CAPS> { [ ISO_Level5_Shift ] };
+    include "level5(modifier_mapping)"
+    
+    include "level3(ralt_switch)"
+    include "capslock(backspace)"
+};

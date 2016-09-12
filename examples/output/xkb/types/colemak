@@ -1,0 +1,81 @@
+default xkb_types "basic" {
+
+    virtual_modifiers LevelThree,LevelFive;
+
+    type "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
+        modifiers = LevelFive+LevelThree+Shift;
+        
+        map[None] = Level1;
+        map[Shift] = Level1;
+        map[LevelThree] = Level1;
+        map[LevelThree+Shift] = Level1;
+        map[LevelFive] = Level2;
+        map[LevelFive+Shift] = Level3;
+        map[LevelFive+LevelThree] = Level4;
+        map[LevelFive+LevelThree+Shift] = Level5;
+        
+        preserve[Shift] = Shift;
+        preserve[LevelThree] = LevelThree;
+        preserve[LevelThree+Shift] = LevelThree+Shift;
+        
+        level_name[Level1] = "Base";
+        level_name[Level2] = "Extend";
+        level_name[Level3] = "ShiftExtend";
+        level_name[Level4] = "AltGrExtend";
+        level_name[Level5] = "ShiftAltGrExtend";
+    };
+    
+    type "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
+        modifiers = LevelFive+LevelThree+Shift;
+        
+        map[None] = Level1;
+        map[Shift] = Level2;
+        map[LevelThree] = Level3;
+        map[LevelThree+Shift] = Level4;
+        map[LevelFive] = Level5;
+        map[LevelFive+Shift] = Level6;
+        map[LevelFive+LevelThree] = Level7;
+        map[LevelFive+LevelThree+Shift] = Level8;
+        
+        level_name[Level1] = "Base";
+        level_name[Level2] = "Shift";
+        level_name[Level3] = "AltGr";
+        level_name[Level4] = "ShiftAltGr";
+        level_name[Level5] = "Extend";
+        level_name[Level6] = "ShiftExtend";
+        level_name[Level7] = "AltGrExtend";
+        level_name[Level8] = "ShiftAltGrExtend";
+    };
+    
+    type "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND_ALPHABETIC" {
+        modifiers = LevelFive+LevelThree+Lock+Shift;
+        
+        map[None] = Level1;
+        map[Shift] = Level2;
+        map[Lock] = Level2;
+        map[Lock+Shift] = Level1;
+        map[LevelThree] = Level3;
+        map[LevelThree+Shift] = Level4;
+        map[LevelThree+Lock] = Level4;
+        map[LevelThree+Lock+Shift] = Level3;
+        map[LevelFive] = Level5;
+        map[LevelFive+Shift] = Level6;
+        map[LevelFive+Lock] = Level6;
+        map[LevelFive+Lock+Shift] = Level5;
+        map[LevelFive+LevelThree] = Level7;
+        map[LevelFive+LevelThree+Shift] = Level8;
+        map[LevelFive+LevelThree+Lock] = Level8;
+        map[LevelFive+LevelThree+Lock+Shift] = Level7;
+        
+        level_name[Level1] = "Base";
+        level_name[Level2] = "Shift";
+        level_name[Level3] = "AltGr";
+        level_name[Level4] = "ShiftAltGr";
+        level_name[Level5] = "Extend";
+        level_name[Level6] = "ShiftExtend";
+        level_name[Level7] = "AltGrExtend";
+        level_name[Level8] = "ShiftAltGrExtend";
+    };
+    
+};
+

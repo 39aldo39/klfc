@@ -1,0 +1,33 @@
+name:           keyboard-layout-files-creator
+version:        1.0
+author:         Aldo Gunsing
+license:        GPL-3
+license-file:   LICENSE.txt
+build-type:     Simple
+cabal-version:  >=1.2
+
+executable klfc
+  hs-source-dirs:  src
+  main-is:         Main.hs
+  build-depends:   base,
+                   base-prelude,
+                   text,
+                   bytestring,
+                   semigroups,
+                   containers,
+                   unordered-containers,
+                   vector,
+                   aeson >= 0.8.1.0,
+                   time >= 1.5,
+                   mtl,
+                   microlens-platform,
+                   base-unicode-symbols,
+                   containers-unicode-symbols,
+                   megaparsec,
+                   filepath,
+                   directory,
+                   optparse-applicative,
+                   transformers,
+                   fail,
+                   file-embed
+  ghc-options:     -Wall

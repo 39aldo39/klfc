@@ -1,0 +1,4 @@
+default xkb_keycodes "basic" {
+    include "evdev(evdev)"
+};
+
