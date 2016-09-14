@@ -141,7 +141,14 @@ parseShortcutPos xs =
     (mplus <$> (`lookupR` posAndString) <*> parseString) xs
 
 parseCapslock ∷ String → Either String Bool
-parseCapslock xs = toEnum <$> maybe (Left ("‘" ⊕ xs ⊕ "’ is not a boolean value")) Right (readMaybe xs)
+parseCapslock xs = maybe (Left ("‘" ⊕ xs ⊕ "’ is not a boolean value")) pure (readMaybe xs >>= intToCapsBool)
+  where
+    intToCapsBool ∷ Int → Maybe Bool
+    intToCapsBool 0 = Just False
+    intToCapsBool 1 = Just True
+    intToCapsBool 4 = Just False
+    intToCapsBool 5 = Just True
+    intToCapsBool _ = Nothing
 
 parseLetter ∷ String → Either String Letter
 parseLetter "--" = Right LNothing
