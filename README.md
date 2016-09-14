@@ -11,7 +11,7 @@ On Windows, a utf-8 codepage is required to be able to output non-ASCII characte
 Example
 -------
 
-To get the same output as in the [example/output](example/output) folder, execute
+To get the same output as in the [examples/output](examples/output) folder, execute
 
     path/to/klfc colemak.json altgr.json extend.json function-keys.json -o output
 
