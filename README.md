@@ -3,6 +3,20 @@ Keyboard Layout Files Creator
 
 Keyboard Layout Files Creator is a tool to create keyboard layout files in various formats. Currently, exporting to XKB, PKL and KLC is supported. The layout is stored in a JSON file, which format is documented in [doc/layout.md](doc/layout.md), and can be imported from a XKB, PKL or KLC file.
 
+Note on Windows
+---------------
+
+On Windows, a utf-8 codepage is required to be able to output non-ASCII characters. This is done by executing `chcp 65001` in the command line.
+
+Example
+-------
+
+To get the same output as in the [example/output](example/output) folder, execute
+
+    path/to/klfc colemak.json altgr.json extend.json function-keys.json -o output
+
+inside the examples folder.
+
 Usage
 -----
 
