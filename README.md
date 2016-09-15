@@ -6,7 +6,7 @@ Keyboard Layout Files Creator is a tool to create keyboard layout files in vario
 Note on Windows
 ---------------
 
-On Windows, a utf-8 codepage is required to be able to output non-ASCII characters. This is done by executing `chcp 65001` in the command line.
+On Windows, a UTF-8 codepage is required to be able to output non-ASCII characters. This is done by executing `chcp 65001` in the command line.
 
 Example
 -------
@@ -17,6 +17,13 @@ To get the same output as in the [examples/output](examples/output) folder, exec
 
 inside the examples folder.
 
+Installation and building
+-------------------------
+
+The easiest way to get KLFC is to download a pre-built binarie from the [releases page](https://github.com/39aldo39/klfc/releases).
+
+KLFC can also be built from source. It is written in Haskell and can be installed with cabal-install. Cabal-Install can be installed by the instructions listed [here](https://wiki.haskell.org/Cabal-Install#Installation), or from the repositories of your distro, if you use Linux. With cabal-install installed, KLFC is built by executing `cabal install` inside the root directory of the source, which will create a binary `klfc` in `~/.cabal/bin/`.
+
 Usage
 -----
 
@@ -25,20 +32,20 @@ Usage
 ### Available options ###
 
     -h,--help                Show this help text
-    
+
 #### Import types ####
     --from-json              Read from a JSON file
     --from-xkb               Import from a XKB symbols file
     --from-pkl               Import from a PKL layout file
     --from-klc               Import from a KLC file
-    
+
 #### Import files ####
     FILE...                  Files to read (‘-’ for stdin). If multiple files are
                              read, the corresponding layouts will be put together.
                              This is useful when a file only specifies a part of
                              the layout (e.g. only the letters at a few
                              shiftstates).
-    
+
 #### Output files ####
     --json FILE              Save to a JSON file (‘-’ for stdout)
     --xkb DIRECTORY          Export to a XKB directory
@@ -46,7 +53,7 @@ Usage
     --klc DIRECTORY          Export to a KLC directory (‘-’ for printing the base
                              layout to stdout)
     -o,--output DIRECTORY    Export to all file types
-    
+
 #### Extra Options ####
     --remove-shiftstates INDEX
                              Remove one or more shiftstates with their letters.
