@@ -8,9 +8,9 @@ module Pkl
     ) where
 
 import BasePrelude
-import Prelude.Unicode hiding ((∉))
+import Prelude.Unicode hiding ((∈), (∉))
 import Data.Monoid.Unicode ((⊕))
-import Data.Foldable.Unicode ((∉))
+import Data.Foldable.Unicode ((∈), (∉))
 import Util (toString, show', ifNonEmpty, (>$>), filterOnSnd, filterOnSndM, sequenceTuple, tellMaybeT)
 import qualified WithPlus as WP (fromList, singleton)
 
@@ -170,8 +170,15 @@ printPklData isCompact (PklData name extendKeys) = unlines $
 toLayoutData ∷ Layout → Logger LayoutData
 toLayoutData =
     prepareLayout >>>
-    (_keys ∘ traverse) (filterKeyOnShiftstates (supportedShiftstate NotExtend)) >=>
+    _keys (fmap catMaybes ∘ traverse toSupportedShiftstates) >=>
     toLayoutData'
+  where
+    toSupportedShiftstates key
+      | not (null (view _letters key))
+      ∧ all (M.Extend ∈) (view _shiftstates key)
+      = pure Nothing
+      | otherwise
+      = Just <$> filterKeyOnShiftstates (supportedShiftstate NotExtend) key
 
 toLayoutData' ∷ Layout → Logger LayoutData
 toLayoutData' layout =
