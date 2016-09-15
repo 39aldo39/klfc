@@ -19,6 +19,7 @@ module Layout.Key
     , toIndexedCustomDeadKey
     , setNullChar
     , combineKeys
+    , nubKeys
     , setDefaultShiftstates
     , filterKeyOnShiftstates
     ) where
@@ -26,12 +27,13 @@ module Layout.Key
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (HumanReadable(..), lensWithDefault, expectedKeys, (>$>), split)
+import Util (HumanReadable(..), lensWithDefault, expectedKeys, (>$>), combineWithOn, nubWithOn, split)
 
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.State (State, state)
 import Data.Aeson
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE (init, last)
 import Lens.Micro.Platform (Lens', makeLenses, view, set)
 
@@ -195,20 +197,19 @@ instance FromJSON (FileType → Maybe Key) where
             unzip $ nubBy ((≡) `on` fst) (zip shiftstates letters)
 
 combineKeys ∷ [Key] → [Key] → [Key]
-combineKeys []           keys2 = keys2
-combineKeys (key1:keys1) keys2 = key1' : combineKeys keys1 keys2'
-  where
-    (samePos, keys2') = partition (on (≡) (view _pos) key1) keys2
-    key1' = foldr1 combineKey (key1:samePos)
+combineKeys = combineWithOn (foldl' combineKey) (view _pos)
+
+nubKeys ∷ [Key] → [Key]
+nubKeys = nubWithOn (foldl' combineKey) (view _pos)
 
 combineKey ∷ Key → Key → Key
 combineKey (Key p sp1 ss1 ls1 cl1) (Key _ sp2 ss2 ls2 cl2) =
-    Key p (sp1 <|> sp2) ss ls (cl1 <|> cl2)
+    Key p (sp2 <|> sp1) ss ls (cl2 <|> cl1)
   where
     (ss, ls) = unzip $ combineLetters (zip ss1 ls1) (zip ss2 ls2)
 
 combineLetters ∷ [(Shiftstate, Letter)] → [(Shiftstate, Letter)] → [(Shiftstate, Letter)]
-combineLetters xs ys = xs ⧺ deleteFirstsBy ((≡) `on` fst) ys xs
+combineLetters = combineWithOn (\(ss,l) ls → (ss, NE.last (l :| map snd ls))) fst
 
 setDefaultShiftstates ∷ [Shiftstate] → Key → Key
 setDefaultShiftstates states key

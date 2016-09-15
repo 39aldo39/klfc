@@ -10,29 +10,29 @@ A key denotes the actions caused by the press of a key on the keyboard. A key ha
 * Caps Lock (`capslock`).
 * Filter (`filter`).
 
-If multiple files contain keys with the same positions, the separate keys will be merged. The letters will be combined and the first explicit definition of a shortcut position, the influence of Caps Lock or a letter is used. For example, if file 1 contains the key:
+If multiple files contain keys with the same positions, the separate keys will be merged. The letters will be combined and the last explicit definition of a shortcut position, the influence of Caps Lock or a letter is used. For example, if file 1 contains the key:
 
     {
         "pos": "S",
-        "shortcutPos": "S",
-        "letters": [ "s", "S" ],
-        "shiftstates": [ "None", "Shift" ]
+        "shortcutPos": "R",
+        "letters": [ "r", "R" ],
+        "shiftstates": [ "None", "Shift" ],
+        "capslock": false
     }
 
 and file 2 the key:
 
     {
         "pos": "S",
-        "shortcutPos": "R",
-        "letters": [ "r", "R", "ß" ],
-        "shiftstates": [ "None", "Shift", "AltGr" ],
-        "capslock": false
+        "shortcutPos": "S",
+        "letters": [ "s", "S", "ß" ],
+        "shiftstates": [ "None", "Shift", "AltGr" ]
     }
 
 the resulting key is:
 
     {
-        "pos": "D",
+        "pos": "S",
         "shortcutPos": "S",
         "letters": [ "s", "S", "ß" ],
         "shiftstates": [ "None", "Shift", "AltGr" ],

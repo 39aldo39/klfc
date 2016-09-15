@@ -77,6 +77,8 @@ The `singletonKeys` attribute takes a list of tuples of a position and a letter,
 
 But singleton keys are more useful, since the output formats handle them better than normal keys.
 
+If multiple singleton keys are defined on the same position, only the last one is used.
+
 Since JSON does not support tuples, a list of length 2 is used. For example, to let the Caps Lock key behave as extended modifier, use the 'tuple' `[ "CapsLock", "Extend" ]`.
 
 Custom dead keys

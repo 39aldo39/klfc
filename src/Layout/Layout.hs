@@ -35,7 +35,7 @@ import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
-import Util (parseString, lensWithDefault', expectedKeys, privateChars, mconcatMapM, (!?))
+import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, privateChars, mconcatMapM, (!?))
 
 import Control.Monad.State (evalState)
 import Data.Aeson
@@ -112,8 +112,14 @@ instance Monoid Layout where
     mempty = Layout (∅) (∅) (∅) []
     mappend (Layout a1 b1 c1 keys1)
             (Layout a2 b2 c2 keys2) =
-        Layout (a1 ⊕ a2) (b1 ⊕ b2) (c1 ⊕ c2)
-               (keys1 `combineKeys` keys2)
+        Layout (a1 ⊕ a2) (b1 `combineSingletonKeys` b2)
+               (c1 ⊕ c2) (keys1 `combineKeys` keys2)
+
+nubSingletonKeys ∷ [SingletonKey] → [SingletonKey]
+nubSingletonKeys = nubWithOn (\(pos,l) ks → (pos, NE.last (l :| map snd ks))) fst
+
+combineSingletonKeys ∷ [SingletonKey] → [SingletonKey] → [SingletonKey]
+combineSingletonKeys = combineWithOn (\(pos,l) ks → (pos, NE.last (l :| map snd ks))) fst
 
 unifyShiftstates ∷ [Key] → ([Key], [Shiftstate])
 unifyShiftstates = flip map <*> setStates ∘ states &&& states
@@ -158,14 +164,13 @@ instance FromJSON (FileType → Layout) where
         info ← parseJSON (Object o)
         customDeadKeys  ← o .:? "customDeadKeys"  .!= []
         qwertyShortcuts ← o .:? "qwertyShortcuts" .!= False
+        singletonKeys ← nubSingletonKeys <$> o .:? "singletonKeys" .!= []
         keys ← (fmap ∘ fmap)
-                   (foldr (combineKeys ∘ (:[])) [] >>>
+                   (nubKeys >>>
                     either error id ∘ setCustomDeads customDeadKeys >>>
                     bool id (map (liftA2 (set _shortcutPos) (view _pos) id)) qwertyShortcuts
                    ) (parseJSON' (Object o))
-        layout ← Layout info
-                   <$> o .:? "singletonKeys" .!= (∅)
-                   <*> o .:? "mods"          .!= (∅)
+        layout ← Layout info singletonKeys <$> o .:? "mods" .!= []
         pure (bool (∅) ∘ layout ∘ keys <*> runFilter filt)
 
 parseJSON' ∷ Value → Parser (FileType → [Key])

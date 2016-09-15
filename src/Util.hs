@@ -136,6 +136,16 @@ dec2bin = unfoldr f
 stripSuffix ∷ Eq α ⇒ [α] → [α] → Maybe [α]
 stripSuffix xs = fmap reverse ∘ stripPrefix (reverse xs) ∘ reverse
 
+combineWithOn ∷ Eq β ⇒ (α → [α] → α) → (α → β) → [α] → [α] → [α]
+combineWithOn _ _   []     ys = ys
+combineWithOn f key (x:xs) ys = f x eqToX : combineWithOn f key xs ys'
+  where (eqToX, ys') = partition (on (≡) key x) ys
+
+nubWithOn ∷ Eq β ⇒ (α → [α] → α) → (α → β) → [α] → [α]
+nubWithOn _ _   []     = []
+nubWithOn f key (x:xs) = f x eqToX : nubWithOn f key xs'
+  where (eqToX, xs') = partition (on (≡) key x) xs
+
 filterOnFst ∷ (α → Bool) → [(α, β)] → [β]
 filterOnFst f = map snd ∘ filter (f ∘ fst)
 
