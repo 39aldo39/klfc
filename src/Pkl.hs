@@ -194,7 +194,8 @@ toLayoutData' layout =
     pklKeys = catMaybes <$> traverse (keyToPklKey layout) keys
     pklModifierKeys = catMaybes <$> traverse (singletonKeyToPklKey layout) (view _singletonKeys layout)
     extendPos = listToMaybe $ filterOnSnd (≡ Action A.Extend) (view _singletonKeys layout)
-    extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndString)
+    extendPosToPklPos P.CapsLock = pure "CapsLock"
+    extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndString) <|> toPklPos pos
     fromPklDead (CustomDead (Just i) d) = Just (i, d)
     fromPklDead _ = Nothing
     e ∷ Pos → MaybeT Logger α

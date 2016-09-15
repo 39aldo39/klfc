@@ -102,6 +102,7 @@ posAndString =
     , (P.Bracket_R, "OEM_6")
     , (P.Backslash, "OEM_5")
 
+    , (P.CapsLock, "OEM_CAPITAL")
     , (P.A, "A")
     , (P.S, "S")
     , (P.D, "D")
