@@ -1,5 +1,5 @@
 {
-    "filter": "only xkb",
+    "filter": "only json,xkb",
     "shiftstates": [ "None" ],
     "keys": [
         { "pos": "Esc", "letters": [ "Esc" ] },

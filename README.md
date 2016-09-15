@@ -13,7 +13,7 @@ Example
 
 To get the same output as in the [examples/output](examples/output) folder, execute
 
-    path/to/klfc colemak.json altgr.json extend.json function-keys.json -o output
+    path/to/klfc colemak.json altgr.json function-keys.json extend.json -o output
 
 inside the examples folder.
 

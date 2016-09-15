@@ -1,31 +1,5 @@
 default partial
 xkb_symbols "basic" {
-    key.type[Group1] = "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
-    key <ESC> { [       Escape,    Caps_Lock,    Caps_Lock,    Caps_Lock,    Caps_Lock ] };
-    key <FK01> { [           F1, XF86AudioPlay, XF86AudioPause, XF86_Switch_VT_1, XF86_Switch_VT_1 ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I209>,clearMods=Shift), SwitchScreen(Screen=1, !same), SwitchScreen(Screen=1, !same) ] };
-    key <FK02> { [           F2, XF86AudioPrev, XF86AudioRewind ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I176>,clearMods=Shift) ] };
-    key <FK03> { [           F3, XF86AudioNext, XF86AudioForward ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I216>,clearMods=Shift) ] };
-    key <FK04> { [           F4, XF86AudioStop,    XF86Eject ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I169>,clearMods=Shift) ] };
-    key <FK05> { [           F5, XF86AudioMute,   XF86Reload ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I181>,clearMods=Shift) ] };
-    key <FK06> { [           F6, XF86AudioLowerVolume, XF86MonBrightnessDown ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I237>,clearMods=Shift) ] };
-    key <FK07> { [           F7, XF86AudioRaiseVolume, XF86MonBrightnessUp ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I238>,clearMods=Shift) ] };
-    key <FK08> { [           F8, XF86AudioMedia,    XF86Sleep ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I150>,clearMods=Shift) ] };
-    key <FK09> { [           F9, XF86HomePage,      XF86WWW ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I158>,clearMods=Shift) ] };
-    key <FK10> { [          F10,   XF86Search,     XF86Mail ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I163>,clearMods=Shift) ] };
-    key <FK11> { [          F11, XF86Explorer,  XF86Launch1 ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I156>,clearMods=Shift) ] };
-    key <FK12> { [          F12, XF86Calculator,  XF86Launch2 ],
-                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I157>,clearMods=Shift) ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
     key <TLDE> { [        grave,   asciitilde,   dead_tilde,   asciitilde,       Delete,       Delete,       Delete,       Delete ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<DELE>,clearMods=Shift), Redirect(key=<DELE>,clearMods=LevelThree), Redirect(key=<DELE>,clearMods=Shift+LevelThree) ] };
@@ -130,11 +104,36 @@ xkb_symbols "basic" {
     key <AB10> { [        slash,     question, questiondown,   asciitilde,    Multi_key,    Multi_key,    KP_Divide,    KP_Divide ] };
     key <SPCE> { [        space,        space,        space, nobreakspace,       Return,       Return,        space, nobreakspace ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<RTRN>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <ESC> { [       Escape,    Caps_Lock,    Caps_Lock,    Caps_Lock,    Caps_Lock ] };
+    key <FK01> { [           F1, XF86AudioPlay, XF86AudioPause, XF86_Switch_VT_1, XF86_Switch_VT_1 ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I209>,clearMods=Shift), SwitchScreen(Screen=1, !same), SwitchScreen(Screen=1, !same) ] };
+    key <FK02> { [           F2, XF86AudioPrev, XF86AudioRewind ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I176>,clearMods=Shift) ] };
+    key <FK03> { [           F3, XF86AudioNext, XF86AudioForward ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I216>,clearMods=Shift) ] };
+    key <FK04> { [           F4, XF86AudioStop,    XF86Eject ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I169>,clearMods=Shift) ] };
+    key <FK05> { [           F5, XF86AudioMute,   XF86Reload ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I181>,clearMods=Shift) ] };
+    key <FK06> { [           F6, XF86AudioLowerVolume, XF86MonBrightnessDown ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I237>,clearMods=Shift) ] };
+    key <FK07> { [           F7, XF86AudioRaiseVolume, XF86MonBrightnessUp ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I238>,clearMods=Shift) ] };
+    key <FK08> { [           F8, XF86AudioMedia,    XF86Sleep ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I150>,clearMods=Shift) ] };
+    key <FK09> { [           F9, XF86HomePage,      XF86WWW ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I158>,clearMods=Shift) ] };
+    key <FK10> { [          F10,   XF86Search,     XF86Mail ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I163>,clearMods=Shift) ] };
+    key <FK11> { [          F11, XF86Explorer,  XF86Launch1 ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I156>,clearMods=Shift) ] };
+    key <FK12> { [          F12, XF86Calculator,  XF86Launch2 ],
+                 actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I157>,clearMods=Shift) ] };
     
     key.type[group1] = "ONE_LEVEL";
     key <CAPS> { [ ISO_Level5_Shift ] };
     include "level5(modifier_mapping)"
     
     include "level3(ralt_switch)"
-    include "capslock(backspace)"
 };

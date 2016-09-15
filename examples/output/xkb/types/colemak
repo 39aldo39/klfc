@@ -2,29 +2,6 @@ default xkb_types "basic" {
 
     virtual_modifiers LevelThree,LevelFive;
 
-    type "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
-        modifiers = LevelFive+LevelThree+Shift;
-        
-        map[None] = Level1;
-        map[Shift] = Level1;
-        map[LevelThree] = Level1;
-        map[LevelThree+Shift] = Level1;
-        map[LevelFive] = Level2;
-        map[LevelFive+Shift] = Level3;
-        map[LevelFive+LevelThree] = Level4;
-        map[LevelFive+LevelThree+Shift] = Level5;
-        
-        preserve[Shift] = Shift;
-        preserve[LevelThree] = LevelThree;
-        preserve[LevelThree+Shift] = LevelThree+Shift;
-        
-        level_name[Level1] = "Base";
-        level_name[Level2] = "Extend";
-        level_name[Level3] = "ShiftExtend";
-        level_name[Level4] = "AltGrExtend";
-        level_name[Level5] = "ShiftAltGrExtend";
-    };
-    
     type "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
         modifiers = LevelFive+LevelThree+Shift;
         
@@ -75,6 +52,29 @@ default xkb_types "basic" {
         level_name[Level6] = "ShiftExtend";
         level_name[Level7] = "AltGrExtend";
         level_name[Level8] = "ShiftAltGrExtend";
+    };
+    
+    type "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
+        modifiers = LevelFive+LevelThree+Shift;
+        
+        map[None] = Level1;
+        map[Shift] = Level1;
+        map[LevelThree] = Level1;
+        map[LevelThree+Shift] = Level1;
+        map[LevelFive] = Level2;
+        map[LevelFive+Shift] = Level3;
+        map[LevelFive+LevelThree] = Level4;
+        map[LevelFive+LevelThree+Shift] = Level5;
+        
+        preserve[Shift] = Shift;
+        preserve[LevelThree] = LevelThree;
+        preserve[LevelThree+Shift] = LevelThree+Shift;
+        
+        level_name[Level1] = "Base";
+        level_name[Level2] = "Extend";
+        level_name[Level3] = "ShiftExtend";
+        level_name[Level4] = "AltGrExtend";
+        level_name[Level5] = "ShiftAltGrExtend";
     };
     
 };

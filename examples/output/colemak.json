@@ -6,9 +6,8 @@
     "localeId": "00000409",
     "version": "1.0",
     "singletonKeys": [
-        [ "Alt_R", "AltGr" ],
-        [ "CapsLock", "Backspace" ],
-        [ "CapsLock", "Extend" ]
+        [ "CapsLock", "Extend" ],
+        [ "Alt_R", "AltGr" ]
     ],
     "keysWithShiftstates": [
         {
@@ -66,21 +65,21 @@
             ]
         },
         {
-            "shiftstates": [ "Extend", "Shift+Extend", "AltGr+Extend", "Shift+AltGr+Extend" ],
+            "shiftstates": [ "None", "Extend", "Shift+Extend", "AltGr+Extend", "Shift+AltGr+Extend" ],
             "keys": [
-                { "pos": "Escape", "letters": [ "CapsLock", "CapsLock", "CapsLock", "CapsLock" ] },
-                { "pos": "F1", "letters": [ "PlayPause", "AudioPause", "Switch_VT_1", "Switch_VT_1" ] },
-                { "pos": "F2", "letters": [ "Previous", "AudioRewind", "", "" ] },
-                { "pos": "F3", "letters": [ "Next", "AudioForward", "", "" ] },
-                { "pos": "F4", "letters": [ "Stop", "Eject", "", "" ] },
-                { "pos": "F5", "letters": [ "Mute", "Browser_Refresh", "", "" ] },
-                { "pos": "F6", "letters": [ "VolumeDown", "BrightnessDown", "", "" ] },
-                { "pos": "F7", "letters": [ "VolumeUp", "BrightnessUp", "", "" ] },
-                { "pos": "F8", "letters": [ "MediaPlayer", "Sleep", "", "" ] },
-                { "pos": "F9", "letters": [ "Browser", "WWW", "", "" ] },
-                { "pos": "F10", "letters": [ "Search", "Mail", "", "" ] },
-                { "pos": "F11", "letters": [ "Explorer", "Launch1", "", "" ] },
-                { "pos": "F12", "letters": [ "Calculator", "Launch2", "", "" ] }
+                { "pos": "Escape", "letters": [ "Esc", "CapsLock", "CapsLock", "CapsLock", "CapsLock" ] },
+                { "pos": "F1", "letters": [ "F1", "PlayPause", "AudioPause", "Switch_VT_1", "Switch_VT_1" ] },
+                { "pos": "F2", "letters": [ "F2", "Previous", "AudioRewind", "", "" ] },
+                { "pos": "F3", "letters": [ "F3", "Next", "AudioForward", "", "" ] },
+                { "pos": "F4", "letters": [ "F4", "Stop", "Eject", "", "" ] },
+                { "pos": "F5", "letters": [ "F5", "Mute", "Browser_Refresh", "", "" ] },
+                { "pos": "F6", "letters": [ "F6", "VolumeDown", "BrightnessDown", "", "" ] },
+                { "pos": "F7", "letters": [ "F7", "VolumeUp", "BrightnessUp", "", "" ] },
+                { "pos": "F8", "letters": [ "F8", "MediaPlayer", "Sleep", "", "" ] },
+                { "pos": "F9", "letters": [ "F9", "Browser", "WWW", "", "" ] },
+                { "pos": "F10", "letters": [ "F10", "Search", "Mail", "", "" ] },
+                { "pos": "F11", "letters": [ "F11", "Explorer", "Launch1", "", "" ] },
+                { "pos": "F12", "letters": [ "F12", "Calculator", "Launch2", "", "" ] }
             ]
         }
     ]

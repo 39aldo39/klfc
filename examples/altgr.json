@@ -1,4 +1,7 @@
 {
+    "singletonKeys": [
+        [ "Alt_R", "AltGr" ]
+    ],
     "shiftstates": [ [ "AltGr" ], [ "Shift", "AltGr" ] ],
     "keys": [
         { "pos": "~", "letters": [ "tilde", "~" ] },
