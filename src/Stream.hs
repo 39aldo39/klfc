@@ -3,6 +3,7 @@
 
 module Stream
     ( Stream(Standard, File)
+    , toFname
     , ReadStream
     , WriteStream
     , readStream
@@ -24,6 +25,10 @@ data Stream
     = Standard
     | File FilePath
     deriving (Show, Read)
+
+toFname ∷ Stream → String
+toFname Standard = "stdin"
+toFname (File f) = f
 
 class ReadStream α where
     readStream ∷ Stream → IO α

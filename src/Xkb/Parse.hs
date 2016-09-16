@@ -8,13 +8,13 @@ import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR)
 import qualified WithPlus as WP (fromList, singleton)
 
-import Control.Monad.Writer (tell, mapWriterT)
-import Data.Functor.Identity (runIdentity)
+import Control.Monad.Writer (tell)
 import qualified Data.Text.Lazy as L (Text)
 import Lens.Micro.Platform (set, over, _2)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Text.Lazy (Parser)
 
+import FileType (FileType)
 import Layout.Key (Key(Key))
 import qualified Layout.Modifier as M
 import Layout.Types
@@ -185,14 +185,12 @@ boolean ∷ Parser Bool
 boolean = True <$ (string' "true" <|> string' "yes" <|> string' "on")
    <|> False <$ (string' "false" <|> string' "no" <|> string' "off")
 
-parseXkbLayout ∷ L.Text → LoggerT IO Layout
-parseXkbLayout text =
-  case parse layout "" text of
-    Right logger → mapWriterT (pure ∘ runIdentity) logger
-    Left e → fail (dropWhileEnd (≡'\n') (parseErrorPretty e))
+parseXkbLayout ∷ String → L.Text → Either String (Logger (FileType → Layout))
+parseXkbLayout fname =
+    parse layout fname >>>
+    bimap parseErrorPretty (fmap const)
 
-parseXkbLayouts ∷ L.Text → LoggerT IO [Layout]
-parseXkbLayouts text =
-  case sequence <$> parse (many layout <* eof) "" text of
-    Right logger → mapWriterT (pure ∘ runIdentity) logger
-    Left e → fail (dropWhileEnd (≡'\n') (parseErrorPretty e))
+parseXkbLayouts ∷ String → L.Text → Either String (Logger (FileType → [Layout]))
+parseXkbLayouts fname =
+    parse (many layout <* eof) fname >>> fmap sequence >>>
+    bimap parseErrorPretty (fmap const)

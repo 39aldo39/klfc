@@ -11,14 +11,14 @@ import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, (>$>), lookupR)
 
-import Control.Monad.Writer (tell, mapWriterT)
+import Control.Monad.Writer (tell)
 import Data.Functor.Compose (Compose(..), getCompose)
-import Data.Functor.Identity (runIdentity)
 import qualified Data.Text.Lazy as L (Text)
 import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Text.Lazy (Parser)
 
+import FileType (FileType)
 import Layout.Key (Key(Key))
 import Layout.Layout (Layout(Layout))
 import Layout.Types
@@ -225,8 +225,7 @@ emptyLine = spacing <* eol
 emptyOrCommentLines ∷ Parser [String]
 emptyOrCommentLines = many (try emptyLine <|> try comment)
 
-parseKlcLayout ∷ L.Text → LoggerT IO Layout
-parseKlcLayout text =
-  case parse (emptyOrCommentLines *> layout <* eof) "" text of
-    Right logger → mapWriterT (pure ∘ runIdentity) logger
-    Left e → fail (dropWhileEnd (≡'\n') (parseErrorPretty e))
+parseKlcLayout ∷ String → L.Text → Either String (Logger (FileType → Layout))
+parseKlcLayout fname =
+    parse (emptyOrCommentLines *> layout <* eof) fname >>>
+    bimap parseErrorPretty (fmap const)

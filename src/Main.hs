@@ -5,7 +5,7 @@
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', (>$>), replace, filterOnIndex)
+import Util (show', replace, filterOnIndex)
 
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans (liftIO)
@@ -36,7 +36,7 @@ import Layout.Mod (isEmptyMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
-import Stream (Stream(Standard, File), WriteStream, readStream, writeStream)
+import Stream (Stream(..), toFname, ReadStream(..), WriteStream(..))
 import Xkb (XkbConfig(XkbConfig), printSymbols, printTypes, printKeycodes, printXCompose, parseXkbLayout)
 
 data Options = Options
@@ -81,17 +81,19 @@ execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ 
     forM_ outputs (\out → output out extraOptions layout)
 
 input ∷ FileType → Stream → LoggerT IO (FileType → Layout)
-input Json = \stream → do
-    file ← liftIO $ removeJsonComments <$> readStream stream
-    case eitherDecode file of
-      Right l → pure l
-      Left  e →
-        case stream of
-          Standard → error ("cannot parse: " ⊕ e ⊕ ".")
-          File fname → error ("cannot parse ‘" ⊕ fname ⊕ "’: " ⊕ e ⊕ ".")
-input Xkb = liftIO ∘ readStream >=> parseXkbLayout >$> const
-input Pkl = liftIO ∘ readStream >=> parsePklLayout >$> const
-input Klc = liftIO ∘ readStream >=> parseKlcLayout >$> const
+input Json = parseWith (\fname → bimap ((fname ⊕ ": ") ⊕) pure ∘ eitherDecode ∘ removeJsonComments)
+input Xkb = parseWith parseXkbLayout
+input Pkl = parseWith parsePklLayout
+input Klc = parseWith parseKlcLayout
+
+parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger (FileType → Layout))) →
+    Stream → LoggerT IO (FileType → Layout)
+parseWith parser stream = flip ($) stream $
+    liftIO ∘ readStream >=>
+    parser (toFname stream) >>>
+    either
+      (error ∘ ("parse error in " ⊕) ∘ dropWhileEnd (≡'\n'))
+      (mapWriterT (pure ∘ runIdentity))
 
 output ∷ Output → [ExtraOption] → (FileType → Layout) → LoggerT IO ()
 output (OutputAll Standard) _ = const (error "everything as output must be written to a directory")
