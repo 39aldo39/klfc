@@ -20,7 +20,7 @@ inside the examples folder.
 Installation and building
 -------------------------
 
-The easiest way to get KLFC is to download a pre-built binarie from the [releases page](https://github.com/39aldo39/klfc/releases).
+The easiest way to get KLFC is to download a pre-built binary from the [releases page](https://github.com/39aldo39/klfc/releases).
 
 KLFC can also be built from source. It is written in Haskell and can be installed with cabal-install. Cabal-Install can be installed by the instructions listed [here](https://wiki.haskell.org/Cabal-Install#Installation), or from the repositories of your distro, if you use Linux. With cabal-install installed, KLFC is built by executing `cabal install` inside the root directory of the source, which will create a binary `klfc` in `~/.cabal/bin/`.
 
