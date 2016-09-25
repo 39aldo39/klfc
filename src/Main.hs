@@ -103,7 +103,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
           | isEmptyLayout (layout t) = tell ["ignoring empty layout for " ⊕ show' t]
           | otherwise = output (Output t (File fname)) extraOptions layout
     let fnameJson
-          | null (name Json) = error "the the layout has an empty name when exported to JSON"
+          | null (name Json) = error "the layout has an empty name when exported to JSON"
           | otherwise = name Json
     output' Json (dir </> fnameJson <.> "json")
     output' Xkb (dir </> "xkb")
@@ -114,7 +114,7 @@ output (Output Json stream) _ = ($ Json) >>>
 output (Output Xkb Standard) _ = const (error "XKB as output must be written to a directory")
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the the layout has an empty name when exported to XKB")
+    when (null name) (error "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectIfExtend ∈) extraOptions
     printIOLogger (dir </> "symbols" </> name) (runReaderT (printSymbols layout) xkbConfig)
     printIOLogger (dir </> "types" </> name) (runReaderT (printTypes layout) xkbConfig)
@@ -137,7 +137,7 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
 output (Output Pkl Standard) _ = const (error "PKL as output must be written to a directory")
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the the layout has an empty name when exported to PKL")
+    when (null name) (error "the layout has an empty name when exported to PKL")
     let isCompact = PklCompact ∈ extraOptions
     today ← liftIO $ formatTime defaultTimeLocale "%F %T" <$> getCurrentTime
     let printedPklData l = printPklData isCompact <$> toPklData l l
@@ -156,7 +156,7 @@ output (Output Klc Standard) _ = ($ Klc) >>>
     printIOLoggerStream Standard ∘ fmap printKlcData ∘ toKlcData
 output (Output Klc (File dir)) _ = ($ Klc) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the the layout has an empty name when exported to KLC")
+    when (null name) (error "the layout has an empty name when exported to KLC")
     let fname l = dir </> view (_info ∘ _name) l <.> "klc"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
