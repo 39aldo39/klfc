@@ -125,7 +125,7 @@ encodePrettyToTextBuilder = encodePrettyToTextBuilder' defConfig
 -- |A variant of 'encodeToTextBuilder' that takes an additional configuration
 --  parameter.
 encodePrettyToTextBuilder' ∷ ToJSON α ⇒ Config → α → Builder
-encodePrettyToTextBuilder' Config{..} = fromValue [] st ∘ toJSON
+encodePrettyToTextBuilder' Config{..} = (⊕ "\n") ∘ fromValue [] st ∘ toJSON
   where
     st       = PState confIndent 0 condSort confDelims
     condSort = sortBy (confCompare `on` fst)

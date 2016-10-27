@@ -16,8 +16,8 @@ import qualified Data.ByteString as B (ByteString, getContents, readFile)
 import qualified Data.ByteString.Lazy as BL (ByteString, getContents, readFile)
 import qualified Data.Text as T (Text)
 import qualified Data.Text.Lazy as L (Text)
-import qualified Data.Text.Lazy.IO as L (getContents, putStrLn, readFile, writeFile)
-import qualified Data.Text.IO as T (getContents, putStrLn, readFile, writeFile)
+import qualified Data.Text.Lazy.IO as L (getContents, putStr, readFile, writeFile)
+import qualified Data.Text.IO as T (getContents, putStr, readFile, writeFile)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
 
@@ -49,17 +49,17 @@ defWriteStream _ g (File fname) = \text → do
 instance ReadStream String where
     readStream = defReadStream getContents readFile
 instance WriteStream String where
-    writeStream = defWriteStream putStrLn writeFile
+    writeStream = defWriteStream putStr writeFile
 
 instance ReadStream T.Text where
     readStream = defReadStream T.getContents T.readFile
 instance WriteStream T.Text where
-    writeStream = defWriteStream T.putStrLn T.writeFile
+    writeStream = defWriteStream T.putStr T.writeFile
 
 instance ReadStream L.Text where
     readStream = defReadStream L.getContents L.readFile
 instance WriteStream L.Text where
-    writeStream = defWriteStream L.putStrLn L.writeFile
+    writeStream = defWriteStream L.putStr L.writeFile
 
 instance ReadStream B.ByteString where
     readStream = defReadStream B.getContents B.readFile
