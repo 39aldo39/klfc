@@ -134,8 +134,7 @@ setStates states key
   | states ≡ view _shiftstates key = key
   | otherwise = set _shiftstates states ∘ set _letters letters $ key
   where
-    letters = map (\s → maybe LNothing snd (find ((≡) s ∘ fst) xs)) states
-    xs = view _shiftstates key `zip` view _letters key
+    letters = map (getLetter key) states
 
 instance ToJSON Layout where
     toJSON (Layout info singletonKeys mods keys) =
