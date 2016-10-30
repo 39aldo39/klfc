@@ -19,6 +19,7 @@ module Layout.Key
     , toIndexedCustomDeadKey
     , setNullChar
     , combineKeys
+    , combineKeysWithoutOverwrite
     , nubKeys
     , setDefaultShiftstates
     , filterKeyOnShiftstatesM
@@ -200,6 +201,9 @@ instance FromJSON (FileType → Maybe Key) where
 
 combineKeys ∷ [Key] → [Key] → [Key]
 combineKeys = combineWithOn (foldl' combineKey) (view _pos)
+
+combineKeysWithoutOverwrite ∷ [Key] → [Key] → [Key]
+combineKeysWithoutOverwrite = combineWithOn (foldr combineKey) (view _pos)
 
 nubKeys ∷ [Key] → [Key]
 nubKeys = nubWithOn (foldl' combineKey) (view _pos)

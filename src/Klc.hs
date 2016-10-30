@@ -16,14 +16,16 @@ import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over)
 
 import Layout.Key (letterToLigatureString, filterKeyOnShiftstatesM)
-import Layout.Layout (setNullChars, unifyShiftstates)
+import Layout.Layout (addDefaultKeys, setNullChars, unifyShiftstates)
 import Layout.Types
 import Lookup.Linux (posAndScancode)
 import Lookup.Windows
 import PresetDeadKey (presetDeadKeyToDeadKey)
+import PresetLayout (defaultKeys)
 
 prepareLayout ∷ Layout → Logger Layout
 prepareLayout =
+    addDefaultKeys defaultKeys >>>
     _singletonKeys
         emptySingletonKeys >$>
     over _keys

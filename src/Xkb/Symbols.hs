@@ -24,7 +24,7 @@ import Layout.Layout (getPosByLetterAndShiftstate, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux
-import PresetLayout (qwerty)
+import PresetLayout (defaultLayout, defaultFullLayout)
 import Xkb.General (XkbConfig(..), prepareLayout, supportedShiftstate)
 import Xkb.Types (keytypeName, isRightGuess)
 
@@ -203,7 +203,7 @@ printAction layout pos shiftstate r@(Redirect rMods rPos) = do
     letter = redirectToLetter rMods rPos
     symbol = fst ∘ runWriter $ printLetter letter
     lPosses = getPosByLetterAndShiftstate letter rShiftstate layout
-    qPosses = filter sameSymbol (getPosByLetterAndShiftstate letter rShiftstate qwerty)
+    qPosses = filter sameSymbol (getPosByLetterAndShiftstate letter rShiftstate defaultLayout)
     sameSymbol p = maybe True ((≡ symbol) ∘ fst ∘ runWriter ∘ printLetter) (getLetterByPosAndShiftstate p rShiftstate layout)
     noOrigRedPos = lift $ "NoAction()" <$ tell [show' r ⊕ " on " ⊕ show' pos ⊕ " could not redirect to the original position in XKB"]
     noRedPos = lift $ "NoAction()" <$ tell [show' r ⊕ " on " ⊕ show' pos ⊕ " could not find a redirect position in XKB"]
@@ -211,7 +211,7 @@ printAction _ _ _ _ = pure "NoAction()"
 
 redirectToLetter ∷ [Modifier] → Pos → Letter
 redirectToLetter mods pos = fromMaybe e $
-    getLetterByPosAndShiftstate pos (WP.fromList mods) qwerty
+    getLetterByPosAndShiftstate pos (WP.fromList mods) defaultFullLayout
     where e = error ("redirecting to " ⊕ show' pos ⊕ " is not supported")
 
 printSingletonKeys ∷ [SingletonKey] → Logger [String]

@@ -13,11 +13,11 @@ import Control.Monad.Reader (Reader, asks)
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Layout (getLetterByPosAndShiftstate, setNullChars)
+import Layout.Layout (getLetterByPosAndShiftstate, addDefaultKeys, setNullChars)
 import Lookup.Linux (modifierAndLevelstring)
 import qualified Layout.Modifier as M
 import Layout.Types
-import PresetLayout (qwerty)
+import PresetLayout (defaultKeys, defaultFullLayout)
 
 data XkbConfig = XkbConfig
     { __addShortcuts ∷ Bool
@@ -31,7 +31,7 @@ prepareLayout layout =
     over _keys
         ( bool id (over traverse addShortcutLetters) addShortcuts >>>
           setNullChars
-        ) layout
+        ) (addDefaultKeys defaultKeys layout)
     ) <$> asks __addShortcuts
 
 supportedShiftstate ∷ Shiftstate → Logger Bool
@@ -45,6 +45,6 @@ supportedModifier modifier
 addShortcutLetters ∷ Key → Key
 addShortcutLetters key = fromMaybe key $
     over _shiftstates (WP.singleton M.Control :) <$>
-    _letters (liftA2 (:) (getLetterByPosAndShiftstate pos (∅) qwerty) ∘ pure) key
+    _letters (liftA2 (:) (getLetterByPosAndShiftstate pos (∅) defaultFullLayout) ∘ pure) key
   where
     pos = view _pos key

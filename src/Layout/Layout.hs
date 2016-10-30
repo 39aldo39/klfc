@@ -23,6 +23,9 @@ module Layout.Layout
     , layoutOrd
     , layoutDelims
     , applyModLayout
+    , getDefaultKeys
+    , addDefaultKeysWith
+    , addDefaultKeys
     , removeEmptyLetters
     , unifyShiftstates
     , getLevel
@@ -186,6 +189,18 @@ parseJSON' = withObject "keys" (lift3A2 (⧺) parseKeys parseKeysWithShiftstates
           (Just states, Just keys) → (pure ∘ (fmap ∘ map) (setDefaultShiftstates states) ∘ flip (mapMaybe ∘ flip ($))) keys
           (Nothing, Just _) → fail "object with property keys, but without corresponding property shiftstates"
           (_, Nothing) → pure (∅)
+
+getDefaultKeys ∷ [Key] → Layout → [Key]
+getDefaultKeys = flip $ \layout → filter ((∈ posses layout) ∘ view _pos)
+  where
+    posses = map (view _pos) ∘ view _keys
+
+addDefaultKeysWith ∷ ([Key] → Layout → [Key]) → [Key] → Layout → Layout
+addDefaultKeysWith f defaultKeys layout =
+    over _keys (`combineKeysWithoutOverwrite` f defaultKeys layout) layout
+
+addDefaultKeys ∷ [Key] → Layout → Layout
+addDefaultKeys = addDefaultKeysWith getDefaultKeys
 
 removeEmptyLetters ∷ Key → Key
 removeEmptyLetters key =

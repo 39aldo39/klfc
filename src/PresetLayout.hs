@@ -1,191 +1,201 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 
 module PresetLayout
-    ( qwerty
+    ( defaultLayout
+    , defaultFullLayout
+    , defaultKeys
     ) where
 
 import BasePrelude
+import Prelude.Unicode
 import Data.Monoid.Unicode ((∅))
-import qualified WithPlus as WP (fromList, singleton)
+import qualified WithPlus as WP (singleton)
 
 import qualified Layout.Action as A
-import Layout.Key (Key(Key))
-import Layout.Layout (Layout(Layout), Information(Information))
+import Layout.Key (Key(Key), filterKeyOnShiftstates)
+import Layout.Layout (Layout(Layout))
 import qualified Layout.Modifier as M
 import qualified Layout.Pos as P
 import Layout.Types
 
-qwertyInfo ∷ Information
-qwertyInfo = Information (Just "qwerty") (Just "qwerty") Nothing Nothing Nothing Nothing Nothing
+defaultLayout ∷ Layout
+defaultLayout = Layout (∅) (∅) (∅) defaultKeys
+
+defaultFullLayout ∷ Layout
+defaultFullLayout = Layout (∅) (∅) (∅) (qwertyKeys ⧺ defaultKeysFull)
+
+defaultKeys ∷ [Key]
+defaultKeys = map (filterKeyOnShiftstates null) defaultKeysFull
+
+defaultKeysFull ∷ [Key]
+defaultKeysFull =
+    [ Key P.Esc Nothing [(∅)] [Action A.Esc] Nothing
+    , Key P.F1 Nothing [(∅)] [Action A.F1] Nothing
+    , Key P.F2 Nothing [(∅)] [Action A.F2] Nothing
+    , Key P.F3 Nothing [(∅)] [Action A.F3] Nothing
+    , Key P.F4 Nothing [(∅)] [Action A.F4] Nothing
+    , Key P.F5 Nothing [(∅)] [Action A.F5] Nothing
+    , Key P.F6 Nothing [(∅)] [Action A.F6] Nothing
+    , Key P.F7 Nothing [(∅)] [Action A.F7] Nothing
+    , Key P.F8 Nothing [(∅)] [Action A.F8] Nothing
+    , Key P.F9 Nothing [(∅)] [Action A.F9] Nothing
+    , Key P.F10 Nothing [(∅)] [Action A.F10] Nothing
+    , Key P.F11 Nothing [(∅)] [Action A.F11] Nothing
+    , Key P.F12 Nothing [(∅)] [Action A.F12] Nothing
+
+    , Key P.PrintScreen Nothing [(∅), WP.singleton M.Alt] [Action A.PrintScreen, Action A.SysRq] Nothing
+    , Key P.ScrollLock Nothing [(∅)] [Action A.ScrollLock] Nothing
+    , Key P.Pause Nothing [(∅), WP.singleton M.Control] [Action A.Pause, Action A.ControlBreak] Nothing
+
+    , Key P.Backspace Nothing [(∅)] [Action A.Backspace] Nothing
+    , Key P.Tab Nothing [(∅), WP.singleton M.Shift] [Action A.Tab, Action A.LeftTab] Nothing
+    , Key P.CapsLock Nothing [(∅)] [Action A.CapsLock] Nothing
+    , Key P.Enter Nothing [(∅)] [Action A.Enter] Nothing
+    , Key P.Shift_L Nothing [(∅)] [Action A.Shift_L] Nothing
+    , Key P.Shift_R Nothing [(∅)] [Action A.Shift_R] Nothing
+
+    , Key P.Control_L Nothing [(∅)] [Action A.Control_L] Nothing
+    , Key P.Win_L Nothing [(∅)] [Action A.Win_L] Nothing
+    , Key P.Alt_L Nothing [(∅)] [Action A.Alt_L] Nothing
+    , Key P.Space Nothing [(∅)] [Char ' '] Nothing
+    , Key P.Alt_R Nothing [(∅)] [Action A.Alt_R] Nothing
+    , Key P.Win_R Nothing [(∅)] [Action A.Win_R] Nothing
+    , Key P.Menu Nothing [(∅)] [Action A.Menu] Nothing
+    , Key P.Control_R Nothing [(∅)] [Action A.Control_R] Nothing
+
+    , Key P.Insert Nothing [(∅)] [Action A.Insert] Nothing
+    , Key P.Delete Nothing [(∅)] [Action A.Delete] Nothing
+    , Key P.Home Nothing [(∅)] [Action A.Home] Nothing
+    , Key P.End Nothing [(∅)] [Action A.End] Nothing
+    , Key P.PageUp Nothing [(∅)] [Action A.PageUp] Nothing
+    , Key P.PageDown Nothing [(∅)] [Action A.PageDown] Nothing
+    , Key P.Up Nothing [(∅)] [Action A.Up] Nothing
+    , Key P.Left Nothing [(∅)] [Action A.Left] Nothing
+    , Key P.Down Nothing [(∅)] [Action A.Down] Nothing
+    , Key P.Right Nothing [(∅)] [Action A.Right] Nothing
+
+    , Key P.NumLock Nothing [(∅)] [Action A.NumLock] Nothing
+    , Key P.KP_Div Nothing [(∅)] [Action A.KP_Div] Nothing
+    , Key P.KP_Mult Nothing [(∅)] [Action A.KP_Mult] Nothing
+    , Key P.KP_Min Nothing [(∅)] [Action A.KP_Min] Nothing
+    , Key P.KP_7 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Home, Action A.KP_7] Nothing
+    , Key P.KP_8 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Up, Action A.KP_8] Nothing
+    , Key P.KP_9 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_PageUp, Action A.KP_9] Nothing
+    , Key P.KP_Plus Nothing [(∅)] [Action A.KP_Plus] Nothing
+    , Key P.KP_4 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Left, Action A.KP_4] Nothing
+    , Key P.KP_5 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Begin, Action A.KP_5] Nothing
+    , Key P.KP_6 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Right, Action A.KP_6] Nothing
+    , Key P.KP_1 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_End, Action A.KP_1] Nothing
+    , Key P.KP_2 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Down, Action A.KP_2] Nothing
+    , Key P.KP_3 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_PageDown, Action A.KP_3] Nothing
+    , Key P.KP_Enter Nothing [(∅)] [Action A.KP_Enter] Nothing
+    , Key P.KP_0 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Insert, Action A.KP_0] Nothing
+    , Key P.KP_Dec Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Delete, Action A.KP_Dec] Nothing
+    , Key P.KP_Eq Nothing [(∅)] [Action A.KP_Eq] Nothing
+
+    , Key P.Power Nothing [(∅)] [Action A.Power] Nothing
+    , Key P.Sleep Nothing [(∅)] [Action A.Sleep] Nothing
+    , Key P.Wake Nothing [(∅)] [Action A.Wake] Nothing
+
+    , Key P.AudioPlay Nothing [(∅)] [Action A.AudioPlay] Nothing
+    , Key P.AudioPause Nothing [(∅)] [Action A.AudioPause] Nothing
+    , Key P.PlayPause Nothing [(∅)] [Action A.PlayPause] Nothing
+    , Key P.Previous Nothing [(∅)] [Action A.Previous] Nothing
+    , Key P.Next Nothing [(∅)] [Action A.Next] Nothing
+    , Key P.Stop Nothing [(∅)] [Action A.Stop] Nothing
+    , Key P.ToggleRepeat Nothing [(∅)] [Action A.ToggleRepeat] Nothing
+    , Key P.ToggleRandom Nothing [(∅)] [Action A.ToggleRandom] Nothing
+    , Key P.AudioRewind Nothing [(∅)] [Action A.AudioRewind] Nothing
+    , Key P.AudioForward Nothing [(∅)] [Action A.AudioForward] Nothing
+    , Key P.Mute Nothing [(∅)] [Action A.Mute] Nothing
+    , Key P.VolumeDown Nothing [(∅)] [Action A.VolumeDown] Nothing
+    , Key P.VolumeUp Nothing [(∅)] [Action A.VolumeUp] Nothing
+    , Key P.BrightnessDown Nothing [(∅)] [Action A.BrightnessDown] Nothing
+    , Key P.BrightnessUp Nothing [(∅)] [Action A.BrightnessUp] Nothing
+    , Key P.Eject Nothing [(∅)] [Action A.Eject] Nothing
+    , Key P.Browser_Back Nothing [(∅)] [Action A.Browser_Back] Nothing
+    , Key P.Browser_Forward Nothing [(∅)] [Action A.Browser_Forward] Nothing
+    , Key P.Browser_Refresh Nothing [(∅)] [Action A.Browser_Refresh] Nothing
+    , Key P.Browser_Stop Nothing [(∅)] [Action A.Browser_Stop] Nothing
+    , Key P.Browser_Search Nothing [(∅)] [Action A.Browser_Search] Nothing
+    , Key P.Browser_Favorites Nothing [(∅)] [Action A.Browser_Favorites] Nothing
+    , Key P.Calculator Nothing [(∅)] [Action A.Calculator] Nothing
+    , Key P.MediaPlayer Nothing [(∅)] [Action A.MediaPlayer] Nothing
+    , Key P.Browser Nothing [(∅)] [Action A.Browser] Nothing
+    , Key P.Mail Nothing [(∅)] [Action A.Mail] Nothing
+    , Key P.Search Nothing [(∅)] [Action A.Search] Nothing
+    , Key P.Explorer Nothing [(∅)] [Action A.Explorer] Nothing
+    , Key P.WWW Nothing [(∅)] [Action A.WWW] Nothing
+    , Key P.MyComputer Nothing [(∅)] [Action A.MyComputer] Nothing
+    , Key P.Launch0 Nothing [(∅)] [Action A.Launch0] Nothing
+    , Key P.Launch1 Nothing [(∅)] [Action A.Launch1] Nothing
+    , Key P.Launch2 Nothing [(∅)] [Action A.Launch2] Nothing
+    , Key P.Launch3 Nothing [(∅)] [Action A.Launch3] Nothing
+    , Key P.Launch4 Nothing [(∅)] [Action A.Launch4] Nothing
+    , Key P.Launch5 Nothing [(∅)] [Action A.Launch5] Nothing
+    , Key P.Launch6 Nothing [(∅)] [Action A.Launch6] Nothing
+    , Key P.Launch7 Nothing [(∅)] [Action A.Launch7] Nothing
+    , Key P.Launch8 Nothing [(∅)] [Action A.Launch8] Nothing
+    , Key P.Launch9 Nothing [(∅)] [Action A.Launch9] Nothing
+    , Key P.LaunchA Nothing [(∅)] [Action A.LaunchA] Nothing
+    , Key P.LaunchB Nothing [(∅)] [Action A.LaunchB] Nothing
+    , Key P.LaunchC Nothing [(∅)] [Action A.LaunchC] Nothing
+    , Key P.LaunchD Nothing [(∅)] [Action A.LaunchD] Nothing
+    , Key P.LaunchE Nothing [(∅)] [Action A.LaunchE] Nothing
+    , Key P.LaunchF Nothing [(∅)] [Action A.LaunchF] Nothing
+    ]
+
 
 qwertyKeys ∷ [Key]
 qwertyKeys =
-    [ Key P.Esc (Just P.Esc) [(∅)] [Action A.Esc] (Just False)
-    , Key P.F1 (Just P.F1) [(∅)] [Action A.F1] (Just False)
-    , Key P.F2 (Just P.F2) [(∅)] [Action A.F2] (Just False)
-    , Key P.F3 (Just P.F3) [(∅)] [Action A.F3] (Just False)
-    , Key P.F4 (Just P.F4) [(∅)] [Action A.F4] (Just False)
-    , Key P.F5 (Just P.F5) [(∅)] [Action A.F5] (Just False)
-    , Key P.F6 (Just P.F6) [(∅)] [Action A.F6] (Just False)
-    , Key P.F7 (Just P.F7) [(∅)] [Action A.F7] (Just False)
-    , Key P.F8 (Just P.F8) [(∅)] [Action A.F8] (Just False)
-    , Key P.F9 (Just P.F9) [(∅)] [Action A.F9] (Just False)
-    , Key P.F10 (Just P.F10) [(∅)] [Action A.F10] (Just False)
-    , Key P.F11 (Just P.F11) [(∅)] [Action A.F11] (Just False)
-    , Key P.F12 (Just P.F12) [(∅)] [Action A.F12] (Just False)
+    [ Key P.Tilde Nothing [(∅), WP.singleton M.Shift] [Char '`', Char '~'] Nothing
+    , Key P.N1 Nothing [(∅), WP.singleton M.Shift] [Char '1', Char '!'] Nothing
+    , Key P.N2 Nothing [(∅), WP.singleton M.Shift] [Char '2', Char '@'] Nothing
+    , Key P.N3 Nothing [(∅), WP.singleton M.Shift] [Char '3', Char '#'] Nothing
+    , Key P.N4 Nothing [(∅), WP.singleton M.Shift] [Char '4', Char '$'] Nothing
+    , Key P.N5 Nothing [(∅), WP.singleton M.Shift] [Char '5', Char '%'] Nothing
+    , Key P.N6 Nothing [(∅), WP.singleton M.Shift] [Char '6', Char '^'] Nothing
+    , Key P.N7 Nothing [(∅), WP.singleton M.Shift] [Char '7', Char '&'] Nothing
+    , Key P.N8 Nothing [(∅), WP.singleton M.Shift] [Char '8', Char '*'] Nothing
+    , Key P.N9 Nothing [(∅), WP.singleton M.Shift] [Char '9', Char '('] Nothing
+    , Key P.N0 Nothing [(∅), WP.singleton M.Shift] [Char '0', Char ')'] Nothing
+    , Key P.Minus Nothing [(∅), WP.singleton M.Shift] [Char '-', Char '_'] Nothing
+    , Key P.Plus Nothing [(∅), WP.singleton M.Shift] [Char '=', Char '+'] Nothing
 
-    , Key P.PrintScreen (Just P.PrintScreen) [(∅), WP.singleton M.Alt] [Action A.PrintScreen, Action A.SysRq] (Just False)
-    , Key P.ScrollLock (Just P.ScrollLock) [(∅)] [Action A.ScrollLock] (Just False)
-    , Key P.Pause (Just P.Pause) [(∅), WP.singleton M.Control] [Action A.Pause, Action A.ControlBreak] (Just False)
+    , Key P.Q Nothing [(∅), WP.singleton M.Shift] [Char 'q', Char 'Q'] Nothing
+    , Key P.W Nothing [(∅), WP.singleton M.Shift] [Char 'w', Char 'W'] Nothing
+    , Key P.E Nothing [(∅), WP.singleton M.Shift] [Char 'e', Char 'E'] Nothing
+    , Key P.R Nothing [(∅), WP.singleton M.Shift] [Char 'r', Char 'R'] Nothing
+    , Key P.T Nothing [(∅), WP.singleton M.Shift] [Char 't', Char 'T'] Nothing
+    , Key P.Y Nothing [(∅), WP.singleton M.Shift] [Char 'y', Char 'Y'] Nothing
+    , Key P.U Nothing [(∅), WP.singleton M.Shift] [Char 'u', Char 'U'] Nothing
+    , Key P.I Nothing [(∅), WP.singleton M.Shift] [Char 'i', Char 'I'] Nothing
+    , Key P.O Nothing [(∅), WP.singleton M.Shift] [Char 'o', Char 'O'] Nothing
+    , Key P.P Nothing [(∅), WP.singleton M.Shift] [Char 'p', Char 'P'] Nothing
+    , Key P.Bracket_L Nothing [(∅), WP.singleton M.Shift] [Char '[', Char '{'] Nothing
+    , Key P.Bracket_R Nothing [(∅), WP.singleton M.Shift] [Char ']', Char '}'] Nothing
+    , Key P.Backslash Nothing [(∅), WP.singleton M.Shift] [Char '\\', Char '|'] Nothing
 
-    , Key P.Tilde (Just P.Tilde) [(∅), WP.singleton M.Shift] [Char '`', Char '~'] (Just False)
-    , Key P.N1 (Just P.N1) [(∅), WP.singleton M.Shift] [Char '1', Char '!'] (Just False)
-    , Key P.N2 (Just P.N2) [(∅), WP.singleton M.Shift] [Char '2', Char '@'] (Just False)
-    , Key P.N3 (Just P.N3) [(∅), WP.singleton M.Shift] [Char '3', Char '#'] (Just False)
-    , Key P.N4 (Just P.N4) [(∅), WP.singleton M.Shift] [Char '4', Char '$'] (Just False)
-    , Key P.N5 (Just P.N5) [(∅), WP.singleton M.Shift] [Char '5', Char '%'] (Just False)
-    , Key P.N6 (Just P.N6) [(∅), WP.singleton M.Shift] [Char '6', Char '^'] (Just False)
-    , Key P.N7 (Just P.N7) [(∅), WP.singleton M.Shift] [Char '7', Char '&'] (Just False)
-    , Key P.N8 (Just P.N8) [(∅), WP.singleton M.Shift] [Char '8', Char '*'] (Just False)
-    , Key P.N9 (Just P.N9) [(∅), WP.singleton M.Shift] [Char '9', Char '('] (Just False)
-    , Key P.N0 (Just P.N0) [(∅), WP.singleton M.Shift] [Char '0', Char ')'] (Just False)
-    , Key P.Minus (Just P.Minus) [(∅), WP.singleton M.Shift] [Char '-', Char '_'] (Just False)
-    , Key P.Plus (Just P.Plus) [(∅), WP.singleton M.Shift] [Char '=', Char '+'] (Just False)
-    , Key P.Backspace (Just P.Backspace) [(∅)] [Action A.Backspace] (Just False)
+    , Key P.A Nothing [(∅), WP.singleton M.Shift] [Char 'a', Char 'A'] Nothing
+    , Key P.S Nothing [(∅), WP.singleton M.Shift] [Char 's', Char 'S'] Nothing
+    , Key P.D Nothing [(∅), WP.singleton M.Shift] [Char 'd', Char 'D'] Nothing
+    , Key P.F Nothing [(∅), WP.singleton M.Shift] [Char 'f', Char 'F'] Nothing
+    , Key P.G Nothing [(∅), WP.singleton M.Shift] [Char 'g', Char 'G'] Nothing
+    , Key P.H Nothing [(∅), WP.singleton M.Shift] [Char 'h', Char 'H'] Nothing
+    , Key P.J Nothing [(∅), WP.singleton M.Shift] [Char 'j', Char 'J'] Nothing
+    , Key P.K Nothing [(∅), WP.singleton M.Shift] [Char 'k', Char 'K'] Nothing
+    , Key P.L Nothing [(∅), WP.singleton M.Shift] [Char 'l', Char 'L'] Nothing
+    , Key P.Semicolon Nothing [(∅), WP.singleton M.Shift] [Char ';', Char ':'] Nothing
+    , Key P.Apastrophe Nothing [(∅), WP.singleton M.Shift] [Char '\'', Char '"'] Nothing
 
-    , Key P.Tab (Just P.Tab) [(∅), WP.singleton M.Shift] [Action A.Tab, Action A.LeftTab] (Just False)
-    , Key P.Q (Just P.Q) [(∅), WP.singleton M.Shift] [Char 'q', Char 'Q'] (Just True)
-    , Key P.W (Just P.W) [(∅), WP.singleton M.Shift] [Char 'w', Char 'W'] (Just True)
-    , Key P.E (Just P.E) [(∅), WP.singleton M.Shift] [Char 'e', Char 'E'] (Just True)
-    , Key P.R (Just P.R) [(∅), WP.singleton M.Shift] [Char 'r', Char 'R'] (Just True)
-    , Key P.T (Just P.T) [(∅), WP.singleton M.Shift] [Char 't', Char 'T'] (Just True)
-    , Key P.Y (Just P.Y) [(∅), WP.singleton M.Shift] [Char 'y', Char 'Y'] (Just True)
-    , Key P.U (Just P.U) [(∅), WP.singleton M.Shift] [Char 'u', Char 'U'] (Just True)
-    , Key P.I (Just P.I) [(∅), WP.singleton M.Shift] [Char 'i', Char 'I'] (Just True)
-    , Key P.O (Just P.O) [(∅), WP.singleton M.Shift] [Char 'o', Char 'O'] (Just True)
-    , Key P.P (Just P.P) [(∅), WP.singleton M.Shift] [Char 'p', Char 'P'] (Just True)
-    , Key P.Bracket_L (Just P.Bracket_L) [(∅), WP.singleton M.Shift] [Char '[', Char '{'] (Just False)
-    , Key P.Bracket_R (Just P.Bracket_R) [(∅), WP.singleton M.Shift] [Char ']', Char '}'] (Just False)
-    , Key P.Backslash (Just P.Backslash) [(∅), WP.singleton M.Shift] [Char '\\', Char '|'] (Just False)
-
-    , Key P.CapsLock (Just P.CapsLock) [(∅)] [Action A.CapsLock] (Just False)
-    , Key P.A (Just P.A) [(∅), WP.singleton M.Shift] [Char 'a', Char 'A'] (Just True)
-    , Key P.S (Just P.S) [(∅), WP.singleton M.Shift] [Char 's', Char 'S'] (Just True)
-    , Key P.D (Just P.D) [(∅), WP.singleton M.Shift] [Char 'd', Char 'D'] (Just True)
-    , Key P.F (Just P.F) [(∅), WP.singleton M.Shift] [Char 'f', Char 'F'] (Just True)
-    , Key P.G (Just P.G) [(∅), WP.singleton M.Shift] [Char 'g', Char 'G'] (Just True)
-    , Key P.H (Just P.H) [(∅), WP.singleton M.Shift] [Char 'h', Char 'H'] (Just True)
-    , Key P.J (Just P.J) [(∅), WP.singleton M.Shift] [Char 'j', Char 'J'] (Just True)
-    , Key P.K (Just P.K) [(∅), WP.singleton M.Shift] [Char 'k', Char 'K'] (Just True)
-    , Key P.L (Just P.L) [(∅), WP.singleton M.Shift] [Char 'l', Char 'L'] (Just True)
-    , Key P.Semicolon (Just P.Semicolon) [(∅), WP.singleton M.Shift] [Char ';', Char ':'] (Just False)
-    , Key P.Apastrophe (Just P.Apastrophe) [(∅), WP.singleton M.Shift] [Char '\'', Char '"'] (Just False)
-    , Key P.Enter (Just P.Enter) [(∅)] [Action A.Enter] (Just False)
-
-    , Key P.Shift_L (Just P.Shift_L) [(∅)] [Action A.Shift_L] (Just False)
-    , Key P.Iso (Just P.Iso) [(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr]] [Char '<', Char '>', Char '|', Char '¦'] (Just False)
-    , Key P.Z (Just P.Z) [(∅), WP.singleton M.Shift] [Char 'z', Char 'Z'] (Just True)
-    , Key P.X (Just P.X) [(∅), WP.singleton M.Shift] [Char 'x', Char 'X'] (Just True)
-    , Key P.C (Just P.C) [(∅), WP.singleton M.Shift] [Char 'c', Char 'C'] (Just True)
-    , Key P.V (Just P.V) [(∅), WP.singleton M.Shift] [Char 'v', Char 'V'] (Just True)
-    , Key P.B (Just P.B) [(∅), WP.singleton M.Shift] [Char 'b', Char 'B'] (Just True)
-    , Key P.N (Just P.N) [(∅), WP.singleton M.Shift] [Char 'n', Char 'N'] (Just True)
-    , Key P.M (Just P.M) [(∅), WP.singleton M.Shift] [Char 'm', Char 'M'] (Just True)
-    , Key P.Comma (Just P.Comma) [(∅), WP.singleton M.Shift] [Char ',', Char '<'] (Just False)
-    , Key P.Period (Just P.Period) [(∅), WP.singleton M.Shift] [Char '.', Char '>'] (Just False)
-    , Key P.Slash (Just P.Slash) [(∅), WP.singleton M.Shift] [Char '/', Char '?'] (Just False)
-    , Key P.Shift_R (Just P.Shift_R) [(∅)] [Action A.Shift_R] (Just False)
-
-    , Key P.Control_L (Just P.Control_L) [(∅)] [Action A.Control_L] (Just False)
-    , Key P.Win_L (Just P.Win_L) [(∅)] [Action A.Win_L] (Just False)
-    , Key P.Alt_L (Just P.Alt_L) [(∅)] [Action A.Alt_L] (Just False)
-    , Key P.Space (Just P.Space) [(∅)] [Char ' '] (Just False)
-    , Key P.Alt_R (Just P.Alt_R) [(∅)] [Action A.Alt_R] (Just False)
-    , Key P.Win_R (Just P.Win_R) [(∅)] [Action A.Win_R] (Just False)
-    , Key P.Menu (Just P.Menu) [(∅)] [Action A.Menu] (Just False)
-    , Key P.Control_R (Just P.Control_R) [(∅)] [Action A.Control_R] (Just False)
-
-    , Key P.Insert (Just P.Insert) [(∅)] [Action A.Insert] (Just False)
-    , Key P.Delete (Just P.Delete) [(∅)] [Action A.Delete] (Just False)
-    , Key P.Home (Just P.Home) [(∅)] [Action A.Home] (Just False)
-    , Key P.End (Just P.End) [(∅)] [Action A.End] (Just False)
-    , Key P.PageUp (Just P.PageUp) [(∅)] [Action A.PageUp] (Just False)
-    , Key P.PageDown (Just P.PageDown) [(∅)] [Action A.PageDown] (Just False)
-    , Key P.Up (Just P.Up) [(∅)] [Action A.Up] (Just False)
-    , Key P.Left (Just P.Left) [(∅)] [Action A.Left] (Just False)
-    , Key P.Down (Just P.Down) [(∅)] [Action A.Down] (Just False)
-    , Key P.Right (Just P.Right) [(∅)] [Action A.Right] (Just False)
-
-    , Key P.NumLock (Just P.NumLock) [(∅)] [Action A.NumLock] (Just False)
-    , Key P.KP_Div (Just P.KP_Div) [(∅)] [Action A.KP_Div] (Just False)
-    , Key P.KP_Mult (Just P.KP_Mult) [(∅)] [Action A.KP_Mult] (Just False)
-    , Key P.KP_Min (Just P.KP_Min) [(∅)] [Action A.KP_Min] (Just False)
-    , Key P.KP_7 (Just P.KP_7) [(∅), WP.singleton M.NumLock] [Action A.KP_Home, Action A.KP_7] (Just False)
-    , Key P.KP_8 (Just P.KP_8) [(∅), WP.singleton M.NumLock] [Action A.KP_Up, Action A.KP_8] (Just False)
-    , Key P.KP_9 (Just P.KP_9) [(∅), WP.singleton M.NumLock] [Action A.KP_PageUp, Action A.KP_9] (Just False)
-    , Key P.KP_Plus (Just P.KP_Plus) [(∅)] [Action A.KP_Plus] (Just False)
-    , Key P.KP_4 (Just P.KP_4) [(∅), WP.singleton M.NumLock] [Action A.KP_Left, Action A.KP_4] (Just False)
-    , Key P.KP_5 (Just P.KP_5) [(∅), WP.singleton M.NumLock] [Action A.KP_Begin, Action A.KP_5] (Just False)
-    , Key P.KP_6 (Just P.KP_6) [(∅), WP.singleton M.NumLock] [Action A.KP_Right, Action A.KP_6] (Just False)
-    , Key P.KP_1 (Just P.KP_1) [(∅), WP.singleton M.NumLock] [Action A.KP_End, Action A.KP_1] (Just False)
-    , Key P.KP_2 (Just P.KP_2) [(∅), WP.singleton M.NumLock] [Action A.KP_Down, Action A.KP_2] (Just False)
-    , Key P.KP_3 (Just P.KP_3) [(∅), WP.singleton M.NumLock] [Action A.KP_PageDown, Action A.KP_3] (Just False)
-    , Key P.KP_Enter (Just P.KP_Enter) [(∅)] [Action A.KP_Enter] (Just False)
-    , Key P.KP_0 (Just P.KP_0) [(∅), WP.singleton M.NumLock] [Action A.KP_Insert, Action A.KP_0] (Just False)
-    , Key P.KP_Dec (Just P.KP_Dec) [(∅), WP.singleton M.NumLock] [Action A.KP_Delete, Action A.KP_Dec] (Just False)
-    , Key P.KP_Eq (Just P.KP_Eq) [(∅)] [Action A.KP_Eq] (Just False)
-
-    , Key P.Power (Just P.Power) [(∅)] [Action A.Power] (Just False)
-    , Key P.Sleep (Just P.Sleep) [(∅)] [Action A.Sleep] (Just False)
-    , Key P.Wake (Just P.Wake) [(∅)] [Action A.Wake] (Just False)
-
-    , Key P.AudioPlay (Just P.AudioPlay) [(∅)] [Action A.AudioPlay] (Just False)
-    , Key P.AudioPause (Just P.AudioPause) [(∅)] [Action A.AudioPause] (Just False)
-    , Key P.PlayPause (Just P.PlayPause) [(∅)] [Action A.PlayPause] (Just False)
-    , Key P.Previous (Just P.Previous) [(∅)] [Action A.Previous] (Just False)
-    , Key P.Next (Just P.Next) [(∅)] [Action A.Next] (Just False)
-    , Key P.Stop (Just P.Stop) [(∅)] [Action A.Stop] (Just False)
-    , Key P.ToggleRepeat (Just P.ToggleRepeat) [(∅)] [Action A.ToggleRepeat] (Just False)
-    , Key P.ToggleRandom (Just P.ToggleRandom) [(∅)] [Action A.ToggleRandom] (Just False)
-    , Key P.AudioRewind (Just P.AudioRewind) [(∅)] [Action A.AudioRewind] (Just False)
-    , Key P.AudioForward (Just P.AudioForward) [(∅)] [Action A.AudioForward] (Just False)
-    , Key P.Mute (Just P.Mute) [(∅)] [Action A.Mute] (Just False)
-    , Key P.VolumeDown (Just P.VolumeDown) [(∅)] [Action A.VolumeDown] (Just False)
-    , Key P.VolumeUp (Just P.VolumeUp) [(∅)] [Action A.VolumeUp] (Just False)
-    , Key P.BrightnessDown (Just P.BrightnessDown) [(∅)] [Action A.BrightnessDown] (Just False)
-    , Key P.BrightnessUp (Just P.BrightnessUp) [(∅)] [Action A.BrightnessUp] (Just False)
-    , Key P.Eject (Just P.Eject) [(∅)] [Action A.Eject] (Just False)
-    , Key P.Browser_Back (Just P.Browser_Back) [(∅)] [Action A.Browser_Back] (Just False)
-    , Key P.Browser_Forward (Just P.Browser_Forward) [(∅)] [Action A.Browser_Forward] (Just False)
-    , Key P.Browser_Refresh (Just P.Browser_Refresh) [(∅)] [Action A.Browser_Refresh] (Just False)
-    , Key P.Browser_Stop (Just P.Browser_Stop) [(∅)] [Action A.Browser_Stop] (Just False)
-    , Key P.Browser_Search (Just P.Browser_Search) [(∅)] [Action A.Browser_Search] (Just False)
-    , Key P.Browser_Favorites (Just P.Browser_Favorites) [(∅)] [Action A.Browser_Favorites] (Just False)
-    , Key P.Calculator (Just P.Calculator) [(∅)] [Action A.Calculator] (Just False)
-    , Key P.MediaPlayer (Just P.MediaPlayer) [(∅)] [Action A.MediaPlayer] (Just False)
-    , Key P.Browser (Just P.Browser) [(∅)] [Action A.Browser] (Just False)
-    , Key P.Mail (Just P.Mail) [(∅)] [Action A.Mail] (Just False)
-    , Key P.Search (Just P.Search) [(∅)] [Action A.Search] (Just False)
-    , Key P.Explorer (Just P.Explorer) [(∅)] [Action A.Explorer] (Just False)
-    , Key P.WWW (Just P.WWW) [(∅)] [Action A.WWW] (Just False)
-    , Key P.MyComputer (Just P.MyComputer) [(∅)] [Action A.MyComputer] (Just False)
-    , Key P.Launch0 (Just P.Launch0) [(∅)] [Action A.Launch0] (Just False)
-    , Key P.Launch1 (Just P.Launch1) [(∅)] [Action A.Launch1] (Just False)
-    , Key P.Launch2 (Just P.Launch2) [(∅)] [Action A.Launch2] (Just False)
-    , Key P.Launch3 (Just P.Launch3) [(∅)] [Action A.Launch3] (Just False)
-    , Key P.Launch4 (Just P.Launch4) [(∅)] [Action A.Launch4] (Just False)
-    , Key P.Launch5 (Just P.Launch5) [(∅)] [Action A.Launch5] (Just False)
-    , Key P.Launch6 (Just P.Launch6) [(∅)] [Action A.Launch6] (Just False)
-    , Key P.Launch7 (Just P.Launch7) [(∅)] [Action A.Launch7] (Just False)
-    , Key P.Launch8 (Just P.Launch8) [(∅)] [Action A.Launch8] (Just False)
-    , Key P.Launch9 (Just P.Launch9) [(∅)] [Action A.Launch9] (Just False)
-    , Key P.LaunchA (Just P.LaunchA) [(∅)] [Action A.LaunchA] (Just False)
-    , Key P.LaunchB (Just P.LaunchB) [(∅)] [Action A.LaunchB] (Just False)
-    , Key P.LaunchC (Just P.LaunchC) [(∅)] [Action A.LaunchC] (Just False)
-    , Key P.LaunchD (Just P.LaunchD) [(∅)] [Action A.LaunchD] (Just False)
-    , Key P.LaunchE (Just P.LaunchE) [(∅)] [Action A.LaunchE] (Just False)
-    , Key P.LaunchF (Just P.LaunchF) [(∅)] [Action A.LaunchF] (Just False)
+    , Key P.Z Nothing [(∅), WP.singleton M.Shift] [Char 'z', Char 'Z'] Nothing
+    , Key P.X Nothing [(∅), WP.singleton M.Shift] [Char 'x', Char 'X'] Nothing
+    , Key P.C Nothing [(∅), WP.singleton M.Shift] [Char 'c', Char 'C'] Nothing
+    , Key P.V Nothing [(∅), WP.singleton M.Shift] [Char 'v', Char 'V'] Nothing
+    , Key P.B Nothing [(∅), WP.singleton M.Shift] [Char 'b', Char 'B'] Nothing
+    , Key P.N Nothing [(∅), WP.singleton M.Shift] [Char 'n', Char 'N'] Nothing
+    , Key P.M Nothing [(∅), WP.singleton M.Shift] [Char 'm', Char 'M'] Nothing
+    , Key P.Comma Nothing [(∅), WP.singleton M.Shift] [Char ',', Char '<'] Nothing
+    , Key P.Period Nothing [(∅), WP.singleton M.Shift] [Char '.', Char '>'] Nothing
+    , Key P.Slash Nothing [(∅), WP.singleton M.Shift] [Char '/', Char '?'] Nothing
     ]
-
-qwerty ∷ Layout
-qwerty = Layout qwertyInfo (∅) (∅) qwertyKeys

@@ -23,23 +23,27 @@ import Lens.Micro.Platform (view, over)
 import Layout.Action (isModifier)
 import qualified Layout.Action as A
 import Layout.Key (letterToDeadKey, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
-import Layout.Layout (setNullChars, unifyShiftstates, getLetterByPosAndShiftstate)
+import Layout.Layout (addDefaultKeysWith, getDefaultKeys, setNullChars, unifyShiftstates, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Linux (posAndScancode)
 import Lookup.Windows
-import PresetLayout (qwerty)
+import PresetLayout (defaultKeys, defaultFullLayout)
 
 data IsExtend = Extend | NotExtend
 
 prepareLayout ∷ Layout → Layout
 prepareLayout =
+    addDefaultKeysWith getDefaultKeys' defaultKeys >>>
     over _singletonKeys (filter (not ∘ isAltRToAltGr)) >>>
     over _keys
         (over (traverse ∘ _shiftstates ∘ traverse) altGrToControlAlt >>>
         flip evalState 1 ∘ (traverse ∘ _letters ∘ traverse) toIndexedCustomDeadKey >>>
         setNullChars)
+  where
+    getDefaultKeys' keys = getDefaultKeys keys ∘ filterNonExtend
+    filterNonExtend = over _keys (filter (any (M.Extend ∉) ∘ view _shiftstates))
 
 supportedShiftstate ∷ IsExtend → Shiftstate → Logger Bool
 supportedShiftstate NotExtend shiftstate = and <$> traverse supportedModifier (toList shiftstate)
@@ -272,7 +276,7 @@ printLetter _ _ l@(CustomDead Nothing _) = "--" <$ tell [show' l ⊕ " does not 
 printLetter isExtend layout (Action a) =
     addBraces isExtend <$> actionToPkl layout a
 printLetter isExtend layout l@(Redirect mods pos) =
-    case getLetterByPosAndShiftstate pos (WP.fromList mods) qwerty of
+    case getLetterByPosAndShiftstate pos (WP.fromList mods) defaultFullLayout of
       Just l' → addBraces isExtend <$> printPklAction layout l (RedirectLetter l' mods)
       Nothing → "--" <$ tell ["redirecting to " ⊕ show' pos ⊕ " is not supported"]
 printLetter _ _ LNothing = pure "--"
