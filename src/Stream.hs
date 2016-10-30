@@ -12,8 +12,8 @@ module Stream
 
 import BasePrelude
 
-import qualified Data.ByteString as B (ByteString, getContents, readFile)
-import qualified Data.ByteString.Lazy as BL (ByteString, getContents, readFile)
+import qualified Data.ByteString as B (ByteString, getContents, putStr, readFile, writeFile)
+import qualified Data.ByteString.Lazy as BL (ByteString, getContents, putStr, readFile, writeFile)
 import qualified Data.Text as T (Text)
 import qualified Data.Text.Lazy as L (Text)
 import qualified Data.Text.Lazy.IO as L (getContents, putStr, readFile, writeFile)
@@ -63,6 +63,10 @@ instance WriteStream L.Text where
 
 instance ReadStream B.ByteString where
     readStream = defReadStream B.getContents B.readFile
+instance WriteStream B.ByteString where
+    writeStream = defWriteStream B.putStr B.writeFile
 
 instance ReadStream BL.ByteString where
     readStream = defReadStream BL.getContents BL.readFile
+instance WriteStream BL.ByteString where
+    writeStream = defWriteStream BL.putStr BL.writeFile
