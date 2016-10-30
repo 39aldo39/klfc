@@ -138,4 +138,4 @@ getType' key mods = Type
     showLevel [] = "Base"
     showLevel xs = concatMap show xs
     subMods = map WithPlus (subsets mods)
-    (levels, ignoredMods) = unzip (map (getLevel key) subMods)
+    (levels, ignoredMods) = unzip (mapMaybe (getLevel key) subMods)

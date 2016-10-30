@@ -38,7 +38,7 @@ import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
-import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, privateChars, mconcatMapM, (!?))
+import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, privateChars, mconcatMapM, (!?), (>$>))
 
 import Control.Monad.State (evalState)
 import Data.Aeson
@@ -239,28 +239,36 @@ applyModLayout layoutMod@(Mod nameM _) =
     over (_info ∘ _name) (⊕ ('_':nameM)) ∘
     over (_keys ∘ traverse ∘ _pos) (applyMod layoutMod)
 
-getLevel ∷ Key → Shiftstate → (Int, Shiftstate)
-getLevel key (WithPlus mods) = over _2 WithPlus (getLevel' key mods)
+getLetter ∷ Key → Shiftstate → Letter
+getLetter key = fromMaybe LNothing ∘
+    (getLevel key >=> (view _letters key !?) ∘ fst)
 
-getLevel' ∷ Key → S.Set Modifier → (Int, S.Set Modifier)
+getLevel ∷ Key → Shiftstate → Maybe (Int, Shiftstate)
+getLevel key (WithPlus mods) = over _2 WithPlus <$> getLevel' key mods
+
+getLevel' ∷ Key → S.Set Modifier → Maybe (Int, S.Set Modifier)
 getLevel' key mods =
   case elemIndex (WithPlus mods) (view _shiftstates key) of
-    Just i  → (i, mods S.∩ S.fromList M.controlMods)
+    Just i  → Just (i, mods S.∩ S.fromList M.controlMods)
     Nothing → reducedLevel
   where
     reducedLevel
-      | null mods = (0, (∅))
-      | M.CapsLock ∈ mods = over _2 (S.delete M.Shift) $ getLevel' key (mods S.∆ S.fromList [M.Shift, M.CapsLock])
-      | otherwise = uncurry (over _2) $ (S.insert *** getLevel' key) (S.deleteFindMin mods)
+      | null mods = Nothing
+      | M.CapsLock ∈ mods = over _2 (S.delete M.Shift) <$>
+            getLevel' key (mods S.∆ S.fromList [M.Shift, M.CapsLock])
+      | otherwise = ($ mods) $
+            S.deleteFindMin >>>
+            sequence ∘ (S.insert *** getLevel' key) >$>
+            uncurry (over _2)
 
 getLetterByPosAndShiftstate ∷ Pos → Shiftstate → Layout → Maybe Letter
 getLetterByPosAndShiftstate pos state =
-    listToMaybe ∘ mapMaybe toLetter ∘ filter ((≡ pos) ∘ view _pos) ∘ view _keys
+    listToMaybe ∘ map toLetter ∘ filter ((≡ pos) ∘ view _pos) ∘ view _keys
   where
-    toLetter key = view _letters key !? fst (getLevel key state)
+    toLetter = flip getLetter state
 
 getPosByLetterAndShiftstate ∷ Letter → Shiftstate → Layout → [Pos]
 getPosByLetterAndShiftstate letter state =
-    map (view _pos) ∘ filter ((≡ Just letter) ∘ toLetter) ∘ view _keys
+    map (view _pos) ∘ filter ((≡ letter) ∘ toLetter) ∘ view _keys
   where
-    toLetter key = view _letters key !? fst (getLevel key state)
+    toLetter = flip getLetter state
