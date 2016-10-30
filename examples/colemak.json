@@ -57,7 +57,6 @@
         { "pos": "M", "letters": [ "m", "M" ] },
         { "pos": ",", "letters": [ ",", "<" ] },
         { "pos": ".", "letters": [ ".", ">" ] },
-        { "pos": "/", "letters": [ "/", "?" ] },
-        { "pos": "space", "letters": [ " ", " " ] }
+        { "pos": "/", "letters": [ "/", "?" ] }
     ]
 }
