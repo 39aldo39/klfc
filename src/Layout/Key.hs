@@ -21,6 +21,7 @@ module Layout.Key
     , combineKeys
     , nubKeys
     , setDefaultShiftstates
+    , filterKeyOnShiftstatesM
     , filterKeyOnShiftstates
     ) where
 
@@ -33,6 +34,7 @@ import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.State (State, state)
 import Data.Aeson
+import Data.Functor.Identity (runIdentity)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE (init, last)
 import Lens.Micro.Platform (Lens', makeLenses, view, set)
@@ -216,7 +218,10 @@ setDefaultShiftstates states key
   | null (view _shiftstates key) = set _shiftstates (zipWith const states (view _letters key)) key
   | otherwise = key
 
-filterKeyOnShiftstates ∷ Monad m ⇒ (Shiftstate → m Bool) → Key → m Key
-filterKeyOnShiftstates p key = do
+filterKeyOnShiftstatesM ∷ Monad m ⇒ (Shiftstate → m Bool) → Key → m Key
+filterKeyOnShiftstatesM p key = do
   (ls, ms) ← unzip <$> filterM (p ∘ snd) (view _letters key `zip` view _shiftstates key)
   pure ∘ set _letters ls ∘ set _shiftstates ms $ key
+
+filterKeyOnShiftstates ∷ (Shiftstate → Bool) → Key → Key
+filterKeyOnShiftstates p = runIdentity ∘ filterKeyOnShiftstatesM (pure ∘ p)

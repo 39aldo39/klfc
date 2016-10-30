@@ -15,7 +15,7 @@ import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
 import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Key (letterToLigatureString, filterKeyOnShiftstates)
+import Layout.Key (letterToLigatureString, filterKeyOnShiftstatesM)
 import Layout.Layout (setNullChars, unifyShiftstates)
 import Layout.Types
 import Lookup.Linux (posAndScancode)
@@ -136,7 +136,7 @@ printKlcData (KlcData info winShiftstates keys ligatures deadKeys) = unlines $
 toKlcData ∷ Layout → Logger KlcData
 toKlcData =
     prepareLayout >=>
-    (_keys ∘ traverse) (filterKeyOnShiftstates supportedShiftstate) >=>
+    (_keys ∘ traverse) (filterKeyOnShiftstatesM supportedShiftstate) >=>
     toKlcData'
 
 toKlcData' ∷ Layout → Logger KlcData

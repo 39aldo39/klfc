@@ -22,7 +22,7 @@ import Lens.Micro.Platform (view, over)
 
 import Layout.Action (isModifier)
 import qualified Layout.Action as A
-import Layout.Key (letterToDeadKey, filterKeyOnShiftstates, toIndexedCustomDeadKey)
+import Layout.Key (letterToDeadKey, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
 import Layout.Layout (setNullChars, unifyShiftstates, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import qualified Layout.Pos as P
@@ -178,7 +178,7 @@ toLayoutData =
       ∧ all (M.Extend ∈) (view _shiftstates key)
       = pure Nothing
       | otherwise
-      = Just <$> filterKeyOnShiftstates (supportedShiftstate NotExtend) key
+      = Just <$> filterKeyOnShiftstatesM (supportedShiftstate NotExtend) key
 
 toLayoutData' ∷ Layout → Logger LayoutData
 toLayoutData' layout =
