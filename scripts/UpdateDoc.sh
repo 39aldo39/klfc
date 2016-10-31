@@ -10,7 +10,7 @@ echo "$preUsage" > "$root/README.md"
 "$root/dist/build/klfc/klfc" -h | "$dir/Usage.hs" >> "$root/README.md"
 
 # Make new action list
-cat "$root/src/Layout/Action.hs" | "$dir/ActionToMd.hs" > "$root/doc/lists/actions.md"
+"$dir/ActionToMd.hs" < "$root/src/Layout/Action.hs" > "$root/doc/lists/actions.md"
 
 # Make new position list
-cat "$root/src/Layout/Pos.hs" | "$dir/PosToMd.hs" > "$root/doc/lists/positions.md"
+"$dir/PosToMd.hs" < "$root/src/Layout/Pos.hs" > "$root/doc/lists/positions.md"

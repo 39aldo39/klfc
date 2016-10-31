@@ -7,11 +7,11 @@ import Data.List (dropWhileEnd)
 import Control.Applicative (liftA2)
 
 modifyLine ∷ String → [String]
-modifyLine "" = [""]
 modifyLine "Available options:" = ["### Available options ###", ""]
 modifyLine ('U':'s':'a':'g':'e':':':' ':xs) = [replicate 4 ' ' ⊕ xs]
 modifyLine xs
   | lastElm ≡ Just ':' = ["#### " ⊕ init xs' ⊕ " ####"]
+  | all isSpace' xs = [""]
   | otherwise = [replicate 2 ' ' ⊕ xs]
   where
     xs' = dropWhileEnd isSpace' (dropWhile isSpace' xs)
