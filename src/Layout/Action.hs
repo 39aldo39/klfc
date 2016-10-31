@@ -63,11 +63,11 @@ data Action
     | MouseUpLeft | MouseUpRight | MouseDownLeft | MouseDownRight
 
     -- Numpad
-              | KP_Div | KP_Mult | KP_Min
-    | KP_7    | KP_8   | KP_9    | KP_Plus
-    | KP_4    | KP_5   | KP_6
-    | KP_1    | KP_2   | KP_3    | KP_Enter
-    |       KP_0       | KP_Dec  | KP_Eq
+    | KP_Clear | KP_Div | KP_Mult | KP_Min
+    | KP_7     | KP_8   | KP_9    | KP_Plus
+    | KP_4     | KP_5   | KP_6
+    | KP_1     | KP_2   | KP_3    | KP_Enter
+    |        KP_0       | KP_Dec  | KP_Eq
 
     | KP_Home | KP_Up    | KP_PageUp
     | KP_Left | KP_Begin | KP_Right

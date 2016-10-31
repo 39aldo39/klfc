@@ -141,6 +141,7 @@ actionAndChar =
     , (A.Tab, '\t')
     , (A.Enter, '\r')
 
+    , (A.KP_Clear, '\ESC')
     , (A.KP_Div, '/')
     , (A.KP_Mult, '*')
     , (A.KP_Min, '-')
