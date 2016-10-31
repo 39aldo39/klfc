@@ -52,6 +52,8 @@ Usage
     --pkl DIRECTORY          Export to a PKL directory
     --klc DIRECTORY          Export to a KLC directory (‘-’ for printing the base
                              layout to stdout)
+    --keylayout DIRECTORY    Export to a keylayout directory (‘-’ for printing the
+                             base layout to stdout)
     -o,--output DIRECTORY    Export to all file types
 
 #### Extra Options ####

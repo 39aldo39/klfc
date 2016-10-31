@@ -169,6 +169,7 @@ The supported actions are:
 * `MouseDownRight`
 
 ###### Numpad ######
+* `KP_Clear`
 * `KP_Div`
 * `KP_Mult`
 * `KP_Min`
