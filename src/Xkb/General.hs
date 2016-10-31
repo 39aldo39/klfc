@@ -43,8 +43,9 @@ supportedModifier modifier
     | otherwise = False <$ tell ["the modifier " ⊕ show' modifier ⊕ " is not supported in XKB"]
 
 addShortcutLetters ∷ Key → Key
+addShortcutLetters key | WP.singleton M.Control ∈ view _shiftstates key = key
 addShortcutLetters key = fromMaybe key $
     over _shiftstates (WP.singleton M.Control :) <$>
-    _letters (liftA2 (:) (getLetterByPosAndShiftstate pos (∅) defaultFullLayout) ∘ pure) key
+    _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultFullLayout) ∘ pure) key
   where
-    pos = view _pos key
+    shortcutPos = view _shortcutPos key
