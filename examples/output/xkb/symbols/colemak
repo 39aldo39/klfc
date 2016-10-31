@@ -102,8 +102,9 @@ xkb_symbols "basic" {
     key <AB09> { [       period,      greater, dead_abovedot,   asciitilde, Pointer_Right, Pointer_Right,   KP_Decimal,        colon ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+8,y=+0), MovePtr(x=+8,y=+0) ] };
     key <AB10> { [        slash,     question, questiondown,   asciitilde,    Multi_key,    Multi_key,    KP_Divide,    KP_Divide ] };
-    key <SPCE> { [        space,        space,        space, nobreakspace,       Return,       Return,        space, nobreakspace ],
-                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<RTRN>,clearMods=Shift) ] };
+    key.type[Group1] = "NONE_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
+    key <SPCE> { [        space,        space, nobreakspace,       Return,       Return,        space, nobreakspace ],
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<RTRN>,clearMods=Shift) ] };
     key.type[Group1] = "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND";
     key <ESC> { [       Escape,    Caps_Lock,    Caps_Lock,    Caps_Lock,    Caps_Lock ] };
     key <FK01> { [           F1, XF86AudioPlay, XF86AudioPause, XF86_Switch_VT_1, XF86_Switch_VT_1 ],

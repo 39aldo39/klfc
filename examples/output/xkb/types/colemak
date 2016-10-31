@@ -54,6 +54,29 @@ default xkb_types "basic" {
         level_name[Level8] = "ShiftAltGrExtend";
     };
     
+    type "NONE_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
+        modifiers = LevelFive+LevelThree+Shift;
+        
+        map[None] = Level1;
+        map[Shift] = Level1;
+        map[LevelThree] = Level2;
+        map[LevelThree+Shift] = Level3;
+        map[LevelFive] = Level4;
+        map[LevelFive+Shift] = Level5;
+        map[LevelFive+LevelThree] = Level6;
+        map[LevelFive+LevelThree+Shift] = Level7;
+        
+        preserve[Shift] = Shift;
+        
+        level_name[Level1] = "Base";
+        level_name[Level2] = "AltGr";
+        level_name[Level3] = "ShiftAltGr";
+        level_name[Level4] = "Extend";
+        level_name[Level5] = "ShiftExtend";
+        level_name[Level6] = "AltGrExtend";
+        level_name[Level7] = "ShiftAltGrExtend";
+    };
+    
     type "NONE_EXTEND_SHIFT+EXTEND_ALTGR+EXTEND_SHIFT+ALTGR+EXTEND" {
         modifiers = LevelFive+LevelThree+Shift;
         
