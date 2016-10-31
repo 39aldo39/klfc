@@ -16,8 +16,7 @@ import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
 
-import Layout.Key (letterToChar)
-import Layout.Layout (getLevel)
+import Layout.Key (letterToChar, getLevel)
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lens.Micro.Platform (view)

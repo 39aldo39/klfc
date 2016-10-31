@@ -28,17 +28,14 @@ module Layout.Layout
     , addDefaultKeys
     , removeEmptyLetters
     , unifyShiftstates
-    , getLevel
     , getLetterByPosAndShiftstate
     , getPosByLetterAndShiftstate
     ) where
 
 import BasePrelude
-import Prelude.Unicode hiding ((∈))
-import Data.Foldable.Unicode ((∈))
+import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import qualified Data.Set.Unicode as S
-import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, privateChars, mconcatMapM, (!?), (>$>))
+import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, privateChars, mconcatMapM)
 
 import Control.Monad.State (evalState)
 import Data.Aeson
@@ -47,10 +44,9 @@ import Data.Aeson.Types (Parser)
 import qualified Data.HashMap.Strict as HM
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE
-import qualified Data.Set as S
 import qualified Data.Text as T (Text, unpack)
 import Data.Text.Lazy.Builder (Builder)
-import Lens.Micro.Platform (Lens', view, set, over, makeLenses, _2)
+import Lens.Micro.Platform (Lens', view, set, over, makeLenses)
 
 import FileType (FileType)
 import Filter (Filter(..))
@@ -58,10 +54,8 @@ import JsonPretty (keyOrder', delimsFromList)
 import Layout.DeadKey (DeadKey)
 import Layout.Key
 import Layout.Mod (Mod(Mod), applyMod)
-import Layout.Modifier (Modifier, Shiftstate)
-import qualified Layout.Modifier as M
+import Layout.Modifier (Shiftstate)
 import Layout.Pos (Pos)
-import WithPlus (WithPlus(..))
 
 data Information = Information
     { infoFullName, infoName, __copyright, __company
@@ -237,28 +231,6 @@ applyModLayout layoutMod@(Mod nameM _) =
     over (_info ∘ _fullName) (⊕ (" (" ⊕ nameM ⊕ ")")) ∘
     over (_info ∘ _name) (⊕ ('_':nameM)) ∘
     over (_keys ∘ traverse ∘ _pos) (applyMod layoutMod)
-
-getLetter ∷ Key → Shiftstate → Letter
-getLetter key = fromMaybe LNothing ∘
-    (getLevel key >=> (view _letters key !?) ∘ fst)
-
-getLevel ∷ Key → Shiftstate → Maybe (Int, Shiftstate)
-getLevel key (WithPlus mods) = over _2 WithPlus <$> getLevel' key mods
-
-getLevel' ∷ Key → S.Set Modifier → Maybe (Int, S.Set Modifier)
-getLevel' key mods =
-  case elemIndex (WithPlus mods) (view _shiftstates key) of
-    Just i  → Just (i, mods S.∩ S.fromList M.controlMods)
-    Nothing → reducedLevel
-  where
-    reducedLevel
-      | null mods = Nothing
-      | M.CapsLock ∈ mods = over _2 (S.delete M.Shift) <$>
-            getLevel' key (mods S.∆ S.fromList [M.Shift, M.CapsLock])
-      | otherwise = ($ mods) $
-            S.deleteFindMin >>>
-            sequence ∘ (S.insert *** getLevel' key) >$>
-            uncurry (over _2)
 
 getLetterByPosAndShiftstate ∷ Pos → Shiftstate → Layout → Maybe Letter
 getLetterByPosAndShiftstate pos state =

@@ -22,14 +22,18 @@ module Layout.Key
     , combineKeysWithoutOverwrite
     , nubKeys
     , setDefaultShiftstates
+    , getLetter
+    , getLevel
     , filterKeyOnShiftstatesM
     , filterKeyOnShiftstates
     ) where
 
 import BasePrelude
-import Prelude.Unicode
+import Prelude.Unicode hiding ((∈))
+import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((⊕))
-import Util (HumanReadable(..), lensWithDefault, expectedKeys, (>$>), combineWithOn, nubWithOn, split)
+import qualified Data.Set.Unicode as S
+import Util (HumanReadable(..), lensWithDefault, expectedKeys, (!?), (>$>), combineWithOn, nubWithOn, split)
 
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
@@ -38,15 +42,18 @@ import Data.Aeson
 import Data.Functor.Identity (runIdentity)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE (init, last)
-import Lens.Micro.Platform (Lens', makeLenses, view, set)
+import qualified Data.Set as S
+import Lens.Micro.Platform (Lens', makeLenses, view, set, over, _2)
 
 import FileType (FileType)
 import Filter (Filter(..))
 import Layout.Modifier (Modifier, Shiftstate)
+import qualified Layout.Modifier as M
 import Layout.Pos (Pos)
 import Layout.Action (Action)
 import Layout.DeadKey (DeadKey(DeadKey), __dkName)
 import PresetDeadKey (PresetDeadKey, presetDeadKeyToDeadKey)
+import WithPlus (WithPlus(..))
 
 data Letter
     = Char Char
@@ -221,6 +228,28 @@ setDefaultShiftstates ∷ [Shiftstate] → Key → Key
 setDefaultShiftstates states key
   | null (view _shiftstates key) = set _shiftstates (zipWith const states (view _letters key)) key
   | otherwise = key
+
+getLetter ∷ Key → Shiftstate → Letter
+getLetter key = fromMaybe LNothing ∘
+    (getLevel key >=> (view _letters key !?) ∘ fst)
+
+getLevel ∷ Key → Shiftstate → Maybe (Int, Shiftstate)
+getLevel key (WithPlus mods) = over _2 WithPlus <$> getLevel' key mods
+
+getLevel' ∷ Key → S.Set Modifier → Maybe (Int, S.Set Modifier)
+getLevel' key mods =
+  case elemIndex (WithPlus mods) (view _shiftstates key) of
+    Just i  → Just (i, mods S.∩ S.fromList M.controlMods)
+    Nothing → reducedLevel
+  where
+    reducedLevel
+      | null mods = Nothing
+      | M.CapsLock ∈ mods = over _2 (S.delete M.Shift) <$>
+          getLevel' key (mods S.∆ S.fromList [M.Shift, M.CapsLock])
+      | otherwise = ($ mods) $
+          S.deleteFindMin >>>
+          sequence ∘ (S.insert *** getLevel' key) >$>
+          uncurry (over _2)
 
 filterKeyOnShiftstatesM ∷ Monad m ⇒ (Shiftstate → m Bool) → Key → m Key
 filterKeyOnShiftstatesM p key = do
