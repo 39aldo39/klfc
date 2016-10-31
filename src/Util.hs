@@ -20,6 +20,7 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import qualified Data.HashMap.Strict as H (keys)
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
 import qualified Data.Set as S (fromAscList, toAscList)
 import qualified Data.Text as T (Text, pack, unpack)
@@ -108,6 +109,9 @@ split _ [] = [] :| []
 split p (x:xs)
   | p x = [] :| toList (split p xs)
   | otherwise = let y :| ys = split p xs in (x:y) :| ys
+
+groupWith' ∷ Ord β ⇒ (α → β) → [α] → [(β, [α])]
+groupWith' f = map (\(x:|xs) → (f x, x:xs)) ∘ NE.groupBy ((≡) `on` f) ∘ sortWith f
 
 replace ∷ Eq α ⇒ α → α → [α] → [α]
 replace y y' = map (\x → bool x y' (x ≡ y))

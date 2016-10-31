@@ -29,5 +29,6 @@ executable klfc
                    optparse-applicative,
                    transformers,
                    fail,
-                   file-embed
+                   file-embed,
+                   xml
   ghc-options:     -Wall

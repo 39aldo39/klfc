@@ -4,6 +4,7 @@ module PresetLayout
     ( defaultLayout
     , defaultFullLayout
     , defaultKeys
+    , defaultMacKeys
     ) where
 
 import BasePrelude
@@ -145,6 +146,60 @@ defaultKeysFull =
     , Key P.LaunchF Nothing [(∅)] [Action A.LaunchF] Nothing
     ]
 
+defaultMacKeys ∷ [Key]
+defaultMacKeys =
+    [ Key P.Esc Nothing [(∅)] [Char '\ESC'] Nothing
+    , Key P.F1 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F2 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F3 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F4 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F5 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F6 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F7 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F8 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F9 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F10 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F11 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.F12 Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.PrintScreen Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.ScrollLock Nothing [(∅)] [Char '\x10'] Nothing
+    , Key P.Pause Nothing [(∅)] [Char '\x10'] Nothing
+
+    , Key P.Insert Nothing [(∅)] [Char '\x05'] Nothing
+    , Key P.Delete Nothing [(∅)] [Char '\DEL'] Nothing
+    , Key P.Home Nothing [(∅)] [Char '\x01'] Nothing
+    , Key P.End Nothing [(∅)] [Char '\x04'] Nothing
+    , Key P.PageUp Nothing [(∅)] [Char '\x0B'] Nothing
+    , Key P.PageDown Nothing [(∅)] [Char '\x0C'] Nothing
+    , Key P.Up Nothing [(∅)] [Char '\x1E'] Nothing
+    , Key P.Left Nothing [(∅)] [Char '\x1C'] Nothing
+    , Key P.Down Nothing [(∅)] [Char '\x1F'] Nothing
+    , Key P.Right Nothing [(∅)] [Char '\x1D'] Nothing
+
+    , Key P.Backspace Nothing [(∅)] [Char '\b'] Nothing
+    , Key P.Tab Nothing [(∅)] [Char '\t'] Nothing
+    , Key P.Enter Nothing [(∅)] [Char '\r'] Nothing
+    , Key P.Space Nothing [(∅)] [Char ' '] Nothing
+
+    , Key P.NumLock Nothing [(∅)] [Char '\ESC'] Nothing
+    , Key P.KP_Div Nothing [(∅)] [Char '/'] Nothing
+    , Key P.KP_Mult Nothing [(∅)] [Char '*'] Nothing
+    , Key P.KP_Min Nothing [(∅)] [Char '-'] Nothing
+    , Key P.KP_7 Nothing [(∅)] [Char '7'] Nothing
+    , Key P.KP_8 Nothing [(∅)] [Char '8'] Nothing
+    , Key P.KP_9 Nothing [(∅)] [Char '9'] Nothing
+    , Key P.KP_Plus Nothing [(∅)] [Char '+'] Nothing
+    , Key P.KP_4 Nothing [(∅)] [Char '4'] Nothing
+    , Key P.KP_5 Nothing [(∅)] [Char '5'] Nothing
+    , Key P.KP_6 Nothing [(∅)] [Char '6'] Nothing
+    , Key P.KP_1 Nothing [(∅)] [Char '1'] Nothing
+    , Key P.KP_2 Nothing [(∅)] [Char '2'] Nothing
+    , Key P.KP_3 Nothing [(∅)] [Char '3'] Nothing
+    , Key P.KP_Enter Nothing [(∅)] [Char '\x03'] Nothing
+    , Key P.KP_0 Nothing [(∅)] [Char '0'] Nothing
+    , Key P.KP_Dec Nothing [(∅)] [Char '.'] Nothing
+    , Key P.KP_Eq Nothing [(∅)] [Char '='] Nothing
+    ]
 
 qwertyKeys ∷ [Key]
 qwertyKeys =

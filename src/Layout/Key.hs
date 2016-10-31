@@ -26,6 +26,7 @@ module Layout.Key
     , getLevel
     , filterKeyOnShiftstatesM
     , filterKeyOnShiftstates
+    , addCapslock
     ) where
 
 import BasePrelude
@@ -54,6 +55,7 @@ import Layout.Action (Action)
 import Layout.DeadKey (DeadKey(DeadKey), __dkName)
 import PresetDeadKey (PresetDeadKey, presetDeadKeyToDeadKey)
 import WithPlus (WithPlus(..))
+import qualified WithPlus as WP
 
 data Letter
     = Char Char
@@ -258,3 +260,13 @@ filterKeyOnShiftstatesM p key = do
 
 filterKeyOnShiftstates ∷ (Shiftstate → Bool) → Key → Key
 filterKeyOnShiftstates p = runIdentity ∘ filterKeyOnShiftstatesM (pure ∘ p)
+
+addCapslock ∷ Key → Key
+addCapslock key
+  | any (M.CapsLock ∈) (view _shiftstates key) = key
+  | otherwise = over _letters (⧺ newLetters) ∘ over _shiftstates (⧺ newStates) $ key
+  where
+    newStates = map (⊕ WP.singleton M.CapsLock) (view _shiftstates key)
+    newLetters
+      | view _capslock key = map (getLetter key) newStates
+      | otherwise = view _letters key

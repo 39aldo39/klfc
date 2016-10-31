@@ -12,6 +12,7 @@ data FileType
     | Xkb
     | Pkl
     | Klc
+    | Keylayout
     deriving (Eq, Show, Read, Enum, Bounded)
 
 typeAndString ∷ [(FileType, String)]
@@ -20,6 +21,7 @@ typeAndString =
     , (Xkb, "XKB")
     , (Pkl, "PKL")
     , (Klc, "KLC")
+    , (Keylayout, "keylayout")
     ]
 
 instance HumanReadable FileType where

@@ -29,6 +29,7 @@ import System.IO (hPutStrLn, stderr)
 import FileType (FileType(..))
 import JsonComments (removeJsonComments)
 import JsonPretty (Config(Config), encodePretty')
+import Keylayout (printKeylayout, toKeylayout)
 import Klc (printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
 import Layout.Layout (isEmptyLayout, layoutOrd, layoutDelims, applyModLayout, removeEmptyLetters, unifyShiftstates)
@@ -69,10 +70,11 @@ execOptions (Options _ [] _ _) = error "no input files."
 execOptions o@(Options Nothing (Standard:_) _ _) = execOptions o { __inputType = Just Json}
 execOptions o@(Options Nothing (File fname:_) _ _) =
   case takeExtension fname of
-    ".json" → execOptions o { __inputType = Just Json }
-    ""      → execOptions o { __inputType = Just Xkb }
-    ".ini"  → execOptions o { __inputType = Just Pkl }
-    ".klc"  → execOptions o { __inputType = Just Klc }
+    ".json"      → execOptions o { __inputType = Just Json }
+    ""           → execOptions o { __inputType = Just Xkb }
+    ".ini"       → execOptions o { __inputType = Just Pkl }
+    ".klc"       → execOptions o { __inputType = Just Klc }
+    ".keylayout" → execOptions o { __inputType = Just Keylayout }
     xs → error ("unknown layout type ‘" ⊕ xs ⊕ "’.")
 execOptions o@(Options _ _ [] _) = execOptions o { __outputs = [Output Json Standard] }
 execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ do
@@ -85,6 +87,7 @@ input Json = parseWith (\fname → bimap ((fname ⊕ ": ") ⊕) pure ∘ eitherD
 input Xkb = parseWith parseXkbLayout
 input Pkl = parseWith parsePklLayout
 input Klc = parseWith parseKlcLayout
+input Keylayout = error "importing from a keylayout file is not supported"
 
 parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger (FileType → Layout))) →
     Stream → LoggerT IO (FileType → Layout)
@@ -109,6 +112,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Xkb (dir </> "xkb")
     output' Pkl (dir </> "pkl")
     output' Klc (dir </> "klc")
+    output' Keylayout (dir </> "keylayout")
 output (Output Json stream) _ = ($ Json) >>>
     liftIO ∘ writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (error "XKB as output must be written to a directory")
@@ -161,6 +165,15 @@ output (Output Klc (File dir)) _ = ($ Klc) >>> \layout → do
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
         printIOLogger (fname layout') (printKlcData <$> toKlcData layout')
+output (Output Keylayout Standard) _ = ($ Keylayout) >>>
+    printIOLoggerStream Standard ∘ fmap printKeylayout ∘ toKeylayout
+output (Output Keylayout (File dir)) _ = ($ Keylayout) >>> \layout → do
+    let name = view (_info ∘ _name) layout
+    when (null name) (error "the layout has an empty name when exported to keylayout")
+    let fname l = dir </> view (_info ∘ _name) l <.> "keylayout"
+    forM_ ((∅) : view _mods layout) $ \layoutMod → do
+        let layout' = applyModLayout layoutMod layout
+        printIOLogger (fname layout') (printKeylayout <$> toKeylayout layout')
 
 defPklFile, defXkbLocal, defXkbSystem ∷ B.ByteString
 defPklFile   = $(embedFile "files/pkl.exe")
@@ -232,6 +245,7 @@ parseOutput = asum
     , Output Xkb <$> streamOption (long "xkb" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a XKB directory")
     , Output Pkl <$> streamOption (long "pkl" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a PKL directory")
     , Output Klc <$> streamOption (long "klc" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a KLC directory (‘-’ for printing the base layout to stdout)")
+    , Output Keylayout <$> streamOption (long "keylayout" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a keylayout directory (‘-’ for printing the base layout to stdout)")
     , OutputAll <$> streamOption (long "output" ⊕ short 'o' ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to all file types")
     ]
 
