@@ -37,7 +37,7 @@
         { "pos": "K", "letters": [ "k", "K" ] },
         { "pos": "L", "letters": [ "l", "L" ] },
         { "pos": ";", "letters": [ ";", ":" ] },
-        { "pos": "'", "letters": [ "'", "\"" ] }
+        { "pos": "'", "letters": [ "'", "\"" ] },
         { "pos": "Z", "letters": [ "z", "Z" ] },
         { "pos": "X", "letters": [ "x", "X" ] },
         { "pos": "C", "letters": [ "c", "C" ] },
