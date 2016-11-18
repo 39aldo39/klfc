@@ -1,3 +1,5 @@
+// AZERTY layout used in France
+// https://en.wikipedia.org/wiki/Azerty
 {
     "shiftstates": [ "None", "Shift", "AltGr" ],
     "keys": [

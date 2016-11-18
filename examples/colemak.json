@@ -1,3 +1,5 @@
+// Base Colemak layout
+// https://colemak.com
 {
     "fullName": "Colemak",
     "name": "colemak",

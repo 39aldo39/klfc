@@ -1,10 +1,12 @@
+// Colemak AltGr layer
+// https://colemak.com/Multilangual
 {
     "singletonKeys": [
         [ "Alt_R", "AltGr" ]
     ],
-    "shiftstates": [ [ "AltGr" ], [ "Shift", "AltGr" ] ],
+    "shiftstates": [ "AltGr", "Shift+AltGr" ],
     "keys": [
-        { "pos": "~", "letters": [ "tilde", "~" ] },
+        { "pos": "~", "letters": [ "tilde", "" ] },
         { "pos": "1", "letters": [ "¡", "¹" ] },
         { "pos": "2", "letters": [ "º", "²" ] },
         { "pos": "3", "letters": [ "ª", "³" ] },
@@ -21,7 +23,7 @@
         { "pos": "W", "letters": [ "å", "Å" ] },
         { "pos": "E", "letters": [ "ã", "Ã" ] },
         { "pos": "R", "letters": [ "ø", "Ø" ] },
-        { "pos": "T", "letters": [ "ogonek", "~" ] },
+        { "pos": "T", "letters": [ "ogonek", "" ] },
         { "pos": "Y", "letters": [ "đ", "Đ" ] },
         { "pos": "U", "letters": [ "ł", "Ł" ] },
         { "pos": "I", "letters": [ "ú", "Ú" ] },
@@ -29,29 +31,52 @@
         { "pos": "P", "letters": [ "ö", "Ö" ] },
         { "pos": "[", "letters": [ "«", "‹" ] },
         { "pos": "]", "letters": [ "»", "›" ] },
-        { "pos": "\\", "letters": [ "~", "~" ] },
+        { "pos": "\\", "letters": [ "cdk:special", "" ] },
         { "pos": "A", "letters": [ "á", "Á" ] },
-        { "pos": "S", "letters": [ "grave", "~" ] },
-        { "pos": "D", "letters": [ "ß", "~" ] },
+        { "pos": "S", "letters": [ "grave", "" ] },
+        { "pos": "D", "letters": [ "ß", "" ] },
         { "pos": "F", "letters": [ "acute", "doubleacute" ] },
-        { "pos": "G", "letters": [ "diaeresis", "~" ] },
-        { "pos": "H", "letters": [ "caron", "~" ] },
+        { "pos": "G", "letters": [ "diaeresis", "" ] },
+        { "pos": "H", "letters": [ "caron", "" ] },
         { "pos": "J", "letters": [ "ñ", "Ñ" ] },
         { "pos": "K", "letters": [ "é", "É" ] },
         { "pos": "L", "letters": [ "í", "Í" ] },
         { "pos": ";", "letters": [ "ó", "Ó" ] },
         { "pos": "'", "letters": [ "õ", "Õ" ] },
-        { "pos": "Iso", "letters": [ "–", "—" ] },
+        { "pos": "Iso", "letters": [ "", "" ] },
         { "pos": "Z", "letters": [ "æ", "Æ" ] },
-        { "pos": "X", "letters": [ "circumflex", "~" ] },
+        { "pos": "X", "letters": [ "circumflex", "" ] },
         { "pos": "C", "letters": [ "ç", "Ç" ] },
         { "pos": "V", "letters": [ "œ", "Œ" ] },
-        { "pos": "B", "letters": [ "breve", "~" ] },
-        { "pos": "N", "letters": [ "abovering", "~" ] },
-        { "pos": "M", "letters": [ "macron", "~" ] },
-        { "pos": ",", "letters": [ "cedilla", "~" ] },
-        { "pos": ".", "letters": [ "abovedot", "~" ] },
-        { "pos": "/", "letters": [ "¿", "~" ] },
+        { "pos": "B", "letters": [ "breve", "" ] },
+        { "pos": "N", "letters": [ "abovering", "" ] },
+        { "pos": "M", "letters": [ "macron", "" ] },
+        { "pos": ",", "letters": [ "cedilla", "" ] },
+        { "pos": ".", "letters": [ "abovedot", "" ] },
+        { "pos": "/", "letters": [ "¿", "" ] },
         { "pos": "space", "letters": [ " ", " " ] }
+    ],
+    "customDeadKeys": [
+        {
+            "name": "special",
+            "stringMap": [
+                [ "c", "©" ],
+                [ "r", "®" ],
+                [ "t", "™" ],
+                [ "d", "°" ],
+                [ "m", "µ" ],
+                [ "n", "№" ],
+                [ "p", "¶" ],
+                [ "s", "§" ],
+                [ ".", "…" ],
+                [ "+", "±" ],
+                [ "=", "≠" ],
+                [ "<", "≤" ],
+                [ ">", "≥" ],
+                [ "~", "≈" ],
+                [ "%", "‰" ],
+                [ "|", "¦" ]
+            ]
+        }
     ]
 }

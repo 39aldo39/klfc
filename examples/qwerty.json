@@ -1,3 +1,5 @@
+// QWERTY (US version)
+// https://en.wikipedia.org/wiki/QWERTY#United_States
 {
     "shiftstates": [ "None", "Shift" ],
     "keys": [
