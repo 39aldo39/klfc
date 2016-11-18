@@ -28,8 +28,8 @@ printCustomDeadKeys ∷ Layout → [String]
 printCustomDeadKeys = concatMap (concatMap printCustomDeadKey ∘ view _letters) ∘ view _keys
 
 printCustomDeadKey ∷ Letter → [String]
-printCustomDeadKey (CustomDead _ (DeadKey _ (Just c) lMap)) =
-    [] : printCombinations (map (over _1 (c :)) lMap)
+printCustomDeadKey (CustomDead _ (DeadKey name (Just c) lMap)) =
+    [] : "# Dead key: " ⊕ name : printCombinations (map (over _1 (c :)) lMap)
 printCustomDeadKey _ = []
 
 printCombinations ∷ [([Char], String)] → [String]
