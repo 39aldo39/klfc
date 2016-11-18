@@ -581,7 +581,7 @@ actionAndLinuxAction =
     , (A.Extend, Symbol "ISO_Level5_Shift")
     , (A.NumLock, Symbol "Num_Lock")
     , (A.NumLock, LockMods "Num_Lock" [M.NumLock])
-    , (A.CapsLock, Symbol "Caps_Lock")
+    , (A.CapsLock, LockMods "Caps_Lock" [M.CapsLock])
     , (A.Insert, Symbol "Insert")
     , (A.Delete, Symbol "Delete")
     , (A.Home, Symbol "Home")
