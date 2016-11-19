@@ -11,7 +11,7 @@ import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
 import Data.List.Unicode ((∖))
-import Util
+import Util (show', (>$>), groupSortWith, tellMaybeT)
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
@@ -83,7 +83,7 @@ toKeylayout' layout = removeEmptyElementsInside ∘ unode "keyboard" ∘ (,)
     deadKeys = nub (concatMap (mapMaybe letterToDeadKey ∘ view _letters) keys)
     deadKeysToActions =
         concatMap deadKeyToActions >>>
-        groupWith' fst >>>
+        groupSortWith fst >>>
         over (traverse ∘ _2 ∘ traverse) snd >>>
         map (\(s, elms) → (s, emptyAction s : elms)) >>>
         map (unode "action" ∘ over _1 ((:[]) ∘ attr "id"))

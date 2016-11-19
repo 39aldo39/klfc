@@ -110,8 +110,11 @@ split p (x:xs)
   | p x = [] :| toList (split p xs)
   | otherwise = let y :| ys = split p xs in (x:y) :| ys
 
-groupWith' ∷ Ord β ⇒ (α → β) → [α] → [(β, [α])]
-groupWith' f = map (\(x:|xs) → (f x, x:xs)) ∘ NE.groupBy ((≡) `on` f) ∘ sortWith f
+groupWith' ∷ Eq β ⇒ (α → β) → [α] → [(β, [α])]
+groupWith' f = map (\(x:|xs) → (f x, x:xs)) ∘ NE.groupBy ((≡) `on` f)
+
+groupSortWith ∷ Ord β ⇒ (α → β) → [α] → [(β, [α])]
+groupSortWith f = groupWith' f ∘ sortWith f
 
 replace ∷ Eq α ⇒ α → α → [α] → [α]
 replace y y' = map (\x → bool x y' (x ≡ y))
