@@ -39,7 +39,7 @@ Filter
 
 The `filter` attribute causes the current layout file to only be active at certain outputs. This is useful when a few outputs support a feature, and the absence of that feature at the other outputs causes undesired behavior.
 
-A filter starts with `only` or `no`, followed by a list of outputs, separated with a comma or a space, for example `no KLC,PKL` A filter of the form `only outputs` causes the layout to only be active for the outputs in `outputs`. A filter of the form `no outputs` causes the layout to only be active for the outputs not in `outputs`. The supported outputs are `JSON`, `XKB`, `PKL` and `KLC`.
+A filter starts with `only` or `no`, followed by a list of outputs, separated with a comma or a space, for example `no KLC,PKL` A filter of the form `only outputs` causes the layout to only be active for the outputs in `outputs`. A filter of the form `no outputs` causes the layout to only be active for the outputs not in `outputs`. The supported outputs are `JSON`, `XKB`, `PKL`, `KLC` and `keylayout`.
 
 Shiftstates
 -----------
