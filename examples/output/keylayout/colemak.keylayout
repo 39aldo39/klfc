@@ -137,7 +137,7 @@
       <key code="21" output="$" />
       <key code="23" action="%" />
       <key code="22" output="^" />
-      <key code="26" output="&amp;" />
+      <key code="26" output="&#38;" />
       <key code="28" output="*" />
       <key code="25" output="(" />
       <key code="29" output=")" />
@@ -166,7 +166,7 @@
       <key code="40" action="E" />
       <key code="37" action="I" />
       <key code="41" action="O" />
-      <key code="39" output="&quot;" />
+      <key code="39" output="&#34;" />
       <key code="50" output="_" />
       <key code="6" action="Z" />
       <key code="7" action="X" />
@@ -175,8 +175,8 @@
       <key code="11" action="B" />
       <key code="45" action="K" />
       <key code="46" action="M" />
-      <key code="43" action="&lt;" />
-      <key code="47" action="&gt;" />
+      <key code="43" action="&#60;" />
+      <key code="47" action="&#62;" />
       <key code="44" output="?" />
       <key code="49" action=" " />
       <key code="53" output="&#27;" />
@@ -513,7 +513,7 @@
       <key code="21" output="$" />
       <key code="23" action="%" />
       <key code="22" output="^" />
-      <key code="26" output="&amp;" />
+      <key code="26" output="&#38;" />
       <key code="28" output="*" />
       <key code="25" output="(" />
       <key code="29" output=")" />
@@ -542,7 +542,7 @@
       <key code="40" action="e" />
       <key code="37" action="i" />
       <key code="41" action="o" />
-      <key code="39" output="&quot;" />
+      <key code="39" output="&#34;" />
       <key code="50" output="_" />
       <key code="6" action="z" />
       <key code="7" action="x" />
@@ -551,8 +551,8 @@
       <key code="11" action="b" />
       <key code="45" action="k" />
       <key code="46" action="m" />
-      <key code="43" action="&lt;" />
-      <key code="47" action="&gt;" />
+      <key code="43" action="&#60;" />
+      <key code="47" action="&#62;" />
       <key code="44" output="?" />
       <key code="49" action=" " />
       <key code="53" output="&#27;" />
@@ -831,7 +831,7 @@
       <when state="none" output=" " />
       <when state="dead:grave" output="`" />
       <when state="dead:acute" output="&#39;" />
-      <when state="dead:diaeresis" output="&quot;" />
+      <when state="dead:diaeresis" output="&#34;" />
       <when state="dead:circumflex" output="^" />
     </action>
     <action id="%">
@@ -846,16 +846,16 @@
       <when state="none" output="." />
       <when state="dead:special" output="…" />
     </action>
-    <action id="&lt;">
-      <when state="none" output="&lt;" />
+    <action id="&#60;">
+      <when state="none" output="&#60;" />
       <when state="dead:special" output="≤" />
     </action>
     <action id="=">
       <when state="none" output="=" />
       <when state="dead:special" output="≠" />
     </action>
-    <action id="&gt;">
-      <when state="none" output="&gt;" />
+    <action id="&#62;">
+      <when state="none" output="&#62;" />
       <when state="dead:special" output="≥" />
     </action>
     <action id="A">
