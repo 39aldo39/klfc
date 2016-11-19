@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternGuards #-}
 
 module Keylayout
@@ -15,7 +16,7 @@ import Util
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
 import qualified Data.ByteString.Lazy as BL (ByteString)
-import qualified Data.Text.Lazy as L (pack)
+import qualified Data.Text.Lazy as L (Text, pack, replace)
 import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, over, _1, _2)
 import Text.XML.Light
@@ -47,12 +48,20 @@ attr ∷ String → String → Attr
 attr = Attr ∘ unqual
 
 printKeylayout ∷ Element → BL.ByteString
-printKeylayout = L.encodeUtf8 ∘ L.pack ∘ (header ⊕) ∘ (⊕ "\n") ∘ ppElement
+printKeylayout = L.encodeUtf8 ∘ xmlEntitiesToNumeric ∘ L.pack ∘ (header ⊕) ∘ (⊕ "\n") ∘ ppElement
   where
     header = unlines
         [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
         , "<!DOCTYPE keyboard SYSTEM \"file://localhost/System/Library/DTDs/KeyboardLayout.dtd\">"
         ]
+
+xmlEntitiesToNumeric ∷ L.Text → L.Text
+xmlEntitiesToNumeric =
+    L.replace "&quot;" "&#34;" >>>
+    L.replace "&amp;"  "&#38;" >>>
+    L.replace "&apos;" "&#39;" >>>
+    L.replace "&lt;"   "&#60;" >>>
+    L.replace "&gt;"   "&#62;"
 
 toKeylayout ∷ Layout → Logger Element
 toKeylayout = prepareLayout >=> toKeylayout'
