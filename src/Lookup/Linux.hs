@@ -253,7 +253,7 @@ posAndScancode =
     , (P.Enter, 0x1C)
 
     , (P.Shift_L, 0x2A)
-    , (P.Iso, 0x46)
+    , (P.Iso, 0x56)
     , (P.Z, 0x2C)
     , (P.X, 0x2D)
     , (P.C, 0x2E)
