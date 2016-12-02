@@ -38,7 +38,7 @@ import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
 import Stream (Stream(..), toFname, ReadStream(..), WriteStream(..))
-import Xkb (XkbConfig(XkbConfig), printSymbols, printTypes, printKeycodes, printXCompose, parseXkbLayout)
+import Xkb (XkbConfig(XkbConfig), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
 
 data Options = Options
     { __inputType ∷ Maybe FileType
@@ -84,19 +84,24 @@ execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ 
 
 input ∷ FileType → Stream → LoggerT IO (FileType → Layout)
 input Json = parseWith (\fname → bimap ((fname ⊕ ": ") ⊕) pure ∘ eitherDecode ∘ removeJsonComments)
-input Xkb = parseWith parseXkbLayout >$> const
+input Xkb =
+    getFileAndVariant ∘ toFname >>> (\(fname, variant) →
+    parseWith' (parseXkbLayoutVariant variant) (File fname)) >$> const
 input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
 input Keylayout = error "importing from a keylayout file is not supported"
 
 parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger β)) →
     Stream → LoggerT IO β
-parseWith parser stream = flip ($) stream $
+parseWith = parseWith' ∘ fmap3 (mapWriterT (pure ∘ runIdentity))
+  where fmap3 = fmap ∘ fmap ∘ fmap
+
+parseWith' ∷ ReadStream α ⇒ (String → α → Either String (LoggerT IO β)) →
+    Stream → LoggerT IO β
+parseWith' parser stream = flip ($) stream $
     liftIO ∘ readStream >=>
     parser (toFname stream) >>>
-    either
-      (error ∘ ("parse error in " ⊕) ∘ dropWhileEnd (≡'\n'))
-      (mapWriterT (pure ∘ runIdentity))
+    either (error ∘ ("parse error in " ⊕) ∘ dropWhileEnd (≡'\n')) id
 
 output ∷ Output → [ExtraOption] → (FileType → Layout) → LoggerT IO ()
 output (OutputAll Standard) _ = const (error "everything as output must be written to a directory")
