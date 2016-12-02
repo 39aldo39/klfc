@@ -14,11 +14,10 @@ import Util (parseString, (>$>), lookupR)
 import Control.Monad.Writer (tell)
 import Data.Functor.Compose (Compose(..), getCompose)
 import qualified Data.Text.Lazy as L (Text)
-import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1)
+import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1, _Left)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Text.Lazy (Parser)
 
-import FileType (FileType)
 import Layout.Key (Key(Key))
 import Layout.Layout (Layout(Layout))
 import Layout.Types
@@ -225,7 +224,7 @@ emptyLine = spacing <* eol
 emptyOrCommentLines ∷ Parser [String]
 emptyOrCommentLines = many (try emptyLine <|> try comment)
 
-parseKlcLayout ∷ String → L.Text → Either String (Logger (FileType → Layout))
+parseKlcLayout ∷ String → L.Text → Either String (Logger Layout)
 parseKlcLayout fname =
     parse (emptyOrCommentLines *> layout <* eof) fname >>>
-    bimap parseErrorPretty (fmap const)
+    over _Left parseErrorPretty

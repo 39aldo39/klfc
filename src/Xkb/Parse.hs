@@ -10,11 +10,10 @@ import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.Writer (tell)
 import qualified Data.Text.Lazy as L (Text)
-import Lens.Micro.Platform (set, over, _2)
+import Lens.Micro.Platform (set, over, _2, _Left)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Text.Lazy (Parser)
 
-import FileType (FileType)
 import Layout.Key (Key(Key))
 import qualified Layout.Modifier as M
 import Layout.Types
@@ -185,12 +184,12 @@ boolean ∷ Parser Bool
 boolean = True <$ (string' "true" <|> string' "yes" <|> string' "on")
    <|> False <$ (string' "false" <|> string' "no" <|> string' "off")
 
-parseXkbLayout ∷ String → L.Text → Either String (Logger (FileType → Layout))
+parseXkbLayout ∷ String → L.Text → Either String (Logger Layout)
 parseXkbLayout fname =
     parse layout fname >>>
-    bimap parseErrorPretty (fmap const)
+    over _Left parseErrorPretty
 
-parseXkbLayouts ∷ String → L.Text → Either String (Logger (FileType → [Layout]))
+parseXkbLayouts ∷ String → L.Text → Either String (Logger [Layout])
 parseXkbLayouts fname =
     parse (many layout <* eof) fname >>> fmap sequence >>>
-    bimap parseErrorPretty (fmap const)
+    over _Left parseErrorPretty

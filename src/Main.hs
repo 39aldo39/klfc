@@ -5,7 +5,7 @@
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', replace, filterOnIndex)
+import Util (show', replace, filterOnIndex, (>$>))
 
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans (liftIO)
@@ -84,13 +84,13 @@ execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ 
 
 input ∷ FileType → Stream → LoggerT IO (FileType → Layout)
 input Json = parseWith (\fname → bimap ((fname ⊕ ": ") ⊕) pure ∘ eitherDecode ∘ removeJsonComments)
-input Xkb = parseWith parseXkbLayout
-input Pkl = parseWith parsePklLayout
-input Klc = parseWith parseKlcLayout
+input Xkb = parseWith parseXkbLayout >$> const
+input Pkl = parseWith parsePklLayout >$> const
+input Klc = parseWith parseKlcLayout >$> const
 input Keylayout = error "importing from a keylayout file is not supported"
 
-parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger (FileType → Layout))) →
-    Stream → LoggerT IO (FileType → Layout)
+parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger β)) →
+    Stream → LoggerT IO β
 parseWith parser stream = flip ($) stream $
     liftIO ∘ readStream >=>
     parser (toFname stream) >>>

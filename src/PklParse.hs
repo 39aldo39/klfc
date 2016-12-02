@@ -12,11 +12,10 @@ import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Writer (tell)
 import qualified Data.Text.Lazy as L (Text)
-import Lens.Micro.Platform (set)
+import Lens.Micro.Platform (set, over, _Left)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Text.Lazy (Parser)
 
-import FileType (FileType)
 import qualified Layout.Action as A
 import Layout.Key (Key(Key))
 import Layout.Layout (Layout(Layout))
@@ -218,7 +217,7 @@ emptyLine = spacing <* eol
 emptyOrCommentLines ∷ Parser [String]
 emptyOrCommentLines = many (try emptyLine <|> comment)
 
-parsePklLayout ∷ String → L.Text → Either String (Logger (FileType → Layout))
+parsePklLayout ∷ String → L.Text → Either String (Logger Layout)
 parsePklLayout fname =
     parse (emptyOrCommentLines *> layout <* eof) fname >>>
-    bimap parseErrorPretty (fmap const)
+    over _Left parseErrorPretty
