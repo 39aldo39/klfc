@@ -1,5 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -35,9 +37,10 @@ module Layout.Layout
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, privateChars, mconcatMapM)
+import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, groupWith', privateChars, mconcatMapM)
 
 import Control.Monad.State (evalState)
+import Control.Monad.Writer (Writer, runWriter, tell)
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON, fieldLabelModifier, omitNothingFields)
 import Data.Aeson.Types (Parser)
@@ -46,7 +49,7 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T (Text, unpack)
 import Data.Text.Lazy.Builder (Builder)
-import Lens.Micro.Platform (Lens', view, set, over, makeLenses)
+import Lens.Micro.Platform (Lens', view, set, over, makeLenses, _2)
 
 import FileType (FileType)
 import Filter (Filter(..))
@@ -145,13 +148,46 @@ instance ToJSON Layout where
         fromValue x _           = x
 
 toJSON' ∷ [Key] → Value
-toJSON' keys =
-  case NE.groupBy ((≡) `on` view _shiftstates) keys of
-    []   → object []
-    [ks] → keysToJSON ks
-    kss  → object ["keysWithShiftstates" .= map keysToJSON kss]
+toJSON' =
+    groupWith' (view _shiftstates) >>>
+    set (traverse ∘ _2 ∘ traverse ∘ _shiftstates) [] >>>
+    whileChange (combineKeysOnShiftstates >=> removeSingleShiftstates) >>>
+    \case
+      []   → object []
+      [ks] → keysToJSON ks
+      kss  → object ["keysWithShiftstates" .= map keysToJSON kss]
   where
-    keysToJSON (k :| ks) = object ["shiftstates" .= view _shiftstates k, "keys" .= toJSON (k:ks)]
+    keysToJSON (shiftstates, ks) = object ["shiftstates" .= shiftstates, "keys" .= toJSON ks]
+
+    whileChange ∷ (α → Writer Any α) → α → α
+    whileChange g x = bool x (whileChange g gx) change
+      where (gx, Any change) = runWriter (g x)
+
+    shiftstatesUnion ∷ [Shiftstate] → [Shiftstate] → Maybe [Shiftstate]
+    shiftstatesUnion state1 state2
+      | state1 `isPrefixOf` state2 = Just state2
+      | state2 `isPrefixOf` state1 = Just state1
+      | otherwise = Nothing
+
+    combineKeysOnShiftstates ∷ [([Shiftstate], [Key])] → Writer Any [([Shiftstate], [Key])]
+    combineKeysOnShiftstates [] = pure []
+    combineKeysOnShiftstates [x] = pure [x]
+    combineKeysOnShiftstates (x1@(state1,keys1) : x2@(state2,keys2) : xs) =
+      case shiftstatesUnion state1 state2 of
+        Just state →
+            tell (Any True) *>
+            combineKeysOnShiftstates ((state, keys1 ⧺ keys2) : xs)
+        Nothing → (x1 :) <$> combineKeysOnShiftstates (x2 : xs)
+
+    removeSingleShiftstates ∷ [([Shiftstate], [Key])] → Writer Any [([Shiftstate], [Key])]
+    removeSingleShiftstates [] = pure []
+    removeSingleShiftstates ((state1,keys1) : (state2,keys2) : (state3,keys3) : xs)
+      | Just state13 ← shiftstatesUnion state1 state3
+      , null (drop 1 keys2)
+      = tell (Any True) *>
+        removeSingleShiftstates ((state13, keys1 ⧺ keys2' ⧺ keys3) : xs)
+      where keys2' = set (traverse ∘ _shiftstates) state2 keys2
+    removeSingleShiftstates (x:xs) = (x :) <$> removeSingleShiftstates xs
 
 instance FromJSON (FileType → Layout) where
     parseJSON = withObject "layout" $ \o → do

@@ -185,9 +185,10 @@ capslockGuess ∷ [Letter] → Bool
 capslockGuess = (listToMaybe >=> letterToChar >$> isAlpha) >>> fromMaybe False
 
 instance ToJSON Key where
-    toJSON (Key pos maybeShortcutPos _ letters maybeCapslock) = object $
+    toJSON (Key pos maybeShortcutPos shiftstates letters maybeCapslock) = object $
         [ "pos"         .= pos ] ⧺
         [ "shortcutPos" .= shortcutPos | shortcutPos ← maybeToList maybeShortcutPos ] ⧺
+        [ "shiftstates" .= shiftstates | not (null shiftstates) ] ⧺
         [ "letters"     .= letters     | not (null letters) ] ⧺
         [ "capslock"    .= capslock    | capslock ← maybeToList maybeCapslock ]
 
