@@ -183,7 +183,7 @@ printAction layout pos shiftstate (Action a) = fromMaybe e $
     removeRed = mapReaderT (mapWriter (over _2 (map (removeSubList "red:"))))
     e = "NoAction()" <$ tell [show' a ⊕ " is not supported in XKB"]
 printAction layout pos shiftstate r@(Redirect rMods rPos) = do
-    extraClearedMods ← bool [M.Extend] [] <$> asks __redirectIfExtend
+    extraClearedMods ← bool [M.Extend] [] <$> asks __redirectClearsExtend
     let addMods   = rMods ∖ mods
     let clearMods = mods ∖ (rMods ⧺ extraClearedMods)
     let emptyMods = null addMods ∧ null clearMods

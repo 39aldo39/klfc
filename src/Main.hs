@@ -28,7 +28,7 @@ import System.IO (hPutStrLn, stderr)
 
 import FileType (FileType(..))
 import JsonComments (removeJsonComments)
-import JsonPretty (Config(Config), encodePretty')
+import JsonPretty (Config(..), encodePretty')
 import Keylayout (printKeylayout, toKeylayout)
 import Klc (printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
@@ -38,7 +38,7 @@ import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
 import Stream (Stream(..), toFname, ReadStream(..), WriteStream(..))
-import Xkb (XkbConfig(XkbConfig), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
+import Xkb (XkbConfig(..), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
 
 data Options = Options
     { __inputType ∷ Maybe FileType
@@ -62,7 +62,7 @@ data ExtraOption
 
     | XkbCustomShortcuts
     | XkbRedirectAll
-    | XkbRedirectIfExtend
+    | XkbRedirectClearsExtend
     deriving (Eq, Show, Read)
 
 execOptions ∷ Options → IO ()
@@ -124,7 +124,7 @@ output (Output Xkb Standard) _ = const (error "XKB as output must be written to 
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (error "the layout has an empty name when exported to XKB")
-    let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectIfExtend ∈) extraOptions
+    let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
     printIOLogger (dir </> "symbols" </> name) (runReaderT (printSymbols layout) xkbConfig)
     printIOLogger (dir </> "types" </> name) (runReaderT (printTypes layout) xkbConfig)
     printIOLogger (dir </> "keycodes" </> name) (printKeycodes layout)
@@ -268,9 +268,11 @@ parsePklOption =
 
 parseXkbOption ∷ Parser ExtraOption
 parseXkbOption = asum
-    [ flag' XkbCustomShortcuts (long "xkb-custom-shortcut-positions" ⊕ hidden ⊕ help "Use the shortcut positions from the ‘shortcutPos’ attributes for shortcuts in XKB")
+    [ flag' XkbCustomShortcuts (long "xkb-custom-shortcuts" ⊕ hidden ⊕ help "Use the shortcut positions from the ‘shortcutPos’ attributes for shortcuts in XKB")
+    , flag' XkbCustomShortcuts (long "xkb-custom-shortcut-positions" ⊕ hidden)
     , flag' XkbRedirectAll (long "xkb-redirect-all" ⊕ hidden ⊕ help "Always use the ‘redirect’ action in XKB, if possible. This may help some programs detect special actions on different layers.")
-    , flag' XkbRedirectIfExtend (long "xkb-redirect-if-extend" ⊕ hidden ⊕ help "Always use the ‘redirect’ action in XKB if the extend modifier (LevelFive) is active, if possible. This may help some programs detect special actions on the extend layer.")
+    , flag' XkbRedirectClearsExtend (long "xkb-redirect-clears-extend" ⊕ hidden ⊕ help "Clear the extend modifier (LevelFive) in redirect actions. This may help some programs detect special actions on the extend layer.")
+    , flag' XkbRedirectClearsExtend (long "xkb-redirect-if-extend" ⊕ hidden)
     ]
 
 usageText ∷ String → Parser ()

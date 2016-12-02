@@ -22,7 +22,7 @@ import PresetLayout (defaultKeys, defaultFullLayout)
 data XkbConfig = XkbConfig
     { __addShortcuts ∷ Bool
     , __redirectAllXkb ∷ Bool
-    , __redirectIfExtend ∷ Bool
+    , __redirectClearsExtend ∷ Bool
     }
 
 prepareLayout ∷ Layout → Reader XkbConfig Layout

@@ -71,13 +71,12 @@ Usage
 ##### PKL #####
     --pkl-compact            Set PKL to compact mode
 ##### XKB #####
-    --xkb-custom-shortcut-positions
-                             Use the shortcut positions from the ‘shortcutPos’
+    --xkb-custom-shortcuts   Use the shortcut positions from the ‘shortcutPos’
                              attributes for shortcuts in XKB
     --xkb-redirect-all       Always use the ‘redirect’ action in XKB, if possible.
                              This may help some programs detect special actions on
                              different layers.
-    --xkb-redirect-if-extend Always use the ‘redirect’ action in XKB if the extend
-                             modifier (LevelFive) is active, if possible. This may
-                             help some programs detect special actions on the
-                             extend layer.
+    --xkb-redirect-clears-extend
+                             Clear the extend modifier (LevelFive) in redirect
+                             actions. This may help some programs detect special
+                             actions on the extend layer.
