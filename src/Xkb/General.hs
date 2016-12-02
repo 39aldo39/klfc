@@ -29,7 +29,7 @@ prepareLayout ∷ Layout → Reader XkbConfig Layout
 prepareLayout layout =
     (\addShortcuts →
     over _keys
-        ( bool id (over traverse addShortcutLetters) addShortcuts >>>
+        ( bool id (map addShortcutLetters) addShortcuts >>>
           setNullChars
         ) (addDefaultKeys defaultKeys layout)
     ) <$> asks __addShortcuts
