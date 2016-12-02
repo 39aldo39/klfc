@@ -107,7 +107,7 @@ actions = char '[' *> ws *> action `sepBy` comma <* char ']' <* ws
 action ∷ Parser (String, String)
 action = liftA2 (,)
          (some alphaNumChar)
-         (char '(' *> many (alphaNumChar <|> oneOf "_,+-=<>!") <* char ')' <* ws)
+         (char '(' *> many (alphaNumChar <|> oneOf " _,+-=<>!") <* char ')' <* ws)
 
 comma ∷ Parser ()
 comma = char ',' *> ws *> pure ()
