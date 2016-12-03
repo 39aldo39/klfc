@@ -32,7 +32,7 @@ module Layout.Key
 import BasePrelude
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
-import Data.Monoid.Unicode ((⊕))
+import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
 import Util (HumanReadable(..), lensWithDefault, expectedKeys, (!?), (>$>), combineWithOn, nubWithOn, split)
 
@@ -173,17 +173,17 @@ data Key = Key
 makeLenses ''Key
 _shortcutPos ∷ Lens' Key Pos
 _shortcutPos = lensWithDefault guess (\y x → x {keyShortcutPos = y}) keyShortcutPos
-  where guess = liftA2 shortcutPosGuess __pos __letters
+  where guess = liftA2 shortcutPosGuess __pos id
 _capslock ∷ Lens' Key Bool
 _capslock = lensWithDefault guess (\y x → x {keyCapslock = y}) keyCapslock
-  where guess = capslockGuess ∘ __letters
+  where guess = capslockGuess
 
-shortcutPosGuess ∷ Pos → [Letter] → Pos
+shortcutPosGuess ∷ Pos → Key → Pos
 shortcutPosGuess p =
-    (listToMaybe >=> letterToChar >=> toUpper >>> (:[]) >>> parseString) >>> fromMaybe p
+    (flip getLetter (∅) >>> letterToChar >=> toUpper >>> (:[]) >>> parseString) >>> fromMaybe p
 
-capslockGuess ∷ [Letter] → Bool
-capslockGuess = (listToMaybe >=> letterToChar >$> isAlpha) >>> fromMaybe False
+capslockGuess ∷ Key → Bool
+capslockGuess = (flip getLetter (∅) >>> letterToChar >$> isAlpha) >>> fromMaybe False
 
 instance ToJSON Key where
     toJSON (Key pos maybeShortcutPos shiftstates letters maybeCapslock) = object $

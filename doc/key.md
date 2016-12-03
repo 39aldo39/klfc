@@ -52,7 +52,7 @@ Shortcut position
 
 The `shortcutPos` attribute corresponds to the position used in shortcuts. If `qwertyShortcuts` is `true`, it will be set to the QWERTY location.
 
-By default, the shortcut position will be the (QWERTY) position of the first character. If the first character has no corresponding position, the shortcut position will be the same as the normal position.
+By default, the shortcut position will be the (QWERTY) position of the default letter. That is, the letter that is typed when no modifier is pressed. If the default letter has no corresponding position, the shortcut position will be the same as the normal position.
 
 Letters
 -------
@@ -79,7 +79,7 @@ Caps Lock
 
 The `capslock` attribute corresponds to the influence of the Caps Lock state. If `capslock` is `true` and Caps Lock is active, the pressed letter will be capitalized. If `capslock` is `false`, the Caps Lock state will be ignored.
 
-By default, Caps Lock will be set iff the first letter is an alphabetic character.
+By default, Caps Lock will be set iff the default letter is an alphabetic character. The default letter is the letter that is types when no modifiers are pressed.
 
 Filter
 ------
