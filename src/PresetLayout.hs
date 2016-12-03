@@ -4,6 +4,7 @@ module PresetLayout
     ( defaultLayout
     , defaultFullLayout
     , defaultKeys
+    , defaultFullKeys
     , defaultMacKeys
     ) where
 
@@ -23,13 +24,13 @@ defaultLayout ∷ Layout
 defaultLayout = Layout (∅) (∅) (∅) defaultKeys
 
 defaultFullLayout ∷ Layout
-defaultFullLayout = Layout (∅) (∅) (∅) (qwertyKeys ⧺ defaultKeysFull)
+defaultFullLayout = Layout (∅) (∅) (∅) (qwertyKeys ⧺ defaultFullKeys)
 
 defaultKeys ∷ [Key]
-defaultKeys = map (filterKeyOnShiftstates null) defaultKeysFull
+defaultKeys = map (filterKeyOnShiftstates null) defaultFullKeys
 
-defaultKeysFull ∷ [Key]
-defaultKeysFull =
+defaultFullKeys ∷ [Key]
+defaultFullKeys =
     [ Key P.Esc Nothing [(∅)] [Action A.Esc] Nothing
     , Key P.F1 Nothing [(∅)] [Action A.F1] Nothing
     , Key P.F2 Nothing [(∅)] [Action A.F2] Nothing
