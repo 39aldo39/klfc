@@ -156,13 +156,13 @@ The supported actions are:
 * `Button_SetDefault_R`
 * `WheelUp`
 * `WheelDown`
-* `WheelRight`
 * `WheelLeft`
+* `WheelRight`
 * `MouseEnable`
-* `MouseLeft`
-* `MouseRight`
 * `MouseUp`
 * `MouseDown`
+* `MouseLeft`
+* `MouseRight`
 * `MouseUpLeft`
 * `MouseUpRight`
 * `MouseDownLeft`

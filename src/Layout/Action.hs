@@ -57,9 +57,9 @@ data Action
     | Button_DoubleClick_Default | Button_DoubleClick_L | Button_DoubleClick_M | Button_DoubleClick_R
     | Button_Drag_Default | Button_Drag_L | Button_Drag_M | Button_Drag_R
     | Button_SetDefault_Next | Button_SetDefault_Prev | Button_SetDefault_L | Button_SetDefault_M | Button_SetDefault_R
-    | WheelUp | WheelDown | WheelRight | WheelLeft
+    | WheelUp | WheelDown | WheelLeft | WheelRight
     | MouseEnable
-    | MouseLeft | MouseRight | MouseUp | MouseDown
+    | MouseUp | MouseDown | MouseLeft | MouseRight
     | MouseUpLeft | MouseUpRight | MouseDownLeft | MouseDownRight
 
     -- Numpad
