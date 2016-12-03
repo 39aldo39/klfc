@@ -3,15 +3,17 @@
 {-# LANGUAGE PatternGuards #-}
 
 module Keylayout
-    ( printKeylayout
+    ( KeylayoutConfig(..)
+    , printKeylayout
     , toKeylayout
     ) where
 
 import BasePrelude
 import Prelude.Unicode
-import Data.Monoid.Unicode ((⊕))
+import Data.Monoid.Unicode ((∅), (⊕))
 import Data.List.Unicode ((∖))
 import Util (show', (>$>), groupSortWith, tellMaybeT)
+import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
@@ -22,14 +24,20 @@ import Lens.Micro.Platform (view, over, _1, _2)
 import Text.XML.Light
 
 import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey)
-import Layout.Layout (addDefaultKeys, addDefaultKeysWith, unifyShiftstates)
+import Layout.Layout (addDefaultKeys, addDefaultKeysWith, unifyShiftstates, getLetterByPosAndShiftstate)
+import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.MacOS (modifierAndString, posAndCode, actionAndChar)
 import PresetDeadKey (presetDeadKeyToDeadKey)
-import PresetLayout (defaultKeys, defaultMacKeys)
+import PresetLayout (defaultKeys, defaultFullLayout, defaultMacKeys)
 
-prepareLayout ∷ Layout → Logger Layout
-prepareLayout =
+data KeylayoutConfig = KeylayoutConfig
+    { __addShortcuts ∷ Bool
+    }
+
+prepareLayout ∷ KeylayoutConfig → Layout → Logger Layout
+prepareLayout KeylayoutConfig{__addShortcuts = addShortcuts} =
+    over (_keys ∘ traverse) (bool id addShortcutLetters addShortcuts) >>>
     addDefaultKeysWith const defaultMacKeys >>>
     addDefaultKeys defaultKeys >>>
     (_keys ∘ traverse)
@@ -43,6 +51,14 @@ supportedModifier ∷ Modifier → Logger Bool
 supportedModifier modifier
   | modifier ∈ map fst modifierAndString = pure True
   | otherwise = False <$ tell [show' modifier ⊕ " is not supported in keylayout"]
+
+addShortcutLetters ∷ Key → Key
+addShortcutLetters key | WP.singleton M.Win ∈ view _shiftstates key = key
+addShortcutLetters key = fromMaybe key $
+    over _shiftstates (WP.singleton M.Win :) <$>
+    _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultFullLayout) ∘ pure) key
+  where
+    shortcutPos = view _shortcutPos key
 
 attr ∷ String → String → Attr
 attr = Attr ∘ unqual
@@ -63,8 +79,8 @@ xmlEntitiesToNumeric =
     L.replace "&lt;"   "&#60;" >>>
     L.replace "&gt;"   "&#62;"
 
-toKeylayout ∷ Layout → Logger Element
-toKeylayout = prepareLayout >=> toKeylayout'
+toKeylayout ∷ KeylayoutConfig → Layout → Logger Element
+toKeylayout config = prepareLayout config >=> toKeylayout'
 
 toKeylayout' ∷ Layout → Logger Element
 toKeylayout' layout = removeEmptyElementsInside ∘ unode "keyboard" ∘ (,)

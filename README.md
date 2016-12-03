@@ -80,3 +80,7 @@ Usage
                              Clear the extend modifier (LevelFive) in redirect
                              actions. This may help some programs detect special
                              actions on the extend layer.
+##### Keylayout #####
+    --keylayout-custom-shortcuts
+                             Use the shortcut positions from the ‘shortcutPos’
+                             attributes for shortcuts in keylayout

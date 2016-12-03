@@ -29,7 +29,7 @@ import System.IO (hPutStrLn, stderr)
 import FileType (FileType(..))
 import JsonComments (removeJsonComments)
 import JsonPretty (Config(..), encodePretty')
-import Keylayout (printKeylayout, toKeylayout)
+import Keylayout (KeylayoutConfig(..), printKeylayout, toKeylayout)
 import Klc (printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
 import Layout.Layout (isEmptyLayout, layoutOrd, layoutDelims, applyModLayout, removeEmptyLetters, unifyShiftstates)
@@ -63,6 +63,8 @@ data ExtraOption
     | XkbCustomShortcuts
     | XkbRedirectAll
     | XkbRedirectClearsExtend
+
+    | KeylayoutCustomShortcuts
     deriving (Eq, Show, Read)
 
 execOptions ∷ Options → IO ()
@@ -170,15 +172,17 @@ output (Output Klc (File dir)) _ = ($ Klc) >>> \layout → do
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
         printIOLogger (fname layout') (printKlcData <$> toKlcData layout')
-output (Output Keylayout Standard) _ = ($ Keylayout) >>>
-    printIOLoggerStream Standard ∘ fmap printKeylayout ∘ toKeylayout
-output (Output Keylayout (File dir)) _ = ($ Keylayout) >>> \layout → do
+output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>> do
+    let keylayoutConfig = KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)
+    printIOLoggerStream Standard ∘ fmap printKeylayout ∘ toKeylayout keylayoutConfig
+output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (error "the layout has an empty name when exported to keylayout")
+    let keylayoutConfig = KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "keylayout"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
-        printIOLogger (fname layout') (printKeylayout <$> toKeylayout layout')
+        printIOLogger (fname layout') (printKeylayout <$> toKeylayout keylayoutConfig layout')
 
 defPklFile, defXkbLocal, defXkbSystem ∷ B.ByteString
 defPklFile   = $(embedFile "files/pkl.exe")
@@ -229,6 +233,7 @@ options = Options
             [ parseExtraOption
             , helpHeader "\b\bPKL:" *> parsePklOption
             , helpHeader "\b\bXKB:" *> parseXkbOption
+            , helpHeader "\b\bKeylayout:" *> parseKeylayoutOption
             ]
         )
 
@@ -274,6 +279,10 @@ parseXkbOption = asum
     , flag' XkbRedirectClearsExtend (long "xkb-redirect-clears-extend" ⊕ hidden ⊕ help "Clear the extend modifier (LevelFive) in redirect actions. This may help some programs detect special actions on the extend layer.")
     , flag' XkbRedirectClearsExtend (long "xkb-redirect-if-extend" ⊕ hidden)
     ]
+
+parseKeylayoutOption ∷ Parser ExtraOption
+parseKeylayoutOption =
+    flag' KeylayoutCustomShortcuts (long "keylayout-custom-shortcuts" ⊕ hidden ⊕ help "Use the shortcut positions from the ‘shortcutPos’ attributes for shortcuts in keylayout")
 
 usageText ∷ String → Parser ()
 usageText s = option disabled (value () ⊕ metavar s)
