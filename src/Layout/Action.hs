@@ -90,18 +90,18 @@ instance FromJSON Action where
 
 toModifier ∷ Action → Maybe Modifier
 toModifier Shift = Just M.Shift
-toModifier Shift_L = Just M.Shift
-toModifier Shift_R = Just M.Shift
+toModifier Shift_L = Just M.Shift_L
+toModifier Shift_R = Just M.Shift_R
 toModifier CapsLock = Just M.CapsLock
 toModifier Win = Just M.Win
-toModifier Win_L = Just M.Win
-toModifier Win_R = Just M.Win
+toModifier Win_L = Just M.Win_L
+toModifier Win_R = Just M.Win_R
 toModifier Alt = Just M.Alt
-toModifier Alt_L = Just M.Alt
-toModifier Alt_R = Just M.Alt
+toModifier Alt_L = Just M.Alt_L
+toModifier Alt_R = Just M.Alt_R
 toModifier Control = Just M.Control
-toModifier Control_L = Just M.Control
-toModifier Control_R = Just M.Control
+toModifier Control_L = Just M.Control_L
+toModifier Control_R = Just M.Control_R
 toModifier NumLock = Just M.NumLock
 toModifier AltGr = Just M.AltGr
 toModifier Extend = Just M.Extend

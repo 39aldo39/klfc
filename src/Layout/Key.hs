@@ -43,12 +43,13 @@ import Data.Aeson
 import Data.Functor.Identity (runIdentity)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NE (init, last)
+import Data.Set (Set)
 import qualified Data.Set as S
 import Lens.Micro.Platform (Lens', makeLenses, view, set, over, _2)
 
 import FileType (FileType)
 import Filter (Filter(..))
-import Layout.Modifier (Modifier, Shiftstate)
+import Layout.Modifier (Modifier, Shiftstate, activatedBy)
 import qualified Layout.Modifier as M
 import Layout.Pos (Pos)
 import Layout.Action (Action)
@@ -239,9 +240,9 @@ getLetter key = fromMaybe LNothing ∘
 getLevel ∷ [Shiftstate] → Shiftstate → Maybe (Int, Shiftstate)
 getLevel states (WithPlus mods) = over _2 WithPlus <$> getLevel' states mods
 
-getLevel' ∷ [Shiftstate] → S.Set Modifier → Maybe (Int, S.Set Modifier)
+getLevel' ∷ [Shiftstate] → Set Modifier → Maybe (Int, Set Modifier)
 getLevel' states mods =
-  case elemIndex (WithPlus mods) states of
+  case findIndex (activatedBy mods) states of
     Just i  → Just (i, mods S.∩ S.fromList M.controlMods)
     Nothing → reducedLevel
   where

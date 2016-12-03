@@ -57,6 +57,10 @@ The supported modifiers are:
 * `AltGr`
 * `Extend`
 
+For the Shift, Win, Alt and Control modifiers, also 'left' and 'right' versions are supported. These are denoted by appending a `_L` or `_R` (for example, `Shift_L` and `Shift_R`). When such modifier is used, only the modifier at the right side will activate the specified layer.
+
+For the outputs for macOS, the Win modifier is equivalent to the Command key.
+
 While Caps Lock is supported, it is rarely used, since the `capslock` attribute at keys is more useful and better supported.
 
 Keys

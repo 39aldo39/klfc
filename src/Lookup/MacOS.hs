@@ -1,6 +1,10 @@
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 
 module Lookup.MacOS where
+
+import BasePrelude
+import Prelude.Unicode
+import Data.List.Unicode ((∖))
 
 import Layout.Types
 import qualified Layout.Action as A
@@ -10,11 +14,42 @@ import qualified Layout.Pos as P
 modifierAndString ∷ [(Modifier, String)]
 modifierAndString =
     [ (M.Shift, "anyShift")
+    , (M.Shift_L, "shift")
+    , (M.Shift_R, "rightShift")
     , (M.CapsLock, "caps")
+    , (M.Alt, "anyOption")
+    , (M.Alt_L, "option")
+    , (M.Alt_R, "rightOption")
     , (M.AltGr, "anyOption")
     , (M.Control, "anyControl")
+    , (M.Control_L, "control")
+    , (M.Control_R, "rightControl")
     , (M.Win, "command")
     ]
+
+usedModifiers ∷ Modifier → [Modifier]
+usedModifiers M.Shift = [M.Shift, M.Shift_L, M.Shift_R]
+usedModifiers M.Shift_L = [M.Shift, M.Shift_L]
+usedModifiers M.Shift_R = [M.Shift, M.Shift_R]
+usedModifiers M.Alt = [M.Alt, M.Alt_L, M.Alt_R, M.AltGr]
+usedModifiers M.Alt_L = [M.Alt, M.Alt_L]
+usedModifiers M.Alt_R = [M.Alt, M.Alt_R, M.AltGr]
+usedModifiers M.AltGr = [M.Alt, M.Alt_L, M.Alt_R, M.AltGr]
+usedModifiers M.Control = [M.Control, M.Control_L, M.Control_R]
+usedModifiers M.Control_L = [M.Control, M.Control_L]
+usedModifiers M.Control_R = [M.Control, M.Control_R]
+usedModifiers modifier = [modifier]
+
+removeDoubleModifiers ∷ [Modifier] → [Modifier]
+removeDoubleModifiers =
+    ifContainsRemove M.Shift [M.Shift_L, M.Shift_R] >>>
+    ifContainsRemove M.Alt [M.Alt_L, M.Alt_R, M.AltGr] >>>
+    ifContainsRemove M.AltGr [M.Alt, M.Alt_L, M.Alt_R] >>>
+    ifContainsRemove M.Control [M.Control_L, M.Control_R]
+  where
+    ifContainsRemove modifier modifiersToRemove mods
+        | modifier ∈ mods = mods ∖ modifiersToRemove
+        | otherwise = mods
 
 posAndCode ∷ [(Pos, Int)]
 posAndCode =

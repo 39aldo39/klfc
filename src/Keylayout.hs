@@ -27,7 +27,7 @@ import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey)
 import Layout.Layout (addDefaultKeys, addDefaultKeysWith, unifyShiftstates, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import Layout.Types
-import Lookup.MacOS (modifierAndString, posAndCode, actionAndChar)
+import Lookup.MacOS
 import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultKeys, defaultFullLayout, defaultMacKeys)
 
@@ -131,7 +131,8 @@ toModifierMap states = unode "modifierMap" ∘ (,)
     zipWith toKeyMapSelect [0..] $ map (toModifiers (ignored states)) states
   where
     ignored =
-        (map fst modifierAndString ∖) ∘ concatMap toList >>>
+        (map fst modifierAndString ∖) ∘ concatMap (concatMap usedModifiers ∘ toList) >>>
+        removeDoubleModifiers >>>
         mapMaybe (`lookup` modifierAndString) >>>
         map (⊕ "?")
 
