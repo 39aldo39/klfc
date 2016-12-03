@@ -2,14 +2,18 @@
 
 module Layout.Action
     ( Action(..)
+    , toModifier
     , isModifier
     ) where
 
-import BasePrelude
+import BasePrelude hiding (Alt, Control)
 import Prelude.Unicode
 import Util (HumanReadable(..))
 
 import Data.Aeson (ToJSON, FromJSON, toJSON, parseJSON)
+
+import Layout.Modifier (Modifier)
+import qualified Layout.Modifier as M
 
 data Action
     -- Top row
@@ -84,5 +88,24 @@ instance ToJSON Action where
 instance FromJSON Action where
     parseJSON = hrParseJSON
 
+toModifier ∷ Action → Maybe Modifier
+toModifier Shift = Just M.Shift
+toModifier Shift_L = Just M.Shift
+toModifier Shift_R = Just M.Shift
+toModifier CapsLock = Just M.CapsLock
+toModifier Win = Just M.Win
+toModifier Win_L = Just M.Win
+toModifier Win_R = Just M.Win
+toModifier Alt = Just M.Alt
+toModifier Alt_L = Just M.Alt
+toModifier Alt_R = Just M.Alt
+toModifier Control = Just M.Control
+toModifier Control_L = Just M.Control
+toModifier Control_R = Just M.Control
+toModifier NumLock = Just M.NumLock
+toModifier AltGr = Just M.AltGr
+toModifier Extend = Just M.Extend
+toModifier _ = Nothing
+
 isModifier ∷ Action → Bool
-isModifier = (∈ [Shift .. NumLock])
+isModifier = isJust ∘ toModifier
