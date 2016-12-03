@@ -21,6 +21,7 @@ module Layout.Layout
     , _mods
     , _keys
     , isEmptyLayout
+    , addSingletonKeysAsKeys
     , setNullChars
     , layoutOrd
     , layoutDelims
@@ -120,6 +121,13 @@ nubSingletonKeys = nubWithOn (\(pos,l) ks → (pos, NE.last (l :| map snd ks))) 
 
 combineSingletonKeys ∷ [SingletonKey] → [SingletonKey] → [SingletonKey]
 combineSingletonKeys = combineWithOn (\(pos,l) ks → (pos, NE.last (l :| map snd ks))) fst
+
+addSingletonKeysAsKeys ∷ Layout → Layout
+addSingletonKeysAsKeys layout = set _singletonKeys [] $
+    over _keys (⧺ map singletonKeyToKey (view _singletonKeys layout)) layout
+  where
+    singletonKeyToKey (pos, letter) = Key pos Nothing [(∅)] [letter] Nothing
+
 
 unifyShiftstates ∷ [Key] → ([Key], [Shiftstate])
 unifyShiftstates = flip map <*> setStates ∘ states &&& states
