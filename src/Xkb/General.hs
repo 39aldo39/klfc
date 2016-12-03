@@ -40,7 +40,7 @@ supportedShiftstate = fmap and ∘ traverse supportedModifier ∘ toList
 supportedModifier ∷ Modifier → Logger Bool
 supportedModifier modifier
     | modifier ∈ map fst modifierAndLevelstring = pure True
-    | otherwise = False <$ tell ["the modifier " ⊕ show' modifier ⊕ " is not supported in XKB"]
+    | otherwise = False <$ tell [show' modifier ⊕ " is not supported in XKB"]
 
 addShortcutLetters ∷ Key → Key
 addShortcutLetters key | WP.singleton M.Control ∈ view _shiftstates key = key
