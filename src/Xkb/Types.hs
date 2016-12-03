@@ -131,10 +131,11 @@ getType' key mods = Type
     , __typeMods   = mods
     , __maps       = zip subMods levels
     , __preserves  = filter (not ∘ null ∘ snd) (zip subMods ignoredMods)
-    , __levelNames = zip [0..] (map (showLevel ∘ toList) (view _shiftstates key))
+    , __levelNames = zip [0..] (map (showLevel ∘ toList) states)
     }
   where
     showLevel [] = "Base"
     showLevel xs = concatMap show xs
     subMods = map WithPlus (subsets mods)
-    (levels, ignoredMods) = unzip (mapMaybe (getLevel key) subMods)
+    states = view _shiftstates key
+    (levels, ignoredMods) = unzip (mapMaybe (getLevel states) subMods)

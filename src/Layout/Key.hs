@@ -234,24 +234,24 @@ setDefaultShiftstates states key
 
 getLetter ∷ Key → Shiftstate → Letter
 getLetter key = fromMaybe LNothing ∘
-    (getLevel key >=> (view _letters key !?) ∘ fst)
+    (getLevel (view _shiftstates key) >=> (view _letters key !?) ∘ fst)
 
-getLevel ∷ Key → Shiftstate → Maybe (Int, Shiftstate)
-getLevel key (WithPlus mods) = over _2 WithPlus <$> getLevel' key mods
+getLevel ∷ [Shiftstate] → Shiftstate → Maybe (Int, Shiftstate)
+getLevel states (WithPlus mods) = over _2 WithPlus <$> getLevel' states mods
 
-getLevel' ∷ Key → S.Set Modifier → Maybe (Int, S.Set Modifier)
-getLevel' key mods =
-  case elemIndex (WithPlus mods) (view _shiftstates key) of
+getLevel' ∷ [Shiftstate] → S.Set Modifier → Maybe (Int, S.Set Modifier)
+getLevel' states mods =
+  case elemIndex (WithPlus mods) states of
     Just i  → Just (i, mods S.∩ S.fromList M.controlMods)
     Nothing → reducedLevel
   where
     reducedLevel
       | null mods = Nothing
       | M.CapsLock ∈ mods = over _2 (S.delete M.Shift) <$>
-          getLevel' key (mods S.∆ S.fromList [M.Shift, M.CapsLock])
+          getLevel' states (mods S.∆ S.fromList [M.Shift, M.CapsLock])
       | otherwise = ($ mods) $
           S.deleteFindMin >>>
-          sequence ∘ (S.insert *** getLevel' key) >$>
+          sequence ∘ (S.insert *** getLevel' states) >$>
           uncurry (over _2)
 
 filterKeyOnShiftstatesM ∷ Monad m ⇒ (Shiftstate → m Bool) → Key → m Key
