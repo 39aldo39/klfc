@@ -11,7 +11,7 @@
     ],
     "keysWithShiftstates": [
         {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend" ],
+            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
             "keys": [
                 { "pos": "~", "letters": [ "`", "~", "tilde", "", "MouseEnable" ] },
                 { "pos": "1", "letters": [ "1", "!", "¡", "¹", "F1" ] },
@@ -26,18 +26,8 @@
                 { "pos": "0", "letters": [ "0", ")", "’", "”", "F10" ] },
                 { "pos": "-", "letters": [ "-", "_", "–", "—", "F11" ] },
                 { "pos": "+", "letters": [ "=", "+", "×", "÷", "F12" ] },
-                { "pos": "Q", "letters": [ "q", "Q", "ä", "Ä", "Esc" ] }
-            ]
-        },
-        {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
-            "keys": [
-                { "pos": "W", "letters": [ "w", "W", "å", "Å", "WheelUp", "WheelRight" ] }
-            ]
-        },
-        {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend" ],
-            "keys": [
+                { "pos": "Q", "letters": [ "q", "Q", "ä", "Ä", "Esc" ] },
+                { "pos": "W", "letters": [ "w", "W", "å", "Å", "WheelUp", "WheelRight" ] },
                 { "pos": "E", "letters": [ "f", "F", "ã", "Ã", "Browser_Back" ] },
                 { "pos": "R", "letters": [ "p", "P", "ø", "Ø", "Browser_Forward" ] },
                 { "pos": "T", "letters": [ "g", "G", "ogonek", "", "MouseUp" ] },
@@ -47,30 +37,10 @@
                 { "pos": "O", "letters": [ "y", "Y", "ü", "Ü", "End" ] },
                 { "pos": "P", "letters": [ ";", ":", "ö", "Ö", "Delete" ] },
                 { "pos": "[", "letters": [ "[", "{", "«", "‹", "Esc" ] },
-                { "pos": "]", "letters": [ "]", "}", "»", "›", "Insert" ] }
-            ]
-        },
-        {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
-            "keys": [
-                { "pos": "\\", "letters": [ "\\", "|", "cdk:special", "", "Browser_Favorites", "MyComputer" ] }
-            ]
-        },
-        {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend" ],
-            "keys": [
-                { "pos": "A", "letters": [ "a", "A", "á", "Á", "Alt" ] }
-            ]
-        },
-        {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
-            "keys": [
-                { "pos": "S", "letters": [ "r", "R", "grave", "", "WheelDown", "WheelLeft" ] }
-            ]
-        },
-        {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend" ],
-            "keys": [
+                { "pos": "]", "letters": [ "]", "}", "»", "›", "Insert" ] },
+                { "pos": "\\", "letters": [ "\\", "|", "cdk:special", "", "Browser_Favorites", "MyComputer" ] },
+                { "pos": "A", "letters": [ "a", "A", "á", "Á", "Alt" ] },
+                { "pos": "S", "letters": [ "r", "R", "grave", "", "WheelDown", "WheelLeft" ] },
                 { "pos": "D", "letters": [ "s", "S", "ß", "", "Shift" ] },
                 { "pos": "F", "letters": [ "t", "T", "acute", "doubleacute", "Control" ] },
                 { "pos": "G", "letters": [ "d", "D", "diaeresis", "", "MouseDown" ] },
@@ -100,14 +70,9 @@
             ]
         },
         {
-            "shiftstates": [ "Extend" ],
-            "keys": [
-                { "pos": "Escape", "letters": [ "CapsLock" ] }
-            ]
-        },
-        {
             "shiftstates": [ "Extend", "Shift+Extend" ],
             "keys": [
+                { "pos": "Escape", "letters": [ "CapsLock" ] },
                 { "pos": "F1", "letters": [ "PlayPause", "AudioPause" ] },
                 { "pos": "F2", "letters": [ "Previous", "AudioRewind" ] },
                 { "pos": "F3", "letters": [ "Next", "AudioForward" ] },
