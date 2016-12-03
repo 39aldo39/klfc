@@ -24,7 +24,7 @@ import Lens.Micro.Platform (view, over, _1, _2)
 import Text.XML.Light
 
 import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey)
-import Layout.Layout (addDefaultKeys, addDefaultKeysWith, unifyShiftstates, getLetterByPosAndShiftstate)
+import Layout.Layout
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.MacOS
@@ -38,6 +38,7 @@ data KeylayoutConfig = KeylayoutConfig
 prepareLayout ∷ KeylayoutConfig → Layout → Logger Layout
 prepareLayout KeylayoutConfig{__addShortcuts = addShortcuts} =
     over (_keys ∘ traverse) (bool id addShortcutLetters addShortcuts) >>>
+    addSingletonKeysAsKeys >>>
     addDefaultKeysWith const defaultMacKeys >>>
     addDefaultKeys defaultKeys >>>
     (_keys ∘ traverse)
