@@ -81,6 +81,7 @@
       <key code="47" action="." />
       <key code="44" output="/" />
       <key code="49" action=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -179,6 +180,7 @@
       <key code="47" action="&#62;" />
       <key code="44" output="?" />
       <key code="49" action=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -276,6 +278,7 @@
       <key code="47" action="dead:abovedot" />
       <key code="44" output="¿" />
       <key code="49" action=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -359,6 +362,7 @@
       <key code="8" output="Ç" />
       <key code="9" output="Œ" />
       <key code="49" output=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -457,6 +461,7 @@
       <key code="47" action="." />
       <key code="44" output="/" />
       <key code="49" action=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -555,6 +560,7 @@
       <key code="47" action="&#62;" />
       <key code="44" output="?" />
       <key code="49" action=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -643,6 +649,7 @@
       <key code="47" action="dead:abovedot" />
       <key code="44" output="¿" />
       <key code="49" action=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
@@ -735,6 +742,7 @@
       <key code="45" action="dead:abovering" />
       <key code="46" action="dead:macron" />
       <key code="49" output=" " />
+      <key code="57" output="&#8;" />
       <key code="53" output="&#27;" />
       <key code="122" output="&#16;" />
       <key code="120" output="&#16;" />
