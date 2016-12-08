@@ -240,7 +240,7 @@ options = Options
 parseInputType ∷ Parser FileType
 parseInputType = asum
     [ flag' Json (long "from-json" ⊕ hidden ⊕ help "Read from a JSON file")
-    , flag' Xkb (long "from-xkb" ⊕ hidden ⊕ help "Import from a XKB symbols file")
+    , flag' Xkb (long "from-xkb" ⊕ hidden ⊕ help "Import from a XKB symbols file. To read a variant, append it in parenthesis (e.g. to read the Colemak variant of the us symbols file, use \"us(colemak)\").")
     , flag' Pkl (long "from-pkl" ⊕ hidden ⊕ help "Import from a PKL layout file")
     , flag' Klc (long "from-klc" ⊕ hidden ⊕ help "Import from a KLC file")
     ]

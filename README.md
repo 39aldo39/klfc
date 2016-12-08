@@ -35,7 +35,9 @@ Usage
 
 #### Import types ####
     --from-json              Read from a JSON file
-    --from-xkb               Import from a XKB symbols file
+    --from-xkb               Import from a XKB symbols file. To read a variant,
+                             append it in parenthesis (e.g. to read the Colemak
+                             variant of the us symbols file, use "us(colemak)").
     --from-pkl               Import from a PKL layout file
     --from-klc               Import from a KLC file
 
