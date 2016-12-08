@@ -8,7 +8,7 @@ module Xkb.Parse where
 import BasePrelude hiding (try)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (parseString, lookupR, whenNothing)
+import Util (parseString, lookupR, whenNothing, (>$>))
 import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.Trans (liftIO)
@@ -212,8 +212,7 @@ getFileAndVariant fname = (dir </> file, variant)
 parseXkbLayoutVariant ∷ String → FilePath → L.Text → Either String (LoggerT IO Layout)
 parseXkbLayoutVariant variant fname =
     parse (many (layout (takeDirectory fname)) <* eof) fname >>>
-    over _Left parseErrorPretty >=>
-    noLayoutWithName ∘ lookup variant
+    over _Left parseErrorPretty >$>
+    fromMaybe unknownVariant ∘ lookup variant
   where
-    --noLayoutWithName = maybe (Left $ fname ⊕ ": unknown layout variant ‘" ⊕ variant ⊕ "’") pure
-    noLayoutWithName = maybe (Right $ (∅) <$ tell [fname ⊕ ": unknown layout variant ‘" ⊕ variant ⊕ "’"]) pure
+    unknownVariant = (∅) <$ tell [fname ⊕ ": unknown layout variant ‘" ⊕ variant ⊕ "’"]
