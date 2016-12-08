@@ -57,9 +57,10 @@ addShortcutLetters ∷ Key → Key
 addShortcutLetters key | WP.singleton M.Win ∈ view _shiftstates key = key
 addShortcutLetters key = fromMaybe key $
     over _shiftstates (WP.singleton M.Win :) <$>
-    _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultFullLayout) ∘ pure) key
+    _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultLayout) ∘ pure) key
   where
     shortcutPos = view _shortcutPos key
+    defaultLayout = defaultFullLayout ⊕ Layout (∅) (∅) (∅) defaultMacKeys
 
 attr ∷ String → String → Attr
 attr = Attr ∘ unqual
