@@ -27,7 +27,6 @@ import Layout.Key (Key(Key))
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux
-import Xkb.Types (isCapslock)
 
 layout ∷ FilePath → Parser (String, LoggerT IO Layout)
 layout dir = liftA2 (,)
@@ -58,14 +57,10 @@ key = do
     letters ← fromMaybe [] ∘ asum <$> xkbLetters `sepBy` comma
     let shiftstates' = shiftstates letters
     let letters' = catMaybes letters
-    let capslock' = Just ∘ isCapslock' ∘ catMaybes $ letters
     void $ char '}' *> ws *> char ';' *> ws
     case pos of
         Left  s → Nothing <$ tell [s]
-        Right p → pure ∘ Just $ Key p Nothing shiftstates' letters' capslock'
-  where
-    isCapslock' (x:x':_) = isCapslock x x'
-    isCapslock' _        = False
+        Right p → pure ∘ Just $ Key p Nothing shiftstates' letters' Nothing
 
 shiftstates ∷ [Maybe Letter] → [Shiftstate]
 shiftstates = catMaybes ∘ zipWith (<$)
