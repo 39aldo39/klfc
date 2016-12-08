@@ -17,7 +17,7 @@ import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.IO as L
 import Lens.Micro.Platform (set, over, _2, _Left)
 import System.Directory (doesFileExist)
-import System.FilePath ((</>), takeDirectory, splitFileName)
+import System.FilePath ((</>), splitFileName)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Prim (MonadParsec)
 import qualified Text.Megaparsec.String as S (Parser)
@@ -40,7 +40,7 @@ xkbLine ∷ FilePath → Parser (LoggerT IO Layout)
 xkbLine dir = pure (∅) <$ keySetting
     <|> fmap (flip (set _keys) (∅) ∘ maybeToList) ∘ writer <$> runWriterT key
     <|> include dir
-    <|> pure (∅) <$ groupName
+    <|> pure ∘ flip (set (_info ∘ _fullName)) (∅) <$> groupName
     <|> pure (∅) <$ modifierMap
     <|> pure (∅) <$ virtualModifiers
 
@@ -140,7 +140,7 @@ parseLetter xs = whenNothing (tell ["unknown letter ‘" ⊕ xs ⊕ "’"]) $
          ]
 
 include ∷ FilePath → Parser (LoggerT IO Layout)
-include dir = getInclude dir <$>
+include dir = fmap (set _info (∅)) ∘ getInclude dir <$>
     (string' "include" *> ws *> char '"' *> some (noneOf "\"") <* char '"' <* ws)
 
 getInclude ∷ FilePath → String → LoggerT IO Layout
@@ -211,8 +211,13 @@ getFileAndVariant fname = (dir </> file, variant)
 
 parseXkbLayoutVariant ∷ String → FilePath → L.Text → Either String (LoggerT IO Layout)
 parseXkbLayoutVariant variant fname =
-    parse (many (layout (takeDirectory fname)) <* eof) fname >>>
+    parse (many (layout dir) <* eof) fname >>>
     over _Left parseErrorPretty >$>
-    fromMaybe unknownVariant ∘ lookup variant
+    fromMaybe unknownVariant ∘ lookup variant >$>
+    set (_info ∘ _name) (file ⧺ variant')
   where
+    (dir, file) = splitFileName fname
+    variant'
+      | variant ≡ "basic" = ""
+      | otherwise = '-' : variant
     unknownVariant = (∅) <$ tell [fname ⊕ ": unknown layout variant ‘" ⊕ variant ⊕ "’"]
