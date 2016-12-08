@@ -1,7 +1,7 @@
 // Extend layout based on DreymaR's Extend mappings
 // https://forum.colemak.com/topic/2014-extend-extra-extreme/
 {
-    "filter": "no klc",
+    "filter": "no klc,keylayout",
     "singletonKeys": [
         [ "CapsLock", "Extend" ]
     ],
