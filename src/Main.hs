@@ -68,7 +68,7 @@ data ExtraOption
     deriving (Eq, Show, Read)
 
 execOptions ∷ Options → IO ()
-execOptions (Options _ [] _ _) = error "no input files."
+execOptions (Options _ [] _ _) = fail "no input files."
 execOptions o@(Options Nothing (Standard:_) _ _) = execOptions o { __inputType = Just Json}
 execOptions o@(Options Nothing (File fname:_) _ _) =
   case takeExtension fname of
@@ -77,7 +77,7 @@ execOptions o@(Options Nothing (File fname:_) _ _) =
     ".ini"       → execOptions o { __inputType = Just Pkl }
     ".klc"       → execOptions o { __inputType = Just Klc }
     ".keylayout" → execOptions o { __inputType = Just Keylayout }
-    xs → error ("unknown layout type ‘" ⊕ xs ⊕ "’.")
+    xs → fail ("unknown layout type ‘" ⊕ xs ⊕ "’.")
 execOptions o@(Options _ _ [] _) = execOptions o { __outputs = [Output Json Standard] }
 execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ do
     layout' ← mconcat <$> traverse (input inputType) inputs
@@ -91,7 +91,7 @@ input Xkb =
     parseWith' (parseXkbLayoutVariant variant) (File fname)) >$> const
 input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
-input Keylayout = error "importing from a keylayout file is not supported"
+input Keylayout = fail "importing from a keylayout file is not supported"
 
 parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger β)) →
     Stream → LoggerT IO β
@@ -103,17 +103,17 @@ parseWith' ∷ ReadStream α ⇒ (String → α → Either String (LoggerT IO β
 parseWith' parser stream = flip ($) stream $
     liftIO ∘ readStream >=>
     parser (toFname stream) >>>
-    either (error ∘ ("parse error in " ⊕) ∘ dropWhileEnd (≡'\n')) id
+    either (fail ∘ ("parse fail in " ⊕) ∘ dropWhileEnd (≡'\n')) id
 
 output ∷ Output → [ExtraOption] → (FileType → Layout) → LoggerT IO ()
-output (OutputAll Standard) _ = const (error "everything as output must be written to a directory")
+output (OutputAll Standard) _ = const (fail "everything as output must be written to a directory")
 output (OutputAll (File dir)) extraOptions = \layout → do
     let name = view (_info ∘ _name) ∘ layout
     let output' t fname
           | isEmptyLayout (layout t) = tell ["ignoring empty layout for " ⊕ show' t]
           | otherwise = output (Output t (File fname)) extraOptions layout
     let fnameJson
-          | null (name Json) = error "the layout has an empty name when exported to JSON"
+          | null (name Json) = fail "the layout has an empty name when exported to JSON"
           | otherwise = name Json
     output' Json (dir </> fnameJson <.> "json")
     output' Xkb (dir </> "xkb")
@@ -122,10 +122,10 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Keylayout (dir </> "keylayout")
 output (Output Json stream) _ = ($ Json) >>>
     liftIO ∘ writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
-output (Output Xkb Standard) _ = const (error "XKB as output must be written to a directory")
+output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the layout has an empty name when exported to XKB")
+    when (null name) (fail "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
     printIOLogger (dir </> "symbols" </> name) (runReaderT (printSymbols layout) xkbConfig)
     printIOLogger (dir </> "types" </> name) (runReaderT (printTypes layout) xkbConfig)
@@ -145,10 +145,10 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     makeExecutable fname =
         getPermissions fname >>=
         setPermissions fname ∘ setOwnerExecutable True
-output (Output Pkl Standard) _ = const (error "PKL as output must be written to a directory")
+output (Output Pkl Standard) _ = const (fail "PKL as output must be written to a directory")
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the layout has an empty name when exported to PKL")
+    when (null name) (fail "the layout has an empty name when exported to PKL")
     let isCompact = PklCompact ∈ extraOptions
     today ← liftIO $ formatTime defaultTimeLocale "%F %T" <$> getCurrentTime
     let printedPklData l = printPklData isCompact <$> toPklData l l
@@ -167,7 +167,7 @@ output (Output Klc Standard) _ = ($ Klc) >>>
     printIOLoggerStream Standard ∘ fmap printKlcData ∘ toKlcData
 output (Output Klc (File dir)) _ = ($ Klc) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the layout has an empty name when exported to KLC")
+    when (null name) (fail "the layout has an empty name when exported to KLC")
     let fname l = dir </> view (_info ∘ _name) l <.> "klc"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
@@ -177,7 +177,7 @@ output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>> do
     printIOLoggerStream Standard ∘ fmap printKeylayout ∘ toKeylayout keylayoutConfig
 output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (error "the layout has an empty name when exported to keylayout")
+    when (null name) (fail "the layout has an empty name when exported to keylayout")
     let keylayoutConfig = KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "keylayout"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
@@ -217,12 +217,15 @@ printLog =
     traverse_ (\xs → hPutStrLn stderr $ "klfc: warning: " ⊕ xs ⊕ ".") ∘ nub
 
 main ∷ IO ()
-main = execParser opts >>= execOptions
+main = (execParser opts >>= execOptions) `catch` handler
   where
     opts = info (helper <*> options)
       ( fullDesc
       ⊕ header "Keyboard Layout Files Creator - export a keyboard layout to different formats"
       )
+    handler e
+      | isUserError e = putStrLn ("klfc: " ⊕ ioeGetErrorString e)
+      | otherwise = ioError e
 
 options ∷ Parser Options
 options = Options
