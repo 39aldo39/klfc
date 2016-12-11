@@ -31,11 +31,11 @@ printKeycodePos ∷ Pos → Pos → Either String String
 printKeycodePos fromPos toPos =
     liftA2 (showKeycodePos fromPos toPos) fromPos' toPos'
   where
-    fromPos' = maybe e (Right ∘ show) (posToScancode fromPos)
-      where e = Left ("the position " ⊕ show' fromPos ⊕ " is not supported in XKB")
-    toPos' = maybe e Right (lookup toPos posAndKeycode)
-      where e = Left ("the position " ⊕ show' toPos ⊕ " is not supported in XKB")
+    fromPos' = maybe e Right (lookup fromPos posAndKeycode)
+      where e = Left (show' fromPos ⊕ " is not supported in XKB")
+    toPos' = maybe e (Right ∘ show) (posToScancode toPos)
+      where e = Left (show' toPos ⊕ " is not supported in XKB")
 
 showKeycodePos ∷ Pos → Pos → String → String → String
 showKeycodePos fromPos toPos fromPosString toPosString =
-    toPosString ⊕ " = " ⊕ fromPosString ⊕ ";\t// " ⊕ toString toPos ⊕ " ← " ⊕ toString fromPos
+    fromPosString ⊕ " = " ⊕ toPosString ⊕ ";\t// " ⊕ toString fromPos ⊕ " → " ⊕ toString toPos
