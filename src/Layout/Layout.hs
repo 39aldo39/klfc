@@ -57,7 +57,7 @@ import Filter (Filter(..))
 import JsonPretty (keyOrder', delimsFromList)
 import Layout.DeadKey (DeadKey)
 import Layout.Key
-import Layout.Mod (Mod(Mod), applyMod)
+import Layout.Mod (Mod(Mod), isEmptyMod, applyMod)
 import Layout.Modifier (Shiftstate)
 import Layout.Pos (Pos)
 
@@ -270,7 +270,7 @@ layoutDelims = delimsFromList
     ]
 
 applyModLayout ∷ Mod → Layout → Layout
-applyModLayout layoutMod | layoutMod ≡ (∅) = id
+applyModLayout layoutMod | isEmptyMod layoutMod = id
 applyModLayout layoutMod@(Mod nameM _) =
     over (_info ∘ _fullName) (⊕ (" (" ⊕ nameM ⊕ ")")) ∘
     over (_info ∘ _name) (⊕ ('_':nameM)) ∘
