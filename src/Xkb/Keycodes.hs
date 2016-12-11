@@ -5,7 +5,7 @@ module Xkb.Keycodes where
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (toString, show', concatMapM, (>$>))
+import Util (toString, show', concatMapM)
 
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view)
@@ -15,14 +15,7 @@ import Lookup.Linux (posToScancode, posAndKeycode)
 import Permutation (assocs)
 
 printKeycodes ∷ Layout → Logger String
-printKeycodes =
-    concatMapM printKeycode ∘ view _mods >$>
-    (⧺) [ "default xkb_keycodes \"basic\" {"
-        , replicate 4 ' ' ⊕ "include \"evdev(evdev)\""
-        , "};"
-        , ""
-        ] >>>
-    unlines
+printKeycodes = fmap unlines ∘ concatMapM printKeycode ∘ view _mods
 
 printKeycode ∷ Mod → Logger [String]
 printKeycode (Mod nameM per) = do
@@ -30,8 +23,6 @@ printKeycode (Mod nameM per) = do
     tell logs
     pure $
         [ "partial xkb_keycodes " ⊕ show nameM ⊕ " {"
-        , replicate 4 ' ' ⊕ "include \"evdev(evdev)\""
-        , ""
         ] ⧺ map (replicate 4 ' ' ⊕) s ⧺
         [ "};"
         , ""
