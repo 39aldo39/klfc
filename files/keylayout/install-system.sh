@@ -16,24 +16,4 @@ while getopts "d:i:l:" opt; do
   esac
 done
 
-confirm () {
-  # call with a prompt string or use a default
-  printf "%s [y/N] " "${1:-Are you sure?}"
-  read -r response
-  case "${response:-${2:-}}" in
-    [yY][eE][sS]|[yY]) true;;
-    [nN][oO]|[nN]) false;;
-    *) confirm "${1:-}" "${2:-}";;
-  esac
-}
-
-copy_file () {
-  file_from=$1
-  file_to=$2
-
-  if [ ! -e "$file_to" ] || confirm "$file_to already exists. Overwrite?"; then
-    cp "$file_from" "$file_to"
-  fi
-}
-
-copy_file "$dir_from/$layout"*.keylayout "$dir_to"
+cp "$dir_from/$layout"*.keylayout "$dir_to"
