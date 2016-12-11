@@ -66,7 +66,7 @@ posAndCode =
     , (P.N0, 0x1D)
     , (P.Minus, 0x1B)
     , (P.Plus, 0x18)
-    , (P.Backspace, 0x33)
+--    , (P.Backspace, 0x33)
 
     , (P.Tab, 0x30)
     , (P.Q, 0x0C)
