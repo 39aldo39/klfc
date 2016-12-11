@@ -15,7 +15,7 @@ import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
 import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Key (letterToLigatureString, filterKeyOnShiftstatesM)
+import Layout.Key (letterToDeadKey, letterToLigatureString, filterKeyOnShiftstatesM)
 import Layout.Layout (addDefaultKeys, setNullChars, unifyShiftstates)
 import Layout.Types
 import Lookup.Linux (posAndScancode)
@@ -202,18 +202,16 @@ toLigature pos shiftState s = runMaybeT $
       <*> pure s
 
 toKlcDeadKeys ∷ [Key] → Logger [KlcDeadKey]
-toKlcDeadKeys = concatMapM toKlcDeadKey
+toKlcDeadKeys =
+    concatMap (mapMaybe letterToDeadKey ∘ view _letters) >>>
+    traverse toKlcDeadKey >$> catMaybes
 
-toKlcDeadKey ∷ Key → Logger [KlcDeadKey]
-toKlcDeadKey = fmap catMaybes ∘ traverse toKlcDeadKey' ∘ view _letters
-
-toKlcDeadKey' ∷ Letter → Logger (Maybe KlcDeadKey)
-toKlcDeadKey' (Dead d) = toKlcDeadKey' (CustomDead Nothing (presetDeadKeyToDeadKey d))
-toKlcDeadKey' (CustomDead _ (DeadKey dName (Just c) stringMap)) = Just ∘ KlcDeadKey dName c <$> charMap
+toKlcDeadKey ∷ DeadKey → Logger (Maybe KlcDeadKey)
+toKlcDeadKey (DeadKey dName (Just c) stringMap) = Just ∘ KlcDeadKey dName c <$> charMap
   where
     charMap = traverse (sequenceTuple ∘ (char *** char)) stringMap
     char ∷ String → Logger Char
     char [x]      = pure x
     char []       = '\0' <$ tell ["empty string in dead key ‘" ⊕ dName ⊕ "’ in KLC"]
     char xs@(x:_) = x <$ tell ["the string ‘" ⊕ xs ⊕ "’ is shortened to ‘" ⊕ [x] ⊕ "’ in dead key ‘" ⊕ dName ⊕ "’ in KLC"]
-toKlcDeadKey' _ = pure Nothing
+toKlcDeadKey _ = pure Nothing
