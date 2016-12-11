@@ -25,7 +25,6 @@ printKeycode (Mod nameM per) = do
         [ "partial xkb_keycodes " ⊕ show nameM ⊕ " {"
         ] ⧺ map (replicate 4 ' ' ⊕) s ⧺
         [ "};"
-        , ""
         ]
 
 printKeycodePos ∷ Pos → Pos → Either String String
