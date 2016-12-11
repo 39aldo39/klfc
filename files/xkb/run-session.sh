@@ -3,7 +3,7 @@ set -eu
 
 xkb_dir=$(dirname "$0")
 layout=""
-mod="basic"
+mod=""
 warning_level=0
 
 OPTIND=1
@@ -23,10 +23,16 @@ if [ -z "$layout" ]; then
   exit 2
 fi
 
+if [ -z "$mod" ]; then
+  extra_keycodes=""
+else
+  extra_keycodes="+$layout($mod)"
+fi
+
 setxkbmap \
     -I "$xkb_dir" \
     -layout "$layout" \
-    -keycodes "$layout($mod)" \
+    -keycodes "evdev+$extra_keycodes" \
     -types "complete+$layout" \
     -compat "complete" \
     -print \
