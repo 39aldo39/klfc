@@ -8,7 +8,7 @@ module Klc
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (show', toString, ifNonEmpty, (>$>), concatMapM, tellMaybeT, sequenceTuple)
+import Util (show', toString, ifNonEmpty, (>$>), nubOn, concatMapM, tellMaybeT, sequenceTuple)
 
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
@@ -204,7 +204,7 @@ toLigature pos shiftState s = runMaybeT $
 toKlcDeadKeys ∷ [Key] → Logger [KlcDeadKey]
 toKlcDeadKeys =
     concatMap (mapMaybe letterToDeadKey ∘ view _letters) >>>
-    traverse toKlcDeadKey >$> catMaybes
+    traverse toKlcDeadKey >$> nubOn __klcBaseChar ∘ catMaybes
 
 toKlcDeadKey ∷ DeadKey → Logger (Maybe KlcDeadKey)
 toKlcDeadKey (DeadKey dName (Just c) stringMap) = Just ∘ KlcDeadKey dName c <$> charMap

@@ -156,6 +156,9 @@ nubWithOn _ _   []     = []
 nubWithOn f key (x:xs) = f x eqToX : nubWithOn f key xs'
   where (eqToX, xs') = partition (on (≡) key x) xs
 
+nubOn ∷ Eq β ⇒ (α → β) → [α] → [α]
+nubOn f = nubBy ((≡) `on` f)
+
 filterOnFst ∷ (α → Bool) → [(α, β)] → [β]
 filterOnFst f = map snd ∘ filter (f ∘ fst)
 

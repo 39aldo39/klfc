@@ -11,7 +11,7 @@ import BasePrelude
 import Prelude.Unicode hiding ((∈), (∉))
 import Data.Monoid.Unicode ((⊕))
 import Data.Foldable.Unicode ((∈), (∉))
-import Util (toString, show', ifNonEmpty, (>$>), filterOnSnd, filterOnSndM, sequenceTuple, tellMaybeT)
+import Util (toString, show', ifNonEmpty, (>$>), nubOn, filterOnSnd, filterOnSndM, sequenceTuple, tellMaybeT)
 import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.State (evalState)
@@ -192,7 +192,7 @@ toLayoutData' layout =
       <*> runMaybeT (MaybeT (pure extendPos) >>= extendPosToPklPos)
       <*> pure (map winShiftstateFromShiftstate states)
       <*> liftA2 (⧺) pklKeys pklModifierKeys
-      <*> traverse (uncurry deadToPkl) (concatMap (mapMaybe fromPklDead ∘ view _letters) keys)
+      <*> (nubOn __pklInt <$> traverse (uncurry deadToPkl) (concatMap (mapMaybe fromPklDead ∘ view _letters) keys))
   where
     (keys, states) = unifyShiftstates (view _keys layout)
     pklKeys = catMaybes <$> traverse (keyToPklKey layout) keys
