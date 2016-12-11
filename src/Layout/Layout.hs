@@ -274,7 +274,8 @@ applyModLayout layoutMod | isEmptyMod layoutMod = id
 applyModLayout layoutMod@(Mod nameM _) =
     over (_info ∘ _fullName) (⊕ (" (" ⊕ nameM ⊕ ")")) ∘
     over (_info ∘ _name) (⊕ ('_':nameM)) ∘
-    over (_keys ∘ traverse ∘ _pos) (applyMod layoutMod)
+    over (_keys ∘ traverse ∘ _pos) (applyMod layoutMod) ∘
+    over (_keys ∘ traverse ∘ _shortcutPos) id -- make the (perhaps) guessed shortcut position explicit
 
 getLetterByPosAndShiftstate ∷ Pos → Shiftstate → Layout → Maybe Letter
 getLetterByPosAndShiftstate pos state =
