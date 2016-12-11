@@ -3,14 +3,14 @@ set -eu
 
 xkb_dir=$(dirname "$0")
 layout="colemak"
-mod="basic"
+mod=""
 warning_level=0
 
 OPTIND=1
 
-while getopts "d:l:m:w:" opt; do
+while getopts "i:l:m:w:" opt; do
   case "$opt" in
-    d) xkb_dir="$OPTARG";;
+    i) xkb_dir="$OPTARG";;
     l) layout="$OPTARG";;
     m) mod="$OPTARG";;
     w) warning_level="$OPTARG";;
@@ -23,10 +23,16 @@ if [ -z "$layout" ]; then
   exit 2
 fi
 
+if [ -z "$mod" ]; then
+  extra_keycodes=""
+else
+  extra_keycodes="+$layout($mod)"
+fi
+
 setxkbmap \
     -I "$xkb_dir" \
     -layout "$layout" \
-    -keycodes "$layout($mod)" \
+    -keycodes "evdev+$extra_keycodes" \
     -types "complete+$layout" \
     -compat "complete" \
     -print \
