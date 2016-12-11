@@ -117,7 +117,10 @@ groupSortWith ∷ Ord β ⇒ (α → β) → [α] → [(β, [α])]
 groupSortWith f = groupWith' f ∘ sortWith f
 
 replace ∷ Eq α ⇒ α → α → [α] → [α]
-replace y y' = map (\x → bool x y' (x ≡ y))
+replace y = replaceWith (≡ y)
+
+replaceWith ∷ (α → Bool) → α → [α] → [α]
+replaceWith p y = map (\x → bool x y (p x))
 
 removeSubList ∷ Eq α ⇒ [α] → [α] → [α]
 removeSubList _ [] = []

@@ -8,9 +8,9 @@ warning_level=0
 
 OPTIND=1
 
-while getopts "d:l:m:w:" opt; do
+while getopts "i:l:m:w:" opt; do
   case "$opt" in
-    d) xkb_dir="$OPTARG";;
+    i) xkb_dir="$OPTARG";;
     l) layout="$OPTARG";;
     m) mod="$OPTARG";;
     w) warning_level="$OPTARG";;

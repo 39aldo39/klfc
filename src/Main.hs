@@ -5,7 +5,7 @@
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', replace, filterOnIndex, (>$>))
+import Util (show', replace, replaceWith, escape, filterOnIndex, (>$>))
 
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans (liftIO)
@@ -22,7 +22,7 @@ import Data.Time.Format (defaultTimeLocale)
 import Lens.Micro.Platform (view, over)
 import Options.Applicative hiding (Mod)
 import qualified Options.Applicative (Mod)
-import System.Directory (getPermissions, setPermissions, setOwnerExecutable)
+import System.Directory (getPermissions, setPermissions, setOwnerExecutable, createDirectoryIfMissing)
 import System.FilePath ((</>), (<.>), takeExtension)
 import System.IO (hPutStrLn, stderr)
 
@@ -124,27 +124,28 @@ output (Output Json stream) _ = ($ Json) >>>
     liftIO ∘ writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
-    let name = view (_info ∘ _name) layout
+    let name = replaceWith (not ∘ isAlphaNum) '_' $ view (_info ∘ _name) layout
+    let description = replace '\n' ' ' $ fromMaybe (view (_info ∘ _fullName) layout) (view (_info ∘ _description) layout)
+    let mods = (\(Mod modName _) → replaceWith (not ∘ isAlphaNum) '_' modName) <$> view _mods layout
     when (null name) (fail "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
     printIOLogger (dir </> "symbols" </> name) (runReaderT (printSymbols layout) xkbConfig)
     printIOLogger (dir </> "types" </> name) (runReaderT (printTypes layout) xkbConfig)
     printIOLogger (dir </> "keycodes" </> name) (printKeycodes layout)
     printIOLogger (dir </> "XCompose") (pure (printXCompose layout))
-    let name' = T.encodeUtf8 (T.pack name)
-    let before = "layout=\"\""
-    let after  = "layout=\"" ⊕ name' ⊕ "\""
-    let replaceLayoutName = B8.unlines ∘ replace before after ∘ B8.lines
-    localFile  ← liftIO $ B.readFile "install-local.sh"  <|> pure defXkbLocal
-    systemFile ← liftIO $ B.readFile "install-system.sh" <|> pure defXkbSystem
-    liftIO $ B.writeFile (dir </> "install-local.sh")  (replaceLayoutName localFile)
-    liftIO $ B.writeFile (dir </> "install-system.sh") (replaceLayoutName systemFile)
-    liftIO $ makeExecutable (dir </> "install-local.sh")
+    let replaceLayout = replaceVar "layout" name
+    let replaceDescription = replaceVar "description" description
+    let replaceMods = replaceVar "mods" (intercalate " " mods)
+    sessionFile ← liftIO $ B.readFile "xkb/run-session.sh"  <|> pure defXkbSession
+    systemFile  ← liftIO $ B.readFile "xkb/install-system.sh" <|> pure defXkbSystem
+    xmlFile     ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
+    liftIO $ B.writeFile (dir </> "run-session.sh")  (replaceLayout sessionFile)
+    liftIO $ B.writeFile (dir </> "install-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) systemFile)
+    liftIO $ createDirectoryIfMissing True (dir </> "scripts")
+    liftIO $ B.writeFile (dir </> "scripts/add-layout-to-xml.py") ((replaceDescription ∘ replaceLayout) xmlFile)
+    liftIO $ makeExecutable (dir </> "run-session.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
-  where
-    makeExecutable fname =
-        getPermissions fname >>=
-        setPermissions fname ∘ setOwnerExecutable True
+    liftIO $ makeExecutable (dir </> "scripts/add-layout-to-xml.py")
 output (Output Pkl Standard) _ = const (fail "PKL as output must be written to a directory")
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let name = view (_info ∘ _name) layout
@@ -161,7 +162,7 @@ output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
         let layout' = applyModLayout layoutMod layout
         printIOLogger (dir </> ("pkl" ⊕ nameM') <.> "ini") (printedPklData layout')
         printIOLogger (layoutFile nameM' layout') (printedLayoutData layout')
-    pklFile ← liftIO $ B.readFile "pkl.exe" <|> pure defPklFile
+    pklFile ← liftIO $ B.readFile "pkl/pkl.exe" <|> pure defPklFile
     liftIO $ B.writeFile (dir </> "pkl.exe") pklFile
 output (Output Klc Standard) _ = ($ Klc) >>>
     printIOLoggerStream Standard ∘ fmap printKlcData ∘ toKlcData
@@ -183,11 +184,32 @@ output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout �
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
         printIOLogger (fname layout') (printKeylayout <$> toKeylayout keylayoutConfig layout')
+    let replaceLayout = replaceVar "layout" name
+    userFile   ← liftIO $ B.readFile "keylayout/install-user.sh"  <|> pure defKeylayoutUser
+    systemFile ← liftIO $ B.readFile "keylayout/install-system.sh" <|> pure defKeylayoutSystem
+    liftIO $ B.writeFile (dir </> "install-user.sh")  (replaceLayout userFile)
+    liftIO $ B.writeFile (dir </> "install-system.sh") (replaceLayout systemFile)
+    liftIO $ makeExecutable (dir </> "install-user.sh")
+    liftIO $ makeExecutable (dir </> "install-system.sh")
 
-defPklFile, defXkbLocal, defXkbSystem ∷ B.ByteString
-defPklFile   = $(embedFile "files/pkl.exe")
-defXkbLocal  = $(embedFile "files/install-local.sh")
-defXkbSystem = $(embedFile "files/install-system.sh")
+replaceVar ∷ B.ByteString → String → B.ByteString → B.ByteString
+replaceVar var val = B8.unlines ∘ replace before after ∘ B8.lines
+  where
+    before = var ⊕ "=\"\""
+    after  = var ⊕ "=" ⊕ T.encodeUtf8 (T.pack (escape val))
+
+makeExecutable ∷ FilePath → IO ()
+makeExecutable fname =
+    getPermissions fname >>=
+    setPermissions fname ∘ setOwnerExecutable True
+
+defPklFile, defXkbSession, defXkbSystem, defXkbXml, defKeylayoutUser, defKeylayoutSystem ∷ B.ByteString
+defPklFile    = $(embedFile "files/pkl/pkl.exe")
+defXkbSession = $(embedFile "files/xkb/run-session.sh")
+defXkbSystem  = $(embedFile "files/xkb/install-system.sh")
+defXkbXml     = $(embedFile "files/xkb/scripts/add-layout-to-xml.py")
+defKeylayoutUser   = $(embedFile "files/keylayout/install-user.sh")
+defKeylayoutSystem = $(embedFile "files/keylayout/install-system.sh")
 
 execExtraOptions ∷ [ExtraOption] → Layout → Layout
 execExtraOptions = flip (foldr execExtraOption)
