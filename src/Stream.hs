@@ -1,25 +1,19 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Stream
-    ( Stream(Standard, File)
+    ( Stream(..)
     , toFname
-    , ReadStream
-    , WriteStream
     , readStream
     , writeStream
     ) where
 
-import BasePrelude
+import BasePrelude hiding (readFile, writeFile)
 
-import qualified Data.ByteString as B (ByteString, getContents, putStr, readFile, writeFile)
-import qualified Data.ByteString.Lazy as BL (ByteString, getContents, putStr, readFile, writeFile)
-import qualified Data.Text as T (Text)
-import qualified Data.Text.Lazy as L (Text)
-import qualified Data.Text.Lazy.IO as L (getContents, putStr, readFile, writeFile)
-import qualified Data.Text.IO as T (getContents, putStr, readFile, writeFile)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Data.IOData (IOData, readFile, writeFile, hGetContents, hPut)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
+import System.IO (stdin)
 
 data Stream
     = Standard
@@ -28,45 +22,14 @@ data Stream
 
 toFname ∷ Stream → String
 toFname Standard = "stdin"
-toFname (File f) = f
+toFname (File fname) = fname
 
-class ReadStream α where
-    readStream ∷ Stream → IO α
+readStream ∷ (MonadIO m, IOData α) ⇒ Stream → m α
+readStream Standard = hGetContents stdin
+readStream (File fname) = readFile fname
 
-class WriteStream α where
-    writeStream ∷ Stream → α → IO ()
-
-defReadStream ∷ IO α → (FilePath → IO α) → Stream → IO α
-defReadStream f _ Standard = f
-defReadStream _ g (File fname) = g fname
-
-defWriteStream ∷ (α → IO ()) → (FilePath → α → IO ()) → Stream → α → IO ()
-defWriteStream f _ Standard = f
-defWriteStream _ g (File fname) = \text → do
-    createDirectoryIfMissing True (takeDirectory fname)
-    g fname text
-
-instance ReadStream String where
-    readStream = defReadStream getContents readFile
-instance WriteStream String where
-    writeStream = defWriteStream putStr writeFile
-
-instance ReadStream T.Text where
-    readStream = defReadStream T.getContents T.readFile
-instance WriteStream T.Text where
-    writeStream = defWriteStream T.putStr T.writeFile
-
-instance ReadStream L.Text where
-    readStream = defReadStream L.getContents L.readFile
-instance WriteStream L.Text where
-    writeStream = defWriteStream L.putStr L.writeFile
-
-instance ReadStream B.ByteString where
-    readStream = defReadStream B.getContents B.readFile
-instance WriteStream B.ByteString where
-    writeStream = defWriteStream B.putStr B.writeFile
-
-instance ReadStream BL.ByteString where
-    readStream = defReadStream BL.getContents BL.readFile
-instance WriteStream BL.ByteString where
-    writeStream = defWriteStream BL.putStr BL.writeFile
+writeStream ∷ (MonadIO m, IOData α) ⇒ Stream → α → m ()
+writeStream Standard = hPut stdin
+writeStream (File fname) = \text → do
+    liftIO $ createDirectoryIfMissing True (takeDirectory fname)
+    writeFile fname text

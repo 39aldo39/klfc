@@ -15,6 +15,7 @@ import qualified Data.ByteString as B (ByteString, readFile, writeFile)
 import qualified Data.ByteString.Char8 as B8 (lines, unlines)
 import Data.FileEmbed (embedFile)
 import Data.Functor.Identity (runIdentity)
+import Data.IOData (IOData)
 import qualified Data.Text as T (pack)
 import qualified Data.Text.Encoding as T (encodeUtf8)
 import Data.Time (getCurrentTime, formatTime)
@@ -37,7 +38,7 @@ import Layout.Mod (isEmptyMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
-import Stream (Stream(..), toFname, ReadStream(..), WriteStream(..))
+import Stream (Stream(..), toFname, readStream, writeStream)
 import Xkb (XkbConfig(..), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
 
 data Options = Options
@@ -93,12 +94,12 @@ input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
 input Keylayout = fail "importing from a keylayout file is not supported"
 
-parseWith ∷ ReadStream α ⇒ (String → α → Either String (Logger β)) →
+parseWith ∷ IOData α ⇒ (String → α → Either String (Logger β)) →
     Stream → LoggerT IO β
 parseWith = parseWith' ∘ fmap3 (mapWriterT (pure ∘ runIdentity))
   where fmap3 = fmap ∘ fmap ∘ fmap
 
-parseWith' ∷ ReadStream α ⇒ (String → α → Either String (LoggerT IO β)) →
+parseWith' ∷ IOData α ⇒ (String → α → Either String (LoggerT IO β)) →
     Stream → LoggerT IO β
 parseWith' parser stream = flip ($) stream $
     liftIO ∘ readStream >=>
@@ -225,10 +226,10 @@ execExtraOption CombineMods =
 execExtraOption UnifyShiftstates = over _keys (fst ∘ unifyShiftstates)
 execExtraOption _ = id
 
-printIOLogger ∷ WriteStream α ⇒ FilePath → Logger α → LoggerT IO ()
+printIOLogger ∷ IOData α ⇒ FilePath → Logger α → LoggerT IO ()
 printIOLogger = printIOLoggerStream ∘ File
 
-printIOLoggerStream ∷ WriteStream α ⇒ Stream → Logger α → LoggerT IO ()
+printIOLoggerStream ∷ IOData α ⇒ Stream → Logger α → LoggerT IO ()
 printIOLoggerStream stream =
     mapWriterT (pure ∘ runIdentity) >=>
     liftIO ∘ writeStream stream

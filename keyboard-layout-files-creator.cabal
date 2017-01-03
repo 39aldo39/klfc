@@ -30,5 +30,6 @@ executable klfc
                    transformers,
                    fail,
                    file-embed,
-                   xml
+                   xml,
+                   chunked-data
   ghc-options:     -Wall
