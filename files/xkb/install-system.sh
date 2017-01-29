@@ -102,7 +102,6 @@ add_description () {
 copy_file "$xkb_dir_from/symbols/$layout" "$xkb_dir_to/symbols/$layout"
 copy_file "$xkb_dir_from/types/$layout" "$xkb_dir_to/types/$layout"
 copy_file "$xkb_dir_from/keycodes/$layout" "$xkb_dir_to/keycodes/$layout"
-copy_file "$xkb_dir_from/compat/$layout" "$xkb_dir_to/compat/$layout"
 
 add_type "$xkb_dir_to/rules/base" "$layout"
 add_type "$xkb_dir_to/rules/evdev" "$layout"
