@@ -751,7 +751,7 @@ modifierAndSymbol =
     [ ((ME.Shift, M.Shift_R), "Shift_R") ] ⧺
     [ ((ME.Latch, m),         "ISO_Level2_Latch") | m ← [M.Shift, M.Shift_L, M.Shift_R] ] ⧺
     [ ((ME.Lock,  m),         "Shift_Lock")       | m ← [M.Shift, M.Shift_L, M.Shift_R] ] ⧺
-    [ ((effect, M.CapsLock),  "CapsLock")  | effect ← reverse allBounded ] ⧺
+    [ ((effect, M.CapsLock),  "Caps_Lock") | effect ← reverse allBounded ] ⧺
     [ ((effect, m),           "Super_L")   | effect ← allBounded, m ← [M.Win, M.Win_L] ] ⧺
     [ ((effect, M.Win_R),     "Super_R")   | effect ← allBounded ] ⧺
     [ ((effect, m),           "Alt_L")     | effect ← allBounded, m ← [M.Alt, M.Alt_L]] ⧺
