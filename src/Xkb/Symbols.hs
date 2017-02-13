@@ -48,10 +48,8 @@ data XkbKey = XkbKey
 makeLenses ''XkbKey
 
 printSymbolsHelp ∷ [Symbol] → String
-printSymbolsHelp = printSymbols' ∘ dropWhileEnd (≡"NoSymbol")
-  where
-    printSymbols' [] = "[]" ∷ String
-    printSymbols' xs = ("[ "⊕) ∘ (⊕" ]") ∘ intercalate ", " ∘ map (printf "%12s") $ xs
+printSymbolsHelp [] = "[]"
+printSymbolsHelp xs = ("[ "⊕) ∘ (⊕" ]") ∘ intercalate ", " ∘ map (printf "%12s") $ xs
 
 printActions ∷ [XkbAction] → String
 printActions = ("[ " ⊕) ∘ (⊕ " ]") ∘ intercalate ", " ∘ dropWhileEnd (≡"NoAction()")
@@ -164,23 +162,23 @@ printLetter (Char c) =
 printLetter (Ligature (Just c) _) =
     printLetter (Char c)
 printLetter l@(Ligature Nothing _) =
-    "NoSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
+    "VoidSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
 printLetter (Action a) =
     maybe e (pure ∘ __symbol) (lookup a actionAndLinuxAction)
-    where e = "NoSymbol" <$ tell [show' a ⊕ " is not supported in XKB"]
-printLetter (Modifiers effect mods) = pure ∘ fromMaybe "NoSymbol" ∘ listToMaybe $
+    where e = "VoidSymbol" <$ tell [show' a ⊕ " is not supported in XKB"]
+printLetter (Modifiers effect mods) = pure ∘ fromMaybe "VoidSymbol" ∘ listToMaybe $
     mapMaybe ((`lookup` modifierAndSymbol) ∘ (,) effect) mods
 printLetter (Dead d) =
     maybe e pure (lookup d deadKeysAndLinuxDeadKeys)
-    where e = "NoSymbol" <$ tell [show' d ⊕ " is not supported in XKB"]
+    where e = "VoidSymbol" <$ tell [show' d ⊕ " is not supported in XKB"]
 printLetter (CustomDead _ (DeadKey _ (Just c) _)) =
     printLetter (Char c)
 printLetter l@(CustomDead _ (DeadKey _ Nothing _)) =
-    "NoSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
+    "VoidSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
 printLetter (Redirect mods pos) =
     printLetter (redirectToLetter mods pos)
 printLetter LNothing =
-    pure "NoSymbol"
+    pure "VoidSymbol"
 
 printAction ∷ Layout → Pos → Shiftstate → Letter → ReaderT XkbConfig Logger String
 printAction layout pos shiftstate (Action a) = fromMaybe e $
