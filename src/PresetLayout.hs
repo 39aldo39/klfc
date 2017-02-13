@@ -51,19 +51,19 @@ defaultFullKeys =
 
     , Key P.Backspace Nothing [(∅)] [Action A.Backspace] Nothing
     , Key P.Tab Nothing [(∅), WP.singleton M.Shift] [Action A.Tab, Action A.LeftTab] Nothing
-    , Key P.CapsLock Nothing [(∅)] [Action A.CapsLock] Nothing
+    , Key P.CapsLock Nothing [(∅)] [Modifiers Lock [M.CapsLock]] Nothing
     , Key P.Enter Nothing [(∅)] [Action A.Enter] Nothing
-    , Key P.Shift_L Nothing [(∅)] [Action A.Shift_L] Nothing
-    , Key P.Shift_R Nothing [(∅)] [Action A.Shift_R] Nothing
+    , Key P.Shift_L Nothing [(∅)] [Modifiers Shift [M.Shift_L]] Nothing
+    , Key P.Shift_R Nothing [(∅)] [Modifiers Shift [M.Shift_R]] Nothing
 
-    , Key P.Control_L Nothing [(∅)] [Action A.Control_L] Nothing
-    , Key P.Win_L Nothing [(∅)] [Action A.Win_L] Nothing
-    , Key P.Alt_L Nothing [(∅)] [Action A.Alt_L] Nothing
+    , Key P.Control_L Nothing [(∅)] [Modifiers Shift [M.Control_L]] Nothing
+    , Key P.Win_L Nothing [(∅)] [Modifiers Shift [M.Win_L]] Nothing
+    , Key P.Alt_L Nothing [(∅)] [Modifiers Shift [M.Alt_L]] Nothing
     , Key P.Space Nothing [(∅)] [Char ' '] Nothing
-    , Key P.Alt_R Nothing [(∅)] [Action A.Alt_R] Nothing
-    , Key P.Win_R Nothing [(∅)] [Action A.Win_R] Nothing
+    , Key P.Alt_R Nothing [(∅)] [Modifiers Shift [M.Alt_R]] Nothing
+    , Key P.Win_R Nothing [(∅)] [Modifiers Shift [M.Win_R]] Nothing
     , Key P.Menu Nothing [(∅)] [Action A.Menu] Nothing
-    , Key P.Control_R Nothing [(∅)] [Action A.Control_R] Nothing
+    , Key P.Control_R Nothing [(∅)] [Modifiers Shift [M.Control_R]] Nothing
 
     , Key P.Insert Nothing [(∅)] [Action A.Insert] Nothing
     , Key P.Delete Nothing [(∅)] [Action A.Delete] Nothing
@@ -76,7 +76,7 @@ defaultFullKeys =
     , Key P.Down Nothing [(∅)] [Action A.Down] Nothing
     , Key P.Right Nothing [(∅)] [Action A.Right] Nothing
 
-    , Key P.NumLock Nothing [(∅)] [Action A.NumLock] Nothing
+    , Key P.NumLock Nothing [(∅)] [Modifiers Lock [M.NumLock]] Nothing
     , Key P.KP_Div Nothing [(∅)] [Action A.KP_Div] Nothing
     , Key P.KP_Mult Nothing [(∅)] [Action A.KP_Mult] Nothing
     , Key P.KP_Min Nothing [(∅)] [Action A.KP_Min] Nothing

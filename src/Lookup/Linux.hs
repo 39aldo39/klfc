@@ -11,7 +11,10 @@ module Lookup.Linux
     , actionAndLinuxAction
     , printLinuxAction
     , modMappingIncludes
-    , modifierAndLevelstring
+    , modifierAndSymbol
+    , modifierAndTypeModifier
+    , modifierAndPressedModifier
+    , virtualMods
     , singleIncludes
     , doubleIncludes
     , presetTypes
@@ -21,7 +24,7 @@ module Lookup.Linux
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show')
+import Util (show', (>$>), whenNothing, allBounded)
 import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.Writer (tell)
@@ -30,6 +33,7 @@ import qualified Data.Map as M
 
 import qualified Layout.Action as A
 import qualified Layout.Modifier as M
+import qualified Layout.ModifierEffect as ME
 import qualified Layout.Pos as P
 import Layout.Types
 import PresetDeadKey (PresetDeadKey)
@@ -387,6 +391,10 @@ data LinuxAction
         { __symbol  ∷ String
         , __addMods ∷ [Modifier]
         }
+    | LatchMods
+        { __symbol  ∷ String
+        , __addMods ∷ [Modifier]
+        }
     | LockMods
         { __symbol  ∷ String
         , __addMods ∷ [Modifier]
@@ -429,8 +437,9 @@ data LinuxAction
 
 printLinuxAction ∷ LinuxAction → Logger String
 printLinuxAction (Symbol _) = pure "NoAction()"
-printLinuxAction (SetMods _ mods) = pure ("SetMods(mods=" ⊕ printModsWithPlus mods ⊕ ")")
-printLinuxAction (LockMods _ mods) = pure ("LockMods(mods=" ⊕ printModsWithPlus mods ⊕ ")")
+printLinuxAction (SetMods   _ mods) = printModsWithEffect Shift mods
+printLinuxAction (LatchMods _ mods) = printModsWithEffect Latch mods
+printLinuxAction (LockMods  _ mods) = printModsWithEffect Lock  mods
 printLinuxAction (MovePtr _ x y) = pure (printf "MovePtr(x=%+d,y=%+d)" x y)
 printLinuxAction (PtrBtn _ b) = pure ("PtrBtn(button=" ⊕ b ⊕ ")")
 printLinuxAction (PtrDoubleClick _ b) = pure ("PtrBtn(button=" ⊕ b ⊕ ",count=2)")
@@ -438,20 +447,35 @@ printLinuxAction (LockPtrBtn _ b) = pure ("LockPtrBtn(button=" ⊕ b ⊕ ")")
 printLinuxAction (SetPtrDflt _ b) = pure ("SetPtrDflt(affect=defaultButton,button=" ⊕ b ⊕ ")")
 printLinuxAction (LockControls _ c) = pure ("LockControls(ctrls=" ⊕ c ⊕ ")")
 printLinuxAction (SwitchScreen _ s) = pure ("SwitchScreen(Screen=" ⊕ show s ⊕ ", !same)")
-printLinuxAction (XkbRedirect _ pos mods clearMods) =
-  case lookup pos posAndKeycode of
-    Just keyCode → pure ("Redirect(key=" ⊕ keyCode ⊕ printedMods ⊕ printedClearMods ⊕ ")")
-    Nothing → "NoAction()" <$ tell ["could not redirect to unsupported " ⊕ show' pos ⊕ " in XKB"]
+printLinuxAction (XkbRedirect _ pos mods clearMods) = do
+    printedMods ← printMods <$> printModsWithPlus mods
+    printedClearMods ← printClearMods <$> printModsWithPlus clearMods
+    case lookup pos posAndKeycode of
+      Just keyCode → pure ("Redirect(key=" ⊕ keyCode ⊕ printedMods ⊕ printedClearMods ⊕ ")")
+      Nothing → "NoAction()" <$ tell ["could not redirect to unsupported " ⊕ show' pos ⊕ " in XKB"]
   where
-    printedMods
-        | null mods = ""
-        | otherwise = ",mods=" ⊕ printModsWithPlus mods
-    printedClearMods
-        | null clearMods = ""
-        | clearMods ≡ [minBound .. maxBound] = ",clearMods=all"
-        | otherwise = ",clearMods=" ⊕ printModsWithPlus clearMods
-printModsWithPlus ∷ [Modifier] → String
-printModsWithPlus = intercalate "+" ∘ mapMaybe (`lookup` modifierAndLevelstring)
+    printMods s
+        | null s    = ""
+        | otherwise = ",mods=" ⊕ s
+    printClearMods s
+        | null s    = ""
+        | sort clearMods ≡ [minBound .. maxBound] = ",clearMods=all"
+        | otherwise = ",clearMods=" ⊕ s
+printModsWithPlus ∷ [Modifier] → Logger String
+printModsWithPlus =
+    traverse (\m → whenNothing (e m) (lookup m modifierAndPressedModifier)) >$>
+    intercalate "+" ∘ catMaybes
+  where
+    e ∷ Modifier → Logger ()
+    e modifier = tell [show' modifier ⊕ " is not supported in XKB"]
+printModsWithEffect ∷ ModifierEffect → [Modifier] → Logger String
+printModsWithEffect effect =
+    printModsWithPlus >$>
+    \s → bool (action effect ⊕ "Mods(mods=" ⊕ s ⊕ ")") "NoAction()" (null s)
+  where
+    action Shift = "Set"
+    action Latch = "Latch"
+    action Lock  = "Lock"
 
 actionAndRedirect ∷ [(Action, Letter)]
 actionAndRedirect =
@@ -568,20 +592,6 @@ actionAndLinuxAction =
     , (A.ScrollLock, Symbol "Scroll_Lock")
     , (A.Pause, Symbol "Pause")
     , (A.ControlBreak, Symbol "Break")
-    , (A.Shift, SetMods "Shift_L" [M.Shift])
-    , (A.Shift_L, SetMods "Shift_L" [M.Shift])
-    , (A.Shift_R, SetMods "Shift_R" [M.Shift])
-    , (A.Control, SetMods "Control_L" [M.Control])
-    , (A.Control_L, SetMods "Control_L" [M.Control])
-    , (A.Control_R, SetMods "Control_R" [M.Control])
-    , (A.Alt, SetMods "Alt_L" [M.Alt])
-    , (A.Alt_L, SetMods "Alt_L" [M.Alt])
-    , (A.Alt_R, SetMods "Alt_R" [M.Alt])
-    , (A.AltGr, Symbol "ISO_Level3_Shift")
-    , (A.Extend, Symbol "ISO_Level5_Shift")
-    , (A.NumLock, Symbol "Num_Lock")
-    , (A.NumLock, LockMods "Num_Lock" [M.NumLock])
-    , (A.CapsLock, LockMods "Caps_Lock" [M.CapsLock])
     , (A.Insert, Symbol "Insert")
     , (A.Delete, Symbol "Delete")
     , (A.Home, Symbol "Home")
@@ -735,17 +745,54 @@ actionAndLinuxAction =
     , (A.KP_Delete, Symbol "KP_Delete")
     ]
 
-modifierAndLevelstring ∷ [(Modifier, String)]
-modifierAndLevelstring =
+modifierAndSymbol ∷ [((ModifierEffect, Modifier), String)]
+modifierAndSymbol =
+    [ ((ME.Shift, m),         "Shift_L") | m ← [M.Shift, M.Shift_L] ] ⧺
+    [ ((ME.Shift, M.Shift_R), "Shift_R") ] ⧺
+    [ ((ME.Latch, m),         "ISO_Level2_Latch") | m ← [M.Shift, M.Shift_L, M.Shift_R] ] ⧺
+    [ ((ME.Lock,  m),         "Shift_Lock")       | m ← [M.Shift, M.Shift_L, M.Shift_R] ] ⧺
+    [ ((effect, M.CapsLock),  "CapsLock")  | effect ← reverse allBounded ] ⧺
+    [ ((effect, m),           "Super_L")   | effect ← allBounded, m ← [M.Win, M.Win_L] ] ⧺
+    [ ((effect, M.Win_R),     "Super_R")   | effect ← allBounded ] ⧺
+    [ ((effect, m),           "Alt_L")     | effect ← allBounded, m ← [M.Alt, M.Alt_L]] ⧺
+    [ ((effect, M.Alt_R),     "Alt_R")     | effect ← allBounded ] ⧺
+    [ ((effect, m),           "Control_L") | effect ← allBounded, m ← [M.Control, M.Control_L] ] ⧺
+    [ ((effect, M.Control_R), "Control_R") | effect ← allBounded ] ⧺
+    [ ((effect, M.NumLock),   "Num_Lock")  | effect ← reverse allBounded ] ⧺
+    [ ((ME.Shift, M.AltGr),   "ISO_Level3_Shift")
+    , ((ME.Latch, M.AltGr),   "ISO_Level3_Latch")
+    , ((ME.Lock,  M.AltGr),   "ISO_Level3_Lock")
+    , ((ME.Shift, M.Extend),  "ISO_Level5_Shift")
+    , ((ME.Latch, M.Extend),  "ISO_Level5_Latch")
+    , ((ME.Lock,  M.Extend),  "ISO_Level5_Lock")
+    ]
+
+modifierAndTypeModifier ∷ [(Modifier, String)]
+modifierAndTypeModifier =
     [ (M.Shift, "Shift")
     , (M.CapsLock, "Lock")
-    , (M.Control, "Control")
-    , (M.Alt, "Alt")
     , (M.Win, "Super")
+    , (M.Alt, "Alt")
+    , (M.Control, "Control")
+    , (M.NumLock, "NumLock")
     , (M.AltGr, "LevelThree")
     , (M.Extend, "LevelFive")
-    , (M.NumLock, "NumLock")
     ]
+
+modifierAndPressedModifier ∷ [(Modifier, String)]
+modifierAndPressedModifier = modifierAndTypeModifier ⧺
+    [ (M.Shift_L, "Shift")
+    , (M.Shift_R, "Shift")
+    , (M.Win_L, "Super")
+    , (M.Win_R, "Super")
+    , (M.Alt_L, "Alt")
+    , (M.Alt_R, "Alt")
+    , (M.Control_L, "Control")
+    , (M.Control_R, "Control")
+    ]
+
+virtualMods ∷ [Modifier]
+virtualMods = [M.Win, M.Win_L, M.Win_R, M.Alt, M.Alt_L, M.Alt_R, M.NumLock, M.AltGr, M.Extend]
 
 deadKeysAndLinuxDeadKeys ∷ [(PresetDeadKey, String)]
 deadKeysAndLinuxDeadKeys =
@@ -784,20 +831,20 @@ deadKeysAndLinuxDeadKeys =
 
 singleIncludes ∷ [((Pos, Letter), String)]
 singleIncludes =
-    [ ((P.Alt_R,     Action A.AltGr), "include \"level3(ralt_switch)\"")
-    , ((P.Alt_L,     Action A.AltGr), "include \"level3(lalt_switch)\"")
-    , ((P.Control_R, Action A.AltGr), "include \"level3(switch)\"")
-    , ((P.Menu,      Action A.AltGr), "include \"level3(menu_switch)\"")
-    , ((P.Win_L,     Action A.AltGr), "include \"level3(lwin_switch)\"")
-    , ((P.Win_R,     Action A.AltGr), "include \"level3(rwin_switch)\"")
-    , ((P.KP_Enter,  Action A.AltGr), "include \"level3(enter_switch)\"")
-    , ((P.CapsLock,  Action A.AltGr), "include \"level3(caps_switch)\"")
-    , ((P.Backslash, Action A.AltGr), "include \"level3(bksl_switch)\"")
-    , ((P.Iso,       Action A.AltGr), "include \"level3(lsgt_switch)\"")
+    [ ((P.Alt_R,     Modifiers Shift [M.AltGr]), "include \"level3(ralt_switch)\"")
+    , ((P.Alt_L,     Modifiers Shift [M.AltGr]), "include \"level3(lalt_switch)\"")
+    , ((P.Control_R, Modifiers Shift [M.AltGr]), "include \"level3(switch)\"")
+    , ((P.Menu,      Modifiers Shift [M.AltGr]), "include \"level3(menu_switch)\"")
+    , ((P.Win_L,     Modifiers Shift [M.AltGr]), "include \"level3(lwin_switch)\"")
+    , ((P.Win_R,     Modifiers Shift [M.AltGr]), "include \"level3(rwin_switch)\"")
+    , ((P.KP_Enter,  Modifiers Shift [M.AltGr]), "include \"level3(enter_switch)\"")
+    , ((P.CapsLock,  Modifiers Shift [M.AltGr]), "include \"level3(caps_switch)\"")
+    , ((P.Backslash, Modifiers Shift [M.AltGr]), "include \"level3(bksl_switch)\"")
+    , ((P.Iso,       Modifiers Shift [M.AltGr]), "include \"level3(lsgt_switch)\"")
 
-    , ((P.Control_R, Action A.Extend), "include \"level5(rctrl_switch)\"")
-    , ((P.Iso,       Action A.Extend), "include \"level5(lsgt_switch)\"")
-    , ((P.Alt_R,     Action A.Extend), "include \"level5(ralt_switch)\"")
+    , ((P.Control_R, Modifiers Shift [M.Extend]), "include \"level5(rctrl_switch)\"")
+    , ((P.Iso,       Modifiers Shift [M.Extend]), "include \"level5(lsgt_switch)\"")
+    , ((P.Alt_R,     Modifiers Shift [M.Extend]), "include \"level5(ralt_switch)\"")
 
     , ((P.Alt_R,       Action A.Compose), "include \"compose(ralt)\"")
     , ((P.Win_L,       Action A.Compose), "include \"compose(lwin)\"")
@@ -811,26 +858,26 @@ singleIncludes =
     , ((P.PrintScreen, Action A.Compose), "include \"compose(prsc)\"")
     , ((P.ScrollLock,  Action A.Compose), "include \"compose(sclk)\"")
 
-    , ((P.CapsLock, Action A.Control), "include \"ctrl(nocaps)\"")
-    , ((P.Menu,     Action A.Control), "include \"ctrl(menu_rctrl)\"")
-    , ((P.Alt_R,    Action A.Control), "include \"ctrl(ralt_rctrl)\"")
+    , ((P.CapsLock, Modifiers Shift [M.Control]), "include \"ctrl(nocaps)\"")
+    , ((P.Menu,     Modifiers Shift [M.Control]), "include \"ctrl(menu_rctrl)\"")
+    , ((P.Alt_R,    Modifiers Shift [M.Control]), "include \"ctrl(ralt_rctrl)\"")
 
     , ((P.CapsLock, Action A.Esc), "include \"capslock(escape)\"")
     , ((P.CapsLock, Action A.Backspace), "include \"capslock(backspace)\"")
-    , ((P.CapsLock, Action A.Win), "include \"capslock(super)\"")
-    , ((P.CapsLock, Action A.NumLock), "include \"capslock(numlock)\"")
+    , ((P.CapsLock, Modifiers Shift [M.Win]), "include \"capslock(super)\"")
+    , ((P.CapsLock, Modifiers Shift [M.NumLock]), "include \"capslock(numlock)\"")
     ]
 
 doubleIncludes ∷ [(((Pos, Letter), (Pos, Letter)), String)]
 doubleIncludes =
-    [ (((P.CapsLock, Action A.Control), (P.Control_L, Action A.CapsLock)), "include \"ctrl(swapcaps)\"")
-    , (((P.CapsLock, Action A.Esc), (P.Esc, Action A.CapsLock)), "include \"capslock(swapescape)\"")
+    [ (((P.CapsLock, Modifiers Shift [M.Control]), (P.Control_L, Modifiers Lock [M.CapsLock])), "include \"ctrl(swapcaps)\"")
+    , (((P.CapsLock, Action A.Esc), (P.Esc, Modifiers Lock [M.CapsLock])), "include \"capslock(swapescape)\"")
     ]
 
 modMappingIncludes ∷ [(Letter, String)]
 modMappingIncludes =
-    [ (Action A.AltGr,  "include \"level3(modifier_mapping)\"")
-    , (Action A.Extend, "include \"level5(modifier_mapping)\"")
+    [ (Modifiers Shift [M.AltGr],  "include \"level3(modifier_mapping)\"")
+    , (Modifiers Shift [M.Extend], "include \"level5(modifier_mapping)\"")
     ]
 
 presetTypes ∷ [(String, String)]

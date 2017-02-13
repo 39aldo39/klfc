@@ -33,11 +33,13 @@ type TypeName = String
 type RightGuess = Bool
 type Symbol = String
 type XkbAction = String
+type VirtualMod = String
 data XkbGroup = XkbGroup
     { __xkbGroupTypeName ∷ TypeName
     , __rightGuess ∷ RightGuess
     , __symbols ∷ [Symbol]
     , __actions ∷ [XkbAction]
+    , __virtualMods ∷ Maybe [VirtualMod]
     }
 data XkbKey = XkbKey
     { __xkbPos ∷ String
@@ -55,9 +57,8 @@ printActions ∷ [XkbAction] → String
 printActions = ("[ " ⊕) ∘ (⊕ " ]") ∘ intercalate ", " ∘ dropWhileEnd (≡"NoAction()")
 
 printGroup ∷ Group → XkbGroup → State Group [String]
-printGroup groupNr (XkbGroup _ _ symbols actions)
-  | all (≡"NoAction()") actions = pure <$> symbols'
-  | otherwise = (:[actions']) <$> symbols'
+printGroup groupNr (XkbGroup _ _ symbols actions vmods) =
+    (: catMaybes [actions', vmods']) <$> symbols'
   where
     symbols' = do
         expGroupNr ← state (id &&& succ)
@@ -65,7 +66,10 @@ printGroup groupNr (XkbGroup _ _ symbols actions)
           LT → pure $ "symbols[Group" ⊕ show groupNr ⊕ "] = " ⊕ printSymbolsHelp symbols
           EQ → pure $ printSymbolsHelp symbols
           GT → ("[], " ⊕) <$> symbols'
-    actions' = "actions[Group" ⊕ show groupNr ⊕ "] = " ⊕ printActions actions
+    actions'
+      | all (≡ "NoAction()") actions = Nothing
+      | otherwise = Just ("actions[Group" ⊕ show groupNr ⊕ "] = " ⊕ printActions actions)
+    vmods' = ("vmods=" ⊕) ∘ intercalate "," <$> vmods
 
 printGroups ∷ [(Group, XkbGroup)] → State Group [String]
 printGroups = concatMapM (uncurry printGroup)
@@ -85,7 +89,7 @@ stateXkbKeys = concatMapM $
         <*> pure ∘ printXkbKey
 
 stateXkbKey ∷ Group → XkbGroup → State (Map Group String) [String]
-stateXkbKey groupNr (XkbGroup typeName rightGuess _ _) = do
+stateXkbKey groupNr (XkbGroup typeName rightGuess _ _ _) = do
     prev ← M.lookup groupNr <$> get
     if maybe rightGuess (≡typeName) prev
       then pure []
@@ -145,7 +149,8 @@ printKey groupNr layout key = mapReaderT runMaybeT $ do
     statesAndLetters ← lift2 $ filterM (supportedShiftstate ∘ fst) (states `zip` letters)
     ls ← lift2 $ traverse (printLetter ∘ snd) statesAndLetters
     actions ← mapReaderT lift $ traverse (uncurry (printAction layout pos)) statesAndLetters
-    let xkbGroup = XkbGroup (keytypeName key) (isRightGuess key) ls actions
+    let vmods = nub ∘ concat <$> traverse printVirtualMods letters
+    let xkbGroup = XkbGroup (keytypeName key) (isRightGuess key) ls actions vmods
     pure $ XkbKey p (M.singleton groupNr xkbGroup)
   where
     pos = view _pos key
@@ -160,6 +165,11 @@ printLetter (Ligature (Just c) _) =
     printLetter (Char c)
 printLetter l@(Ligature Nothing _) =
     "NoSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
+printLetter (Action a) =
+    maybe e (pure ∘ __symbol) (lookup a actionAndLinuxAction)
+    where e = "NoSymbol" <$ tell [show' a ⊕ " is not supported in XKB"]
+printLetter (Modifiers effect mods) = pure ∘ fromMaybe "NoSymbol" ∘ listToMaybe $
+    mapMaybe ((`lookup` modifierAndSymbol) ∘ (,) effect) mods
 printLetter (Dead d) =
     maybe e pure (lookup d deadKeysAndLinuxDeadKeys)
     where e = "NoSymbol" <$ tell [show' d ⊕ " is not supported in XKB"]
@@ -167,9 +177,6 @@ printLetter (CustomDead _ (DeadKey _ (Just c) _)) =
     printLetter (Char c)
 printLetter l@(CustomDead _ (DeadKey _ Nothing _)) =
     "NoSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
-printLetter (Action a) =
-    maybe e (pure ∘ __symbol) (lookup a actionAndLinuxAction)
-    where e = "NoSymbol" <$ tell [show' a ⊕ " is not supported in XKB"]
 printLetter (Redirect mods pos) =
     printLetter (redirectToLetter mods pos)
 printLetter LNothing =
@@ -182,7 +189,7 @@ printAction layout pos shiftstate (Action a) = fromMaybe e $
   where
     removeRed = mapReaderT (mapWriter (over _2 (map (removeSubList "red:"))))
     e = "NoAction()" <$ tell [show' a ⊕ " is not supported in XKB"]
-printAction layout pos shiftstate r@(Redirect rMods rPos) = do
+printAction layout pos shiftstate l@(Redirect rMods rPos) = do
     extraClearedMods ← bool [M.Extend] [] <$> asks __redirectClearsExtend
     let addMods   = rMods ∖ mods
     let clearMods = mods ∖ (rMods ⧺ extraClearedMods)
@@ -205,9 +212,21 @@ printAction layout pos shiftstate r@(Redirect rMods rPos) = do
     lPosses = getPosByLetterAndShiftstate letter rShiftstate layout
     qPosses = filter sameSymbol (getPosByLetterAndShiftstate letter rShiftstate defaultLayout)
     sameSymbol p = maybe True ((≡ symbol) ∘ fst ∘ runWriter ∘ printLetter) (getLetterByPosAndShiftstate p rShiftstate layout)
-    noOrigRedPos = lift $ "NoAction()" <$ tell [show' r ⊕ " on " ⊕ show' pos ⊕ " could not redirect to the original position in XKB"]
-    noRedPos = lift $ "NoAction()" <$ tell [show' r ⊕ " on " ⊕ show' pos ⊕ " could not find a redirect position in XKB"]
+    noOrigRedPos = lift $ "NoAction()" <$ tell [show' l ⊕ " on " ⊕ show' pos ⊕ " could not redirect to the original position in XKB"]
+    noRedPos = lift $ "NoAction()" <$ tell [show' l ⊕ " on " ⊕ show' pos ⊕ " could not find a redirect position in XKB"]
+printAction _ _ _ l@(Modifiers effect mods) = lift $
+    printLinuxAction (effectToAction effect symbol mods)
+  where
+    symbol = fst ∘ runWriter $ printLetter l
+    effectToAction Shift = SetMods
+    effectToAction Latch = LatchMods
+    effectToAction Lock  = LockMods
 printAction _ _ _ _ = pure "NoAction()"
+
+printVirtualMods ∷ Letter → Maybe [String]
+printVirtualMods (Modifiers _ mods) = Just $
+    mapMaybe (`lookup` modifierAndPressedModifier) (filter (∈ virtualMods) mods)
+printVirtualMods _ = Nothing
 
 redirectToLetter ∷ [Modifier] → Pos → Letter
 redirectToLetter mods pos = fromMaybe e $

@@ -11,6 +11,7 @@ module Lookup.Windows
     , modifierAndChar
     , PklAction(..)
     , actionAndPklAction
+    , modifierAndPklAction
     ) where
 
 import BasePrelude
@@ -45,7 +46,7 @@ shiftstateFromWinShiftstate = WP.fromList ∘ catMaybes ∘ zipWith toModifier (
           toModifier n _ = lookupR n modifierAndWinShiftstate
 
 isAltRToAltGr ∷ SingletonKey → Bool
-isAltRToAltGr (P.Alt_R, Action A.AltGr) = True
+isAltRToAltGr (P.Alt_R, Modifiers Shift [M.AltGr]) = True
 isAltRToAltGr _ = False
 
 altGrToControlAlt ∷ Shiftstate → Shiftstate
@@ -231,20 +232,6 @@ actionAndPklAction =
     , (A.ScrollLock, Simple "ScrollLock")
     , (A.Pause, Simple "Pause")
     , (A.ControlBreak, Simple "CtrlBreak")
-    , (A.Shift, Simple "Shift")
-    , (A.Control, Simple "Ctrl")
-    , (A.Alt, Simple "Alt")
-    , (A.AltGr, Simple "RAlt")
-    , (A.Win, Simple "LWin")
-    , (A.CapsLock, Simple "CapsLock")
-    , (A.Shift_L, Simple "LShift")
-    , (A.Shift_R, Simple "RShift")
-    , (A.Control_L, Simple "LCtrl")
-    , (A.Control_R, Simple "RCtrl")
-    , (A.Alt_L, Simple "LAlt")
-    , (A.Alt_R, Simple "RAlt")
-    , (A.Win_L, Simple "LWin")
-    , (A.Win_R, Simple "RWin")
     , (A.Insert, Simple "Ins")
     , (A.Delete, Simple "Del")
     , (A.Home, Simple "Home")
@@ -338,4 +325,22 @@ actionAndPklAction =
     , (A.KP_PageDown, Simple "NumpadPgDn")
     , (A.KP_Insert, Simple "NumpadIns")
     , (A.KP_Delete, Simple "NumpadDel")
+    ]
+
+modifierAndPklAction ∷ [(Modifier, PklAction)]
+modifierAndPklAction =
+    [ (M.Shift, Simple "Shift")
+    , (M.Shift_L, Simple "LShift")
+    , (M.Shift_R, Simple "RShift")
+    , (M.CapsLock, Simple "CapsLock")
+    , (M.Win, Simple "LWin")
+    , (M.Win_L, Simple "LWin")
+    , (M.Win_R, Simple "RWin")
+    , (M.Alt, Simple "Alt")
+    , (M.Alt_L, Simple "LAlt")
+    , (M.Alt_R, Simple "RAlt")
+    , (M.Control, Simple "Ctrl")
+    , (M.Control_L, Simple "LCtrl")
+    , (M.Control_R, Simple "RCtrl")
+    , (M.AltGr, Simple "RAlt")
     ]

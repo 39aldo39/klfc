@@ -16,7 +16,6 @@ import Lens.Micro.Platform (set, over, _Left)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Text.Lazy (Parser)
 
-import qualified Layout.Action as A
 import Layout.Key (Key(Key))
 import Layout.Layout (Layout(Layout))
 import qualified Layout.Modifier as M
@@ -96,7 +95,7 @@ globalSection ∷ Parser PklParseLayout
 globalSection = mconcat ∘ map (uncurry field) <$> many nameValue
   where
     field ∷ String → String → PklParseLayout
-    field "extend_key" = maybe (∅) ((\ks → (∅) { parseSingletonKeys = [ks]}) ∘ flip (,) (Action A.Extend)) ∘ parseString
+    field "extend_key" = maybe (∅) ((\ks → (∅) { parseSingletonKeys = [ks]}) ∘ flip (,) (Modifiers Shift [M.Extend])) ∘ parseString
     field "shiftstates" = (\ms → (∅) { parseShiftstates = ms }) ∘ map shiftstateFromWinShiftstate ∘ catMaybes ∘ map readMaybe ∘ shiftstates
     field _ = const (∅)
 

@@ -1,4 +1,6 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Pkl
     ( printPklData
@@ -18,13 +20,12 @@ import Control.Monad.State (evalState)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (tell)
-import Lens.Micro.Platform (view, over)
+import Lens.Micro.Platform (view, over, (<&>))
 
-import Layout.Action (isModifier)
-import qualified Layout.Action as A
 import Layout.Key (letterToDeadKey, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
 import Layout.Layout (addDefaultKeysWith, getDefaultKeys, setNullChars, unifyShiftstates, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
+import Layout.ModifierEffect (defaultModifierEffect)
 import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Linux (posAndScancode)
@@ -197,7 +198,7 @@ toLayoutData' layout =
     (keys, states) = unifyShiftstates (view _keys layout)
     pklKeys = catMaybes <$> traverse (keyToPklKey layout) keys
     pklModifierKeys = catMaybes <$> traverse (singletonKeyToPklKey layout) (view _singletonKeys layout)
-    extendPos = listToMaybe $ filterOnSnd (≡ Action A.Extend) (view _singletonKeys layout)
+    extendPos = listToMaybe $ filterOnSnd (≡ Modifiers Shift [M.Extend]) (view _singletonKeys layout)
     extendPosToPklPos P.CapsLock = pure "CapsLock"
     extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndString) <|> toPklPos pos
     fromPklDead (CustomDead (Just i) d) = Just (i, d)
@@ -271,10 +272,19 @@ printLetter ∷ IsExtend → Layout → Letter → Logger String
 printLetter isExtend _ (Char ' ') = pure (addBraces isExtend "space")
 printLetter _ _ (Char c) = pure [c]
 printLetter _ _ (Ligature _ x) = pure x
-printLetter _ _ (CustomDead (Just i) _) = pure ("dk" ⊕ show i)
-printLetter _ _ l@(CustomDead Nothing _) = "--" <$ tell [show' l ⊕ " does not have an dead key number"]
 printLetter isExtend layout (Action a) =
     addBraces isExtend <$> actionToPkl layout a
+printLetter _ _ (Modifiers Shift [M.Extend]) = pure "--"
+printLetter _ _ (Modifiers effect [modifier])
+  | effect ≡ defaultModifierEffect modifier
+  = case lookup modifier modifierAndPklAction of
+      Just (Simple xs) → pure xs
+      _ → "--" <$ tell [show' modifier ⊕ " is not supported in PKL"]
+  | otherwise = "--" <$ tell [show' modifier ⊕ " with " ⊕ show' effect ⊕ " is not supported in PKL"]
+printLetter _ _ (Modifiers _ _) =
+     "--" <$ tell ["Multiple modifiers on one letter is not supported in PKL"]
+printLetter _ _ (CustomDead (Just i) _) = pure ("dk" ⊕ show i)
+printLetter _ _ l@(CustomDead Nothing _) = "--" <$ tell [show' l ⊕ " does not have an dead key number"]
 printLetter isExtend layout l@(Redirect mods pos) =
     case getLetterByPosAndShiftstate pos (WP.fromList mods) defaultFullLayout of
       Just l' → addBraces isExtend <$> printPklAction layout l (RedirectLetter l' mods)
@@ -299,11 +309,11 @@ addBraces Extend x = x
 addBraces NotExtend x = "={" ⊕ x ⊕ "}"
 
 printModifierPosition ∷ Layout → Letter → Logger String
-printModifierPosition _ (Action A.Extend) = pure "disabled"
-printModifierPosition layout (Action a)
-  | isModifier a =
-      case lookup a actionAndPklAction of
-        Just (Simple xs) → pure $ xs ⊕ "\tmodifier"
-        _ → "disabled" <$ tell [show' a ⊕ " is not supported in PKL"]
-  | otherwise = printLetter NotExtend layout (Action a)
-printModifierPosition layout letter = printLetter NotExtend layout letter
+printModifierPosition layout letter
+  | Modifiers _ _ ← letter
+  = s <&> \case
+      "--" → "disabled"
+      s' → s' ⊕ "\tmodifier"
+  | otherwise = s
+  where
+    s = printLetter NotExtend layout letter

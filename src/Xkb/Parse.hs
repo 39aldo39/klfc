@@ -5,7 +5,7 @@
 
 module Xkb.Parse where
 
-import BasePrelude hiding (try)
+import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR, whenNothing, (>$>))
@@ -136,6 +136,7 @@ parseLetter xs = whenNothing (tell ["unknown letter ‘" ⊕ xs ⊕ "’"]) $
     asum [ Char <$> lookupR xs charAndString
          , Dead <$> lookupR xs deadKeysAndLinuxDeadKeys
          , Action <$> lookupR xs (map (over _2 __symbol) actionAndLinuxAction)
+         , uncurry Modifiers ∘ over _2 (:[]) <$> lookupR xs modifierAndSymbol
          , parseString xs
          ]
 

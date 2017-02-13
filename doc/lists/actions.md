@@ -118,24 +118,6 @@ The supported actions are:
 * `BrightnessDown`
 * `BrightnessUp`
 
-###### Modifiers ######
-* `Shift`
-* `Shift_L`
-* `Shift_R`
-* `CapsLock`
-* `Win`
-* `Win_L`
-* `Win_R`
-* `Alt`
-* `Alt_L`
-* `Alt_R`
-* `Control`
-* `Control_L`
-* `Control_R`
-* `NumLock`
-* `AltGr`
-* `Extend`
-
 ###### Mouse keys ######
 * `Button_Default`
 * `Button_L`

@@ -198,6 +198,9 @@ privateChars = [chr   0xE000 .. chr   0xF8FF]
              ⧺ [chr  0xF0000 .. chr  0xFFFFD]
              ⧺ [chr 0x100000 .. chr 0x10FFFD]
 
+allBounded ∷ (Enum α, Bounded α) ⇒ [α]
+allBounded = [minBound .. maxBound]
+
 infixr 1 >$>
 (>$>) ∷ Functor f ⇒ (α → f β) → (β → γ) → α → f γ
 f >$> g = f >>> fmap g

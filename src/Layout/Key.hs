@@ -42,7 +42,7 @@ import Control.Monad.State (State, state)
 import Data.Aeson
 import Data.Functor.Identity (runIdentity)
 import Data.List.NonEmpty (NonEmpty((:|)))
-import qualified Data.List.NonEmpty as NE (init, last)
+import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
 import qualified Data.Set as S
 import Lens.Micro.Platform (Lens', makeLenses, view, set, over, _2)
@@ -51,6 +51,7 @@ import FileType (FileType)
 import Filter (Filter(..))
 import Layout.Modifier (Modifier, Shiftstate, activatedBy)
 import qualified Layout.Modifier as M
+import Layout.ModifierEffect (ModifierEffect(..), defaultModifierEffect)
 import Layout.Pos (Pos)
 import Layout.Action (Action)
 import Layout.DeadKey (DeadKey(DeadKey), __dkName)
@@ -62,9 +63,10 @@ data Letter
     = Char Char
     | Ligature (Maybe Char) String
     | Action Action
-    | Redirect [Modifier] Pos
+    | Modifiers ModifierEffect [Modifier]
     | Dead PresetDeadKey
     | CustomDead (Maybe Int) DeadKey
+    | Redirect [Modifier] Pos
     | LNothing
     deriving (Eq, Show, Read)
 
@@ -112,6 +114,10 @@ letterToString ∷ Letter → String
 letterToString (Char x) = [x]
 letterToString (Ligature Nothing xs) = "lig:" ⊕ xs
 letterToString (Ligature (Just c) xs) = c:':':xs
+letterToString (Modifiers effect [modifier]) | defaultModifierEffect modifier ≡ effect = toString modifier
+letterToString (Modifiers Shift mods) = "shift:" ⊕ intercalate "," (map toString mods)
+letterToString (Modifiers Latch mods) = "latch:" ⊕ intercalate "," (map toString mods)
+letterToString (Modifiers Lock  mods) = "lock:"  ⊕ intercalate "," (map toString mods)
 letterToString (Action x) = toString x
 letterToString (Redirect []   p) = "red:" ⊕ toString p
 letterToString (Redirect mods p) = intercalate "+" (map toString mods ⧺ [toString p])
@@ -131,8 +137,12 @@ letterFromString s = maybe e pure ∘ asum ∘ fmap ($ s) $
     , stripPrefix "customDeadKey:" >$> customDead
     , stripPrefix "red:" >=> redirect
     , stripPrefix "redirect:" >=> redirect
+    , stripPrefix "shift:" >=> modifiersWith Shift
+    , stripPrefix "latch:" >=> modifiersWith Latch
+    , stripPrefix "lock:" >=> modifiersWith Lock
     , char
     , ligature
+    , modifier
     , action
     , dead
     , redirect
@@ -145,6 +155,11 @@ letterFromString s = maybe e pure ∘ asum ∘ fmap ($ s) $
     ligature (c:':':xs) = Just (Ligature (Just c) xs)
     ligature _          = Nothing
     ligature' = Ligature Nothing
+    modifiersWith effect =
+        toList ∘ split (∈ [',', ' ']) >>>
+        traverse parseString ∘ filter (not ∘ null) >$>
+        Modifiers effect
+    modifier = parseString >$> \m → Modifiers (defaultModifierEffect m) [m]
     customDead xs = CustomDead Nothing (DeadKey xs Nothing [])
     action = parseString >$> Action
     dead = parseString >$> Dead

@@ -20,8 +20,8 @@ import Layout.Key (letterToChar, getLevel)
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lens.Micro.Platform (view)
-import Lookup.Linux (presetTypes, defaultTypes, modifierAndLevelstring)
-import Xkb.General (XkbConfig, prepareLayout, supportedModifier)
+import Lookup.Linux (presetTypes, defaultTypes, modifierAndTypeModifier)
+import Xkb.General (XkbConfig, prepareLayout, supportedTypeModifier)
 
 isRightGuess ∷ Key → Bool
 isRightGuess key = rightGuessMods ∧ rightCapslock
@@ -54,7 +54,7 @@ keytypeName = (\x → fromMaybe x (lookup x presetTypes)) ∘ keytypeName'
 
 keytypeName' ∷ Key → String
 keytypeName' key =
-    (intercalate "_" ∘ map modsToName ∘ filter (all (∈ map fst modifierAndLevelstring)) ∘ map toList $ view _shiftstates key) ⊕
+    (intercalate "_" ∘ map modsToName ∘ filter (all (∈ map fst modifierAndTypeModifier)) ∘ map toList $ view _shiftstates key) ⊕
     bool "" "_ALPHABETIC" (view _capslock key)
   where
     modsToName [] = "NONE"
@@ -76,7 +76,7 @@ printTypes = mapReaderT (pure ∘ runIdentity) ∘ prepareLayout >=> \layout →
     printVirtualMods [] = [""]
     printVirtualMods xs =
         [ ""
-        , "    virtual_modifiers " ⊕ intercalate "," (mapMaybe (`lookup` modifierAndLevelstring) xs) ⊕ ";"
+        , "    virtual_modifiers " ⊕ intercalate "," (mapMaybe (`lookup` modifierAndTypeModifier) xs) ⊕ ";"
         , ""
         ]
 
@@ -108,7 +108,7 @@ printType (Type typeName typeMods maps preserves levelNames) = map (replicate 4 
     printPreserve (WithPlus mods, WithPlus preserveMods) = "preserve[" ⊕ fromMaybe "None" (listMods (S.toDescList mods)) ⊕ "] = " ⊕ fromMaybe "None" (listMods (S.toDescList preserveMods)) ⊕ ";"
     printName (level, string) = "level_name[Level" ⊕ show (succ level) ⊕ "] = \"" ⊕ string ⊕ "\";"
     listMods [] = Nothing
-    listMods ms = Just ∘ intercalate "+" ∘ mapMaybe (`lookup` modifierAndLevelstring) $ ms
+    listMods ms = Just ∘ intercalate "+" ∘ mapMaybe (`lookup` modifierAndTypeModifier) $ ms
 
 getTypes ∷ Layout → Logger [Type]
 getTypes =
@@ -119,7 +119,7 @@ getTypes =
     isPresetType = (∈ map snd presetTypes)
 
 getType ∷ Key → Logger Type
-getType key = getType' key <$> filterMS supportedModifier mods
+getType key = getType' key <$> filterMS supportedTypeModifier mods
   where
     mods       = (S.∪ extraMods) ∘ S.unions ∘ map getSet ∘ view _shiftstates $ key
     extraMods  = S.fromList [M.CapsLock | view _capslock key]
