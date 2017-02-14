@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Xkb.Types where
 
@@ -10,8 +11,7 @@ import Util (subsets, (>$>))
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP (fromList, singleton)
 
-import Control.Monad.Reader (ReaderT, lift, mapReaderT)
-import Data.Functor.Identity (runIdentity)
+import Control.Monad.Reader (MonadReader)
 import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -60,9 +60,9 @@ keytypeName' key =
     modsToName [] = "NONE"
     modsToName ms = intercalate "+" ∘ map (map toUpper ∘ show) $ ms
 
-printTypes ∷ Layout → ReaderT XkbConfig Logger String
-printTypes = mapReaderT (pure ∘ runIdentity) ∘ prepareLayout >=> \layout → do
-    types ← lift $ getTypes layout
+printTypes ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m String
+printTypes = prepareLayout >=> \layout → do
+    types ← getTypes layout
     let virtualMods = S.unions (map __typeMods types)
     pure $ unlines $
         [ "default xkb_types \"basic\" {"
@@ -110,7 +110,7 @@ printType (Type typeName typeMods maps preserves levelNames) = map (replicate 4 
     listMods [] = Nothing
     listMods ms = Just ∘ intercalate "+" ∘ mapMaybe (`lookup` modifierAndTypeModifier) $ ms
 
-getTypes ∷ Layout → Logger [Type]
+getTypes ∷ Logger m ⇒ Layout → m [Type]
 getTypes =
     traverse getType ∘ view _keys >$>
     filter (not ∘ isPresetType ∘ __typeName) >>>
@@ -118,7 +118,7 @@ getTypes =
   where
     isPresetType = (∈ map snd presetTypes)
 
-getType ∷ Key → Logger Type
+getType ∷ Logger m ⇒ Key → m Type
 getType key = getType' key <$> filterMS supportedTypeModifier mods
   where
     mods       = (S.∪ extraMods) ∘ S.unions ∘ map getSet ∘ view _shiftstates $ key

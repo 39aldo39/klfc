@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module Layout.Types
     ( Action
     , DeadKey(..)
@@ -24,7 +26,6 @@ module Layout.Types
     , _keys
     , SingletonKey
     , Logger
-    , LoggerT
     , Mod(..)
     , Modifier
     , ModifierEffect(..)
@@ -41,7 +42,6 @@ import Layout.Modifier (Modifier, Shiftstate)
 import Layout.ModifierEffect (ModifierEffect(..))
 import Layout.Pos (Pos)
 
-import Control.Monad.Writer (Writer, WriterT)
+import Control.Monad.Writer (MonadWriter)
 
-type Logger  = Writer  [String]
-type LoggerT = WriterT [String]
+type Logger = MonadWriter [String]

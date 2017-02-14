@@ -11,8 +11,8 @@ import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR, whenNothing, (>$>))
 import qualified WithPlus as WP (fromList, singleton)
 
-import Control.Monad.Trans (liftIO)
-import Control.Monad.Writer (MonadWriter, writer, runWriterT, tell)
+import Control.Monad.Trans (MonadIO, liftIO)
+import Control.Monad.Writer (writer, runWriterT, tell)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.IO as L
 import Lens.Micro.Platform (set, over, _2, _Left)
@@ -28,15 +28,15 @@ import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux
 
-layout ∷ FilePath → Parser (String, LoggerT IO Layout)
+layout ∷ (Logger m, MonadIO m) ⇒ FilePath → Parser (String, m Layout)
 layout dir = liftA2 (,)
     (manyTill (void xkbName <|> ws1) (char '"') *> xkbName <* char '"')
     (ws *> char '{' *> ws *> xkbLines dir <* char '}' <* ws <* char ';' <* ws)
 
-xkbLines ∷ FilePath → Parser (LoggerT IO Layout)
+xkbLines ∷ (Logger m, MonadIO m) ⇒ FilePath → Parser (m Layout)
 xkbLines dir = fmap mconcat ∘ sequence <$> many (xkbLine dir)
 
-xkbLine ∷ FilePath → Parser (LoggerT IO Layout)
+xkbLine ∷ (Logger m, MonadIO m) ⇒ FilePath → Parser (m Layout)
 xkbLine dir = pure (∅) <$ keySetting
     <|> fmap (flip (set _keys) (∅) ∘ maybeToList) ∘ writer <$> runWriterT key
     <|> include dir
@@ -44,10 +44,10 @@ xkbLine dir = pure (∅) <$ keySetting
     <|> pure (∅) <$ modifierMap
     <|> pure (∅) <$ virtualModifiers
 
-groupName ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m String
+groupName ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
 groupName = keyDescription (string' "name") *> char '"' *> manyTill anyChar (char '"') <* ws <* char ';' <* ws
 
-key ∷ LoggerT Parser (Maybe Key)
+key ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe Key)
 key = do
     void $ optional (string' "replace" *> ws) *>
            optional (string' "override" *> ws) *>
@@ -74,7 +74,7 @@ shiftstates = catMaybes ∘ zipWith (<$)
     , WP.fromList [M.Extend, M.AltGr, M.Shift]
     ]
 
-xkbLetters ∷ LoggerT Parser (Maybe [Maybe Letter])
+xkbLetters ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe [Maybe Letter])
 xkbLetters = asum
   [ Just <$> symbols
   , Just <$> (keyDescription (string' "symbols") *> symbols)
@@ -91,37 +91,37 @@ xkbLetters = asum
         xkbName)
   ]
 
-keyDescription ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m α → m α
+keyDescription ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m α → m α
 keyDescription s = s <* ws <*
                    optional (char '[' *> ws *> xkbName <* ws <* char ']') <*
                    ws <* char '=' <* ws
 
-symbols ∷ LoggerT Parser [Maybe Letter]
+symbols ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m [Maybe Letter]
 symbols =
     char '[' *> ws *> keysym `sepBy` comma <* char ']' <* ws
 
-actions ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m [(String, String)]
+actions ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [(String, String)]
 actions = char '[' *> ws *> action `sepBy` comma <* char ']' <* ws
 
-action ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m (String, String)
+action ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (String, String)
 action = liftA2 (,)
          (some alphaNumChar)
          (char '(' *> many (alphaNumChar <|> oneOf " _,+-=<>!") <* char ')' <* ws)
 
-comma ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m ()
+comma ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
 comma = char ',' *> ws
 
-position ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m (Either String Pos)
+position ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (Either String Pos)
 position = parsePos <$> xkbName <?> ""
 
 parsePos ∷ String → Either String Pos
 parsePos s = maybe (Left ("unknown position ‘" ⊕ s ⊕ "’")) Right $
     lookupR s posAndKeycode
 
-keysym ∷ LoggerT Parser (Maybe Letter)
+keysym ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe Letter)
 keysym = xkbName >>= parseLetter
 
-parseLetter ∷ MonadWriter [String] m ⇒ String → m (Maybe Letter)
+parseLetter ∷ Logger m ⇒ String → m (Maybe Letter)
 parseLetter "NoSymbol" = pure Nothing
 parseLetter "VoidSymbol" = pure (Just LNothing)
 parseLetter [x] = pure ∘ Just $ Char x
@@ -140,11 +140,11 @@ parseLetter xs = whenNothing (tell ["unknown letter ‘" ⊕ xs ⊕ "’"]) $
          , parseString xs
          ]
 
-include ∷ FilePath → Parser (LoggerT IO Layout)
+include ∷ (Logger m, MonadIO m) ⇒ FilePath → Parser (m Layout)
 include dir = fmap (set _info (∅)) ∘ getInclude dir <$>
     (string' "include" *> ws *> char '"' *> some (noneOf "\"") <* char '"' <* ws)
 
-getInclude ∷ FilePath → String → LoggerT IO Layout
+getInclude ∷ (Logger m, MonadIO m) ⇒ FilePath → String → m Layout
 getInclude dir name
   | Just singletonKeys ← parseSingletonKey name = pure $
         set _singletonKeys singletonKeys (∅)
@@ -169,33 +169,33 @@ parseSingletonKey xs = asum
     ]
   where xs' = "include \"" ⊕ xs ⊕ "\""
 
-keySetting ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m ()
+keySetting ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
 keySetting = string' "key." *> manyTill anyChar (char ';') *> ws *> pure ()
 
-modifierMap ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m (String, [String])
+modifierMap ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (String, [String])
 modifierMap = liftA2 (,)
               (string' "modifier_map" *> ws *> xkbName <* ws)
               (char '{' *> ws *> xkbName `sepBy` comma <* char '}' <* ws <* char ';' <* ws)
 
-virtualModifiers ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m [String]
+virtualModifiers ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [String]
 virtualModifiers = string' "virtual_modifiers" *> ws *> xkbName `sepBy` comma <* char ';' <* ws
 
-xkbName ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m String
+xkbName ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
 xkbName = some (alphaNumChar <|> oneOf "_+-<>()") <* ws
 
-ws ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m ()
+ws ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
 ws = void $ many singleSpace
 
-ws1 ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m ()
+ws1 ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
 ws1 = void (some singleSpace) <?> "white space"
 
-comment ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m ()
+comment ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
 comment = void $ (string "//" <|> string "#") *> manyTill anyChar eol
 
-singleSpace ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m ()
+singleSpace ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
 singleSpace = void (some spaceChar) <|> comment <?> ""
 
-boolean ∷ (Token s ~ Char, MonadParsec e s m) ⇒ m Bool
+boolean ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m Bool
 boolean = True <$ (string' "true" <|> string' "yes" <|> string' "on")
    <|> False <$ (string' "false" <|> string' "no" <|> string' "off")
 
@@ -210,7 +210,7 @@ getFileAndVariant fname = (dir </> file, variant)
     (dir, name) = splitFileName fname
     (file, variant) = fromMaybe (fname, "basic") $ parseXkbFilePath name
 
-parseXkbLayoutVariant ∷ String → FilePath → L.Text → Either String (LoggerT IO Layout)
+parseXkbLayoutVariant ∷ (Logger m, MonadIO m) ⇒ String → FilePath → L.Text → Either String (m Layout)
 parseXkbLayoutVariant variant fname =
     parse (many (layout dir) <* eof) fname >>>
     over _Left parseErrorPretty >$>

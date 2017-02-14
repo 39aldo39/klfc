@@ -5,7 +5,7 @@
 
 module Layout.Key
     ( Letter(..)
-    , Key(Key)
+    , Key(..)
     , _pos
     , _shortcutPos
     , _shiftstates

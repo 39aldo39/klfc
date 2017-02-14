@@ -1,5 +1,6 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Xkb.General where
 
@@ -9,7 +10,7 @@ import Data.Monoid.Unicode ((∅), (⊕))
 import Util (show')
 import qualified WithPlus as WP (singleton)
 
-import Control.Monad.Reader (Reader, asks)
+import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view, over)
 
@@ -25,7 +26,7 @@ data XkbConfig = XkbConfig
     , __redirectClearsExtend ∷ Bool
     }
 
-prepareLayout ∷ Layout → Reader XkbConfig Layout
+prepareLayout ∷ MonadReader XkbConfig m ⇒ Layout → m Layout
 prepareLayout layout =
     (\addShortcuts →
     over _keys
@@ -34,15 +35,15 @@ prepareLayout layout =
         ) (addDefaultKeys defaultKeys layout)
     ) <$> asks __addShortcuts
 
-supportedShiftstate ∷ Shiftstate → Logger Bool
+supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedTypeModifier ∘ toList
 
-supportedTypeModifier ∷ Modifier → Logger Bool
+supportedTypeModifier ∷ Logger m ⇒ Modifier → m Bool
 supportedTypeModifier modifier
     | modifier ∈ map fst modifierAndTypeModifier = pure True
     | otherwise = False <$ tell [show' modifier ⊕ " is not supported in XKB"]
 
-supportedPressedModifier ∷ Modifier → Logger Bool
+supportedPressedModifier ∷ Logger m ⇒ Modifier → m Bool
 supportedPressedModifier modifier
     | modifier ∈ map fst modifierAndPressedModifier = pure True
     | otherwise = False <$ tell [show' modifier ⊕ " is not supported in XKB"]

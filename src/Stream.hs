@@ -5,9 +5,11 @@ module Stream
     , toFname
     , readStream
     , writeStream
+    , writeFileStream
     ) where
 
 import BasePrelude hiding (readFile, writeFile)
+import Prelude.Unicode
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.IOData (IOData, readFile, writeFile, hGetContents, hPut)
@@ -33,3 +35,6 @@ writeStream Standard = hPut stdin
 writeStream (File fname) = \text → do
     liftIO $ createDirectoryIfMissing True (takeDirectory fname)
     writeFile fname text
+
+writeFileStream ∷ (MonadIO m, IOData α) ⇒ FilePath → α → m ()
+writeFileStream = writeStream ∘ File

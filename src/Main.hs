@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 import BasePrelude
 import Prelude.Unicode
@@ -8,13 +9,12 @@ import Data.Monoid.Unicode ((∅), (⊕))
 import Util (show', replace, replaceWith, escape, filterOnIndex, (>$>))
 
 import Control.Monad.Reader (runReaderT)
-import Control.Monad.Trans (liftIO)
-import Control.Monad.Writer (execWriterT, mapWriterT, tell)
+import Control.Monad.Trans (MonadIO, liftIO)
+import Control.Monad.Writer (WriterT, execWriterT, tell)
 import Data.Aeson (eitherDecode)
 import qualified Data.ByteString as B (ByteString, readFile, writeFile)
 import qualified Data.ByteString.Char8 as B8 (lines, unlines)
 import Data.FileEmbed (embedFile)
-import Data.Functor.Identity (runIdentity)
 import Data.IOData (IOData)
 import qualified Data.Text as T (pack)
 import qualified Data.Text.Encoding as T (encodeUtf8)
@@ -38,7 +38,7 @@ import Layout.Mod (isEmptyMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
-import Stream (Stream(..), toFname, readStream, writeStream)
+import Stream (Stream(..), toFname, readStream, writeStream, writeFileStream)
 import Xkb (XkbConfig(..), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
 
 data Options = Options
@@ -85,28 +85,23 @@ execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ 
     let layout = execExtraOptions extraOptions ∘ layout'
     forM_ outputs (\out → output out extraOptions layout)
 
-input ∷ FileType → Stream → LoggerT IO (FileType → Layout)
+input ∷ (Logger m, MonadIO m) ⇒ FileType → Stream → m (FileType → Layout)
 input Json = parseWith (\fname → bimap ((fname ⊕ ": ") ⊕) pure ∘ eitherDecode ∘ removeJsonComments)
 input Xkb =
     getFileAndVariant ∘ toFname >>> (\(fname, variant) →
-    parseWith' (parseXkbLayoutVariant variant) (File fname)) >$> const
+    parseWith (parseXkbLayoutVariant variant) (File fname)) >$> const
 input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
 input Keylayout = fail "importing from a keylayout file is not supported"
 
-parseWith ∷ IOData α ⇒ (String → α → Either String (Logger β)) →
-    Stream → LoggerT IO β
-parseWith = parseWith' ∘ fmap3 (mapWriterT (pure ∘ runIdentity))
-  where fmap3 = fmap ∘ fmap ∘ fmap
-
-parseWith' ∷ IOData α ⇒ (String → α → Either String (LoggerT IO β)) →
-    Stream → LoggerT IO β
-parseWith' parser stream = flip ($) stream $
-    liftIO ∘ readStream >=>
+parseWith ∷ (Logger m, MonadIO m) ⇒ IOData α ⇒ (String → α → Either String (m β)) →
+    Stream → m β
+parseWith parser stream = flip ($) stream $
+    readStream >=>
     parser (toFname stream) >>>
     either (fail ∘ ("parse fail in " ⊕) ∘ dropWhileEnd (≡'\n')) id
 
-output ∷ Output → [ExtraOption] → (FileType → Layout) → LoggerT IO ()
+output ∷ (Logger m, MonadIO m) ⇒ Output → [ExtraOption] → (FileType → Layout) → m ()
 output (OutputAll Standard) _ = const (fail "everything as output must be written to a directory")
 output (OutputAll (File dir)) extraOptions = \layout → do
     let name = view (_info ∘ _name) ∘ layout
@@ -122,7 +117,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Klc (dir </> "klc")
     output' Keylayout (dir </> "keylayout")
 output (Output Json stream) _ = ($ Json) >>>
-    liftIO ∘ writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
+    writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let name = replaceWith (not ∘ isAlphaNum) '_' $ view (_info ∘ _name) layout
@@ -130,17 +125,17 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let mods = (\(Mod modName _) → replaceWith (not ∘ isAlphaNum) '_' modName) <$> view _mods layout
     when (null name) (fail "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
-    printIOLogger (dir </> "symbols" </> name) (runReaderT (printSymbols layout) xkbConfig)
-    printIOLogger (dir </> "types" </> name) (runReaderT (printTypes layout) xkbConfig)
-    printIOLogger (dir </> "keycodes" </> name) (printKeycodes layout)
-    printIOLogger (dir </> "XCompose") (pure (printXCompose layout))
+    writeFileStream (dir </> "symbols" </> name) =<< runReaderT (printSymbols layout) xkbConfig
+    writeFileStream (dir </> "types" </> name) =<< runReaderT (printTypes layout) xkbConfig
+    writeFileStream (dir </> "keycodes" </> name) =<< printKeycodes layout
+    writeFileStream (dir </> "XCompose") (printXCompose layout)
     let replaceLayout = replaceVar "layout" name
     let replaceDescription = replaceVar "description" description
     let replaceMods = replaceVar "mods" (intercalate " " mods)
     sessionFile ← liftIO $ B.readFile "xkb/run-session.sh"  <|> pure defXkbSession
     systemFile  ← liftIO $ B.readFile "xkb/install-system.sh" <|> pure defXkbSystem
     xmlFile     ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
-    liftIO $ B.writeFile (dir </> "run-session.sh")  (replaceLayout sessionFile)
+    liftIO $ B.writeFile (dir </> "run-session.sh") (replaceLayout sessionFile)
     liftIO $ B.writeFile (dir </> "install-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) systemFile)
     liftIO $ createDirectoryIfMissing True (dir </> "scripts")
     liftIO $ B.writeFile (dir </> "scripts/add-layout-to-xml.py") ((replaceDescription ∘ replaceLayout) xmlFile)
@@ -161,22 +156,22 @@ output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     forM_ ((∅) : view _mods layout) $ \layoutMod@(Mod nameM _) → do
         let nameM' = bool ('_':nameM) "" (isEmptyMod layoutMod)
         let layout' = applyModLayout layoutMod layout
-        printIOLogger (dir </> ("pkl" ⊕ nameM') <.> "ini") (printedPklData layout')
-        printIOLogger (layoutFile nameM' layout') (printedLayoutData layout')
+        writeFileStream (dir </> ("pkl" ⊕ nameM') <.> "ini") =<< printedPklData layout'
+        writeFileStream (layoutFile nameM' layout') =<< printedLayoutData layout'
     pklFile ← liftIO $ B.readFile "pkl/pkl.exe" <|> pure defPklFile
     liftIO $ B.writeFile (dir </> "pkl.exe") pklFile
 output (Output Klc Standard) _ = ($ Klc) >>>
-    printIOLoggerStream Standard ∘ fmap printKlcData ∘ toKlcData
+    writeStream Standard ∘ printKlcData <=< toKlcData
 output (Output Klc (File dir)) _ = ($ Klc) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (fail "the layout has an empty name when exported to KLC")
     let fname l = dir </> view (_info ∘ _name) l <.> "klc"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
-        printIOLogger (fname layout') (printKlcData <$> toKlcData layout')
-output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>> do
-    let keylayoutConfig = KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)
-    printIOLoggerStream Standard ∘ fmap printKeylayout ∘ toKeylayout keylayoutConfig
+        writeFileStream (fname layout') ∘ printKlcData =<< toKlcData layout'
+output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>>
+    toKeylayout (KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)) >=>
+    writeStream Standard ∘ printKeylayout
 output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (fail "the layout has an empty name when exported to keylayout")
@@ -184,11 +179,11 @@ output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout �
     let fname l = dir </> view (_info ∘ _name) l <.> "keylayout"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
-        printIOLogger (fname layout') (printKeylayout <$> toKeylayout keylayoutConfig layout')
+        writeFileStream (fname layout') ∘ printKeylayout =<< toKeylayout keylayoutConfig layout'
     let replaceLayout = replaceVar "layout" name
-    userFile   ← liftIO $ B.readFile "keylayout/install-user.sh"  <|> pure defKeylayoutUser
+    userFile   ← liftIO $ B.readFile "keylayout/install-user.sh"   <|> pure defKeylayoutUser
     systemFile ← liftIO $ B.readFile "keylayout/install-system.sh" <|> pure defKeylayoutSystem
-    liftIO $ B.writeFile (dir </> "install-user.sh")  (replaceLayout userFile)
+    liftIO $ B.writeFile (dir </> "install-user.sh")   (replaceLayout userFile)
     liftIO $ B.writeFile (dir </> "install-system.sh") (replaceLayout systemFile)
     liftIO $ makeExecutable (dir </> "install-user.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
@@ -226,15 +221,7 @@ execExtraOption CombineMods =
 execExtraOption UnifyShiftstates = over _keys (fst ∘ unifyShiftstates)
 execExtraOption _ = id
 
-printIOLogger ∷ IOData α ⇒ FilePath → Logger α → LoggerT IO ()
-printIOLogger = printIOLoggerStream ∘ File
-
-printIOLoggerStream ∷ IOData α ⇒ Stream → Logger α → LoggerT IO ()
-printIOLoggerStream stream =
-    mapWriterT (pure ∘ runIdentity) >=>
-    liftIO ∘ writeStream stream
-
-printLog ∷ LoggerT IO () → IO ()
+printLog ∷ WriterT [String] IO () → IO ()
 printLog =
     execWriterT >=>
     traverse_ (\xs → hPutStrLn stderr $ "klfc: warning: " ⊕ xs ⊕ ".") ∘ nub

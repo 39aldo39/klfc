@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Xkb.Keycodes where
 
@@ -14,10 +15,10 @@ import Layout.Types
 import Lookup.Linux (posToScancode, posAndKeycode)
 import Permutation (assocs)
 
-printKeycodes ∷ Layout → Logger String
+printKeycodes ∷ Logger m ⇒ Layout → m String
 printKeycodes = fmap unlines ∘ concatMapM printKeycode ∘ view _mods
 
-printKeycode ∷ Mod → Logger [String]
+printKeycode ∷ Logger m ⇒ Mod → m [String]
 printKeycode (Mod nameM per) = do
     let (logs, s) = partitionEithers (map (uncurry printKeycodePos) (assocs per))
     tell logs

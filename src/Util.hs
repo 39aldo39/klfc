@@ -183,9 +183,6 @@ mconcatMapM f = fmap mconcat ∘ traverse f
 tellMaybeT ∷ MonadWriter w m ⇒ w → MaybeT m α
 tellMaybeT x = MaybeT (Nothing <$ tell x)
 
-lift2 ∷ (MonadTrans t1, MonadTrans t2, Monad m, Monad (t2 m)) ⇒ m α → t1 (t2 m) α
-lift2 = lift ∘ lift
-
 sequenceTuple ∷ Applicative f ⇒ (f α, f β) → f (α, β)
 sequenceTuple = uncurry (liftA2 (,))
 

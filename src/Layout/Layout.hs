@@ -6,7 +6,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Layout.Layout
-    ( Information(Information)
+    ( Information(..)
     , _fullName
     , _name
     , _copyright
@@ -14,7 +14,7 @@ module Layout.Layout
     , _localeId
     , _version
     , _description
-    , Layout(Layout)
+    , Layout(..)
     , SingletonKey
     , _info
     , _singletonKeys
@@ -57,7 +57,7 @@ import Filter (Filter(..))
 import JsonPretty (keyOrder', delimsFromList)
 import Layout.DeadKey (DeadKey)
 import Layout.Key
-import Layout.Mod (Mod(Mod), isEmptyMod, applyMod)
+import Layout.Mod (Mod(..), isEmptyMod, applyMod)
 import Layout.Modifier (Shiftstate)
 import Layout.Pos (Pos)
 

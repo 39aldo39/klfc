@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Klc
     ( printKlcData
@@ -11,7 +12,7 @@ import Data.Monoid.Unicode ((⊕))
 import Util (show', toString, ifNonEmpty, (>$>), nubOn, concatMapM, tellMaybeT, sequenceTuple)
 
 import Control.Monad.Trans (lift)
-import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
+import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over)
 
@@ -23,7 +24,7 @@ import Lookup.Windows
 import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultKeys)
 
-prepareLayout ∷ Layout → Logger Layout
+prepareLayout ∷ Logger m ⇒ Layout → m Layout
 prepareLayout =
     addDefaultKeys defaultKeys >>>
     _singletonKeys
@@ -33,7 +34,7 @@ prepareLayout =
         over (traverse ∘ _letters ∘ traverse) deadToCustomDead >>>
         setNullChars)
 
-emptySingletonKeys ∷ [SingletonKey] → Logger [SingletonKey]
+emptySingletonKeys ∷ Logger m ⇒ [SingletonKey] → m [SingletonKey]
 emptySingletonKeys [] = pure []
 emptySingletonKeys xs = xs <$ tell ["singleton keys are not supported in KLC"]
 
@@ -41,10 +42,10 @@ deadToCustomDead ∷ Letter → Letter
 deadToCustomDead (Dead d) = CustomDead Nothing (presetDeadKeyToDeadKey d)
 deadToCustomDead l = l
 
-supportedShiftstate ∷ Shiftstate → Logger Bool
+supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedModifier ∘ toList
 
-supportedModifier ∷ Modifier → Logger Bool
+supportedModifier ∷ Logger m ⇒ Modifier → m Bool
 supportedModifier modifier
   | modifier ∈ map fst modifierAndWinShiftstate = pure True
   | otherwise = False <$ tell [show' modifier ⊕ " is not supported in KLC"]
@@ -135,13 +136,13 @@ printKlcData (KlcData info winShiftstates keys ligatures deadKeys) = unlines $
 
 -- TO KLC DATA
 
-toKlcData ∷ Layout → Logger KlcData
+toKlcData ∷ Logger m ⇒ Layout → m KlcData
 toKlcData =
     prepareLayout >=>
     (_keys ∘ traverse) (filterKeyOnShiftstatesM supportedShiftstate) >=>
     toKlcData'
 
-toKlcData' ∷ Layout → Logger KlcData
+toKlcData' ∷ Logger m ⇒ Layout → m KlcData
 toKlcData' layout =
     KlcData
       <$> pure (view _info layout)
@@ -152,7 +153,7 @@ toKlcData' layout =
   where
     (keys, states) = unifyShiftstates (view _keys layout)
 
-toKlcKey ∷ Key → Logger (Maybe KlcKey)
+toKlcKey ∷ Logger m ⇒ Key → m (Maybe KlcKey)
 toKlcKey key = runMaybeT $
     KlcKey
       <$> printPos (view _pos key)
@@ -165,15 +166,15 @@ toKlcKey key = runMaybeT $
     letterComments = map toString (dropWhileEnd unsupported (view _letters key))
     unsupported = (≡) "-1" ∘ fst ∘ runWriter ∘ printLetter
 
-printPos ∷ Pos → MaybeT Logger String
+printPos ∷ Logger m ⇒ Pos → MaybeT m String
 printPos pos = maybe e pure $ printf "%02x" <$> lookup pos posAndScancode
   where e = tellMaybeT [show' pos ⊕ " is not supported in KLC"]
 
-printShortcutPos ∷ Pos → MaybeT Logger String
+printShortcutPos ∷ Logger m ⇒ Pos → MaybeT m String
 printShortcutPos pos = maybe e pure $ lookup pos posAndString
   where e = tellMaybeT [show' pos ⊕ " is not supported in KLC"]
 
-printLetter ∷ Letter → Logger String
+printLetter ∷ Logger m ⇒ Letter → m String
 printLetter (Char c)
     | isAscii c ∧ isAlphaNum c = pure [c]
     | otherwise = pure (printf "%04x" c)
@@ -184,33 +185,33 @@ printLetter l@(CustomDead _ (DeadKey _ Nothing _ )) = "-1" <$ tell [show' l ⊕ 
 printLetter LNothing = pure "-1"
 printLetter l = "-1" <$ tell [show' l ⊕ " is not supported in KLC"]
 
-toKlcLigatures ∷ Layout → Logger [KlcLigature]
+toKlcLigatures ∷ Logger m ⇒ Layout → m [KlcLigature]
 toKlcLigatures = concatMapM toKlcLigature ∘ view _keys
 
-toKlcLigature ∷ Key → Logger [KlcLigature]
+toKlcLigature ∷ Logger m ⇒ Key → m [KlcLigature]
 toKlcLigature key = fmap catMaybes ∘ sequence $ do
     (shiftstate, letter) ← view _shiftstates key `zip` view _letters key
     maybeToList $ toLigature pos (winShiftstateFromShiftstate shiftstate) <$> letterToLigatureString letter
   where
     pos = view _pos key
 
-toLigature ∷ Pos → Int → String → Logger (Maybe KlcLigature)
+toLigature ∷ Logger m ⇒ Pos → Int → String → m (Maybe KlcLigature)
 toLigature pos shiftState s = runMaybeT $
     KlcLigature
       <$> printShortcutPos pos
       <*> pure shiftState
       <*> pure s
 
-toKlcDeadKeys ∷ [Key] → Logger [KlcDeadKey]
+toKlcDeadKeys ∷ Logger m ⇒ [Key] → m [KlcDeadKey]
 toKlcDeadKeys =
     concatMap (mapMaybe letterToDeadKey ∘ view _letters) >>>
     traverse toKlcDeadKey >$> nubOn __klcBaseChar ∘ catMaybes
 
-toKlcDeadKey ∷ DeadKey → Logger (Maybe KlcDeadKey)
+toKlcDeadKey ∷ Logger m ⇒ DeadKey → m (Maybe KlcDeadKey)
 toKlcDeadKey (DeadKey dName (Just c) stringMap) = Just ∘ KlcDeadKey dName c <$> charMap
   where
     charMap = traverse (sequenceTuple ∘ (char *** char)) stringMap
-    char ∷ String → Logger Char
+    char ∷ Logger m ⇒ String → m Char
     char [x]      = pure x
     char []       = '\0' <$ tell ["empty string in dead key ‘" ⊕ dName ⊕ "’ in KLC"]
     char xs@(x:_) = x <$ tell ["the string ‘" ⊕ xs ⊕ "’ is shortened to ‘" ⊕ [x] ⊕ "’ in dead key ‘" ⊕ dName ⊕ "’ in KLC"]

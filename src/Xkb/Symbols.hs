@@ -1,5 +1,6 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Xkb.Symbols where
 
@@ -7,15 +8,14 @@ import BasePrelude
 import Prelude.Unicode
 import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', lookup', removeSubList, concatMapM, tellMaybeT, lift2, (>$>))
+import Util (show', lookup', concatMapM, tellMaybeT, (>$>))
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP (fromList)
 
-import Control.Monad.Reader (ReaderT, lift, asks, mapReaderT)
+import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.State (State, state, evalState, get, modify)
 import Control.Monad.Trans.Maybe (MaybeT(..))
-import Control.Monad.Writer (tell, runWriter, mapWriter)
-import Data.Functor.Identity (runIdentity)
+import Control.Monad.Writer (tell, runWriter)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Lens.Micro.Platform (view, over, _1, _2, makeLenses)
@@ -126,27 +126,27 @@ printXkbData (XkbData keys extraKeys) = unlines $
 type RedirectAllXkb = Bool
 type RedirectIfExtend = Bool
 
-printSymbols ∷ Layout → ReaderT XkbConfig Logger String
+printSymbols ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m String
 printSymbols =
-    mapReaderT (pure ∘ runIdentity) ∘ prepareLayout >=>
+    prepareLayout >=>
     printLayout 1 >$>
     printXkbData
 
-printLayouts ∷ [Layout] → ReaderT XkbConfig Logger XkbData
+printLayouts ∷ (Logger m, MonadReader XkbConfig m) ⇒ [Layout] → m XkbData
 printLayouts = fmap mconcat ∘ zipWithM printLayout [1..]
 
-printLayout ∷ Group → Layout → ReaderT XkbConfig Logger XkbData
-printLayout groupNr =
-    liftA2 XkbData
-        <$> fmap catMaybes ∘ liftA2 traverse (printKey groupNr) (view _keys)
-        <*> lift ∘ printSingletonKeys ∘ view _singletonKeys
+printLayout ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → m XkbData
+printLayout groupNr layout =
+    XkbData
+        <$> (catMaybes <$> traverse (printKey groupNr layout) (view _keys layout))
+        <*> printSingletonKeys (view _singletonKeys layout)
 
-printKey ∷ Group → Layout → Key → ReaderT XkbConfig Logger (Maybe XkbKey)
-printKey groupNr layout key = mapReaderT runMaybeT $ do
+printKey ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → Key → m (Maybe XkbKey)
+printKey groupNr layout key = runMaybeT $ do
     p ← maybe unsupportedPos pure (lookup pos posAndKeycode)
-    statesAndLetters ← lift2 $ filterM (supportedShiftstate ∘ fst) (states `zip` letters)
-    ls ← lift2 $ traverse (printLetter ∘ snd) statesAndLetters
-    actions ← mapReaderT lift $ traverse (uncurry (printAction layout pos)) statesAndLetters
+    statesAndLetters ← filterM (supportedShiftstate ∘ fst) (states `zip` letters)
+    ls ← traverse (printLetter ∘ snd) statesAndLetters
+    actions ← traverse (uncurry (printAction layout pos)) statesAndLetters
     let vmods = nub ∘ concat <$> traverse printVirtualMods letters
     let xkbGroup = XkbGroup (keytypeName key) (isRightGuess key) ls actions vmods
     pure $ XkbKey p (M.singleton groupNr xkbGroup)
@@ -154,9 +154,9 @@ printKey groupNr layout key = mapReaderT runMaybeT $ do
     pos = view _pos key
     states = view _shiftstates key
     letters = view _letters key
-    unsupportedPos = lift $ tellMaybeT [show' pos ⊕ " is not supported in XKB"]
+    unsupportedPos = tellMaybeT [show' pos ⊕ " is not supported in XKB"]
 
-printLetter ∷ Letter → Logger String
+printLetter ∷ Logger m ⇒ Letter → m String
 printLetter (Char c) =
     pure $ fromMaybe (printf "U%04X" c) (lookup c charAndString)
 printLetter (Ligature (Just c) _) =
@@ -180,21 +180,23 @@ printLetter (Redirect mods pos) =
 printLetter LNothing =
     pure "VoidSymbol"
 
-printAction ∷ Layout → Pos → Shiftstate → Letter → ReaderT XkbConfig Logger String
-printAction layout pos shiftstate (Action a) = fromMaybe e $
-    removeRed ∘ printAction layout pos shiftstate <$> lookup a actionAndRedirect <|>
-    lift ∘ printLinuxAction <$> lookup a actionAndLinuxAction
+printAction ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → Pos → Shiftstate → Letter → m String
+printAction layout pos shiftstate letter = printAction' letter layout pos shiftstate letter
+
+printAction' ∷ (Logger m, MonadReader XkbConfig m) ⇒ Letter → Layout → Pos → Shiftstate → Letter → m String
+printAction' errorL layout pos shiftstate (Action a) = fromMaybe e $
+    printAction' errorL layout pos shiftstate <$> lookup a actionAndRedirect <|>
+    printLinuxAction <$> lookup a actionAndLinuxAction
   where
-    removeRed = mapReaderT (mapWriter (over _2 (map (removeSubList "red:"))))
     e = "NoAction()" <$ tell [show' a ⊕ " is not supported in XKB"]
-printAction layout pos shiftstate l@(Redirect rMods rPos) = do
+printAction' errorL layout pos shiftstate (Redirect rMods rPos) = do
     extraClearedMods ← bool [M.Extend] [] <$> asks __redirectClearsExtend
     let addMods   = rMods ∖ mods
     let clearMods = mods ∖ (rMods ⧺ extraClearedMods)
     let emptyMods = null addMods ∧ null clearMods
 
     let linuxActionAt p = XkbRedirect symbol p addMods clearMods
-    let printWithAt e = maybe e (lift ∘ printLinuxAction ∘ linuxActionAt) ∘ listToMaybe
+    let printWithAt e = maybe e (printLinuxAction ∘ linuxActionAt) ∘ listToMaybe
 
     redirectAll ← asks __redirectAllXkb
     case (emptyMods, redirectAll) of
@@ -210,16 +212,16 @@ printAction layout pos shiftstate l@(Redirect rMods rPos) = do
     lPosses = getPosByLetterAndShiftstate letter rShiftstate layout
     qPosses = filter sameSymbol (getPosByLetterAndShiftstate letter rShiftstate defaultLayout)
     sameSymbol p = maybe True ((≡ symbol) ∘ fst ∘ runWriter ∘ printLetter) (getLetterByPosAndShiftstate p rShiftstate layout)
-    noOrigRedPos = lift $ "NoAction()" <$ tell [show' l ⊕ " on " ⊕ show' pos ⊕ " could not redirect to the original position in XKB"]
-    noRedPos = lift $ "NoAction()" <$ tell [show' l ⊕ " on " ⊕ show' pos ⊕ " could not find a redirect position in XKB"]
-printAction _ _ _ l@(Modifiers effect mods) = lift $
+    noOrigRedPos = "NoAction()" <$ tell [show' errorL ⊕ " on " ⊕ show' pos ⊕ " could not redirect to the original position in XKB"]
+    noRedPos = "NoAction()" <$ tell [show' errorL ⊕ " on " ⊕ show' pos ⊕ " could not find a redirect position in XKB"]
+printAction' _ _ _ _ l@(Modifiers effect mods) =
     printLinuxAction (effectToAction effect symbol mods)
   where
     symbol = fst ∘ runWriter $ printLetter l
     effectToAction Shift = SetMods
     effectToAction Latch = LatchMods
     effectToAction Lock  = LockMods
-printAction _ _ _ _ = pure "NoAction()"
+printAction' _ _ _ _ _ = pure "NoAction()"
 
 printVirtualMods ∷ Letter → Maybe [String]
 printVirtualMods (Modifiers _ mods) = Just $
@@ -231,7 +233,7 @@ redirectToLetter mods pos = fromMaybe e $
     getLetterByPosAndShiftstate pos (WP.fromList mods) defaultFullLayout
     where e = error ("redirecting to " ⊕ show' pos ⊕ " is not supported")
 
-printSingletonKeys ∷ [SingletonKey] → Logger [String]
+printSingletonKeys ∷ Logger m ⇒ [SingletonKey] → m [String]
 printSingletonKeys startSingletonKeys =
   case over _2 addEmpty (singletonKeysToIncludes startSingletonKeys) of
     ([], includes) → pure includes
@@ -262,10 +264,10 @@ singletonKeysToIncludes (x:xs) = fromMaybe none (double <|> single)
         pure $ over _2 (s:) (singletonKeysToIncludes xs)
     none = over _1 (x:) (singletonKeysToIncludes xs)
 
-printSingletonKey ∷ Pos → Letter → Logger (Maybe String)
+printSingletonKey ∷ Logger m ⇒ Pos → Letter → m (Maybe String)
 printSingletonKey pos letter = runMaybeT $ do
     p ← maybe e pure (lookup pos posAndKeycode)
-    l ← lift $ printLetter letter
+    l ← printLetter letter
     pure $ "key " ⊕ p ⊕ " { [ " ⊕ l ⊕ " ] };"
   where
     e = tellMaybeT [show' pos ⊕ " is not supported in XKB"]

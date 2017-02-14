@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Keylayout
     ( KeylayoutConfig(..)
@@ -15,12 +16,12 @@ import Data.List.Unicode ((∖))
 import Util (show', (>$>), groupSortWith, tellMaybeT)
 import qualified WithPlus as WP (singleton)
 
-import Control.Monad.Trans.Maybe
-import Control.Monad.Writer
+import Control.Monad.Trans.Maybe (MaybeT(..))
+import Control.Monad.Writer (tell)
 import qualified Data.ByteString.Lazy as BL (ByteString)
 import qualified Data.Text.Lazy as L (Text, pack, replace)
 import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
-import Lens.Micro.Platform (view, over, _1, _2)
+import Lens.Micro.Platform (view, set, over, _1, _2)
 import Text.XML.Light
 
 import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey)
@@ -35,7 +36,7 @@ data KeylayoutConfig = KeylayoutConfig
     { __addShortcuts ∷ Bool
     }
 
-prepareLayout ∷ KeylayoutConfig → Layout → Logger Layout
+prepareLayout ∷ Logger m ⇒ KeylayoutConfig → Layout → m Layout
 prepareLayout KeylayoutConfig{__addShortcuts = addShortcuts} =
     over (_keys ∘ traverse) (bool id addShortcutLetters addShortcuts) >>>
     addSingletonKeysAsKeys >>>
@@ -45,10 +46,10 @@ prepareLayout KeylayoutConfig{__addShortcuts = addShortcuts} =
         (filterKeyOnShiftstatesM supportedShiftstate >$>
         addCapslock)
 
-supportedShiftstate ∷ Shiftstate → Logger Bool
+supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedModifier ∘ toList
 
-supportedModifier ∷ Modifier → Logger Bool
+supportedModifier ∷ Logger m ⇒ Modifier → m Bool
 supportedModifier modifier
   | modifier ∈ map fst modifierAndString = pure True
   | otherwise = False <$ tell [show' modifier ⊕ " is not supported in keylayout"]
@@ -60,7 +61,7 @@ addShortcutLetters key = fromMaybe key $
     _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultLayout) ∘ pure) key
   where
     shortcutPos = view _shortcutPos key
-    defaultLayout = defaultFullLayout ⊕ Layout (∅) (∅) (∅) defaultMacKeys
+    defaultLayout = defaultFullLayout ⊕ set _keys defaultMacKeys (∅)
 
 attr ∷ String → String → Attr
 attr = Attr ∘ unqual
@@ -81,10 +82,10 @@ xmlEntitiesToNumeric =
     L.replace "&lt;"   "&#60;" >>>
     L.replace "&gt;"   "&#62;"
 
-toKeylayout ∷ KeylayoutConfig → Layout → Logger Element
+toKeylayout ∷ Logger m ⇒ KeylayoutConfig → Layout → m Element
 toKeylayout config = prepareLayout config >=> toKeylayout'
 
-toKeylayout' ∷ Layout → Logger Element
+toKeylayout' ∷ Logger m ⇒ Layout → m Element
 toKeylayout' layout = removeEmptyElementsInside ∘ unode "keyboard" ∘ (,)
     [ attr "group" "126"
     , attr "id" "-1337"
@@ -151,30 +152,30 @@ modifierToString ∷ Modifier → String
 modifierToString modifier = fromMaybe e (lookup modifier modifierAndString)
   where e = error $ show' modifier ⊕ " is not supported in keylayout"
 
-toKeyMapSet ∷ [Key] → Logger Element
+toKeyMapSet ∷ Logger m ⇒ [Key] → m Element
 toKeyMapSet =
     transpose ∘ map (\key → (,) (view _pos key) <$> view _letters key) >>>
     zipWithM toKeyMap [0..] >$>
     unode "keyMapSet" ∘ (,) [attr "id" "defaultKeyMapSet"]
 
-toKeyMap ∷ Int → [(Pos, Letter)] → Logger Element
+toKeyMap ∷ Logger m ⇒ Int → [(Pos, Letter)] → m Element
 toKeyMap i =
     traverse (uncurry printKey) >$>
     catMaybes >>>
     unode "keyMap" ∘ (,) [attr "index" (show i)]
 
-printKey ∷ Pos → Letter → Logger (Maybe Element)
+printKey ∷ Logger m ⇒ Pos → Letter → m (Maybe Element)
 printKey pos letter = runMaybeT $
     unode "key" <$> sequence
       [ attr "code" <$> printPos pos
       , printLetter letter
       ]
 
-printPos ∷ Pos → MaybeT Logger String
+printPos ∷ Logger m ⇒ Pos → MaybeT m String
 printPos pos = maybe e (pure ∘ show) (lookup pos posAndCode)
   where e = tellMaybeT [show' pos ⊕ " is not supported in keylayout"]
 
-printLetter ∷ Letter → MaybeT Logger Attr
+printLetter ∷ Logger m ⇒ Letter → MaybeT m Attr
 printLetter (Char c) = pure (attr "output" [c])
 printLetter (Ligature _ s) = pure (attr "output" s)
 printLetter (Dead dead) = printLetter (CustomDead Nothing (presetDeadKeyToDeadKey dead))

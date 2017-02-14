@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Lookup.Linux
     ( LinuxAction(..)
@@ -435,7 +436,7 @@ data LinuxAction
         }
     deriving (Show, Read)
 
-printLinuxAction ∷ LinuxAction → Logger String
+printLinuxAction ∷ Logger m ⇒ LinuxAction → m String
 printLinuxAction (Symbol _) = pure "NoAction()"
 printLinuxAction (SetMods   _ mods) = printModsWithEffect Shift mods
 printLinuxAction (LatchMods _ mods) = printModsWithEffect Latch mods
@@ -461,14 +462,14 @@ printLinuxAction (XkbRedirect _ pos mods clearMods) = do
         | null s    = ""
         | sort clearMods ≡ [minBound .. maxBound] = ",clearMods=all"
         | otherwise = ",clearMods=" ⊕ s
-printModsWithPlus ∷ [Modifier] → Logger String
+printModsWithPlus ∷ Logger m ⇒ [Modifier] → m String
 printModsWithPlus =
     traverse (\m → whenNothing (e m) (lookup m modifierAndPressedModifier)) >$>
     intercalate "+" ∘ catMaybes
   where
-    e ∷ Modifier → Logger ()
+    e ∷ Logger m ⇒ Modifier → m ()
     e modifier = tell [show' modifier ⊕ " is not supported in XKB"]
-printModsWithEffect ∷ ModifierEffect → [Modifier] → Logger String
+printModsWithEffect ∷ Logger m ⇒ ModifierEffect → [Modifier] → m String
 printModsWithEffect effect =
     printModsWithPlus >$>
     \s → bool (action effect ⊕ "Mods(mods=" ⊕ s ⊕ ")") "NoAction()" (null s)

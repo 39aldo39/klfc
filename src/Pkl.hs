@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Pkl
     ( printPklData
@@ -46,14 +47,14 @@ prepareLayout =
     getDefaultKeys' keys = getDefaultKeys keys ∘ filterNonExtend
     filterNonExtend = over _keys (filter (any (M.Extend ∉) ∘ view _shiftstates))
 
-supportedShiftstate ∷ IsExtend → Shiftstate → Logger Bool
+supportedShiftstate ∷ Logger m ⇒ IsExtend → Shiftstate → m Bool
 supportedShiftstate NotExtend shiftstate = and <$> traverse supportedModifier (toList shiftstate)
 supportedShiftstate Extend shiftstate
   | M.Extend ∉ shiftstate = pure False
   | shiftstate ≡ WP.singleton M.Extend = pure True
   | otherwise = False <$ tell ["extend mappings with other modifiers is not supported in PKL"]
 
-supportedModifier ∷ Modifier → Logger Bool
+supportedModifier ∷ Logger m ⇒ Modifier → m Bool
 supportedModifier M.Extend = pure False
 supportedModifier modifier
   | modifier ∈ map fst modifierAndWinShiftstate = pure True
@@ -172,7 +173,7 @@ printPklData isCompact (PklData name extendKeys) = unlines $
 
 -- TO PKL DATA
 
-toLayoutData ∷ Layout → Logger LayoutData
+toLayoutData ∷ Logger m ⇒ Layout → m LayoutData
 toLayoutData =
     prepareLayout >>>
     _keys (fmap catMaybes ∘ traverse toSupportedShiftstates) >=>
@@ -185,7 +186,7 @@ toLayoutData =
       | otherwise
       = Just <$> filterKeyOnShiftstatesM (supportedShiftstate NotExtend) key
 
-toLayoutData' ∷ Layout → Logger LayoutData
+toLayoutData' ∷ Logger m ⇒ Layout → m LayoutData
 toLayoutData' layout =
     LayoutData
       <$> pure (view _info layout)
@@ -203,19 +204,19 @@ toLayoutData' layout =
     extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndString) <|> toPklPos pos
     fromPklDead (CustomDead (Just i) d) = Just (i, d)
     fromPklDead _ = Nothing
-    e ∷ Pos → MaybeT Logger α
+    e ∷ Logger m ⇒ Pos → MaybeT m α
     e pos = tellMaybeT [show' pos ⊕ " is not supported in PKL"]
 
-deadToPkl ∷ Int → DeadKey → Logger PklDeadKey
+deadToPkl ∷ Logger m ⇒ Int → DeadKey → m PklDeadKey
 deadToPkl i d = PklDeadKey (__dkName d) i <$> charMap
   where
     charMap = traverse (sequenceTuple ∘ (char *** char)) (__stringMap d)
-    char ∷ String → Logger Char
+    char ∷ Logger m ⇒ String → m Char
     char [x]      = pure x
     char []       = '\0' <$ tell ["empty string in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") in PKL"]
     char xxs@(x:_) = x <$ tell ["the string '" ⊕ xxs ⊕ " is shortened to '" ⊕ [x] ⊕ " in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") in PKL"]
 
-toPklData ∷ Layout → Layout → Logger PklData
+toPklData ∷ Logger m ⇒ Layout → Layout → m PklData
 toPklData shortcutLayout =
     prepareLayout >>>
     view _keys >>>
@@ -223,7 +224,7 @@ toPklData shortcutLayout =
     catMaybes >>>
     PklData (view (_info ∘ _name) shortcutLayout)
 
-keyToPklKey ∷ Layout → Key → Logger (Maybe PklKey)
+keyToPklKey ∷ Logger m ⇒ Layout → Key → m (Maybe PklKey)
 keyToPklKey layout key = runMaybeT $
     PklKey
       <$> toPklPos (view _pos key)
@@ -232,24 +233,24 @@ keyToPklKey layout key = runMaybeT $
       <*> lift (traverse (printLetter NotExtend layout) (view _letters key))
       <*> pure (keyComment (view _pos key) (view _letters key))
 
-extendKeyToPklKey ∷ Layout → Key → Logger (Maybe PklKey)
+extendKeyToPklKey ∷ Logger m ⇒ Layout → Key → m (Maybe PklKey)
 extendKeyToPklKey layout key = runMaybeT $ do
     letter ← MaybeT $ listToMaybe <$> filterOnSndM (supportedShiftstate Extend) lettersWithStates
     PklSpecialKey
       <$> toPklPos (view _pos key)
-      <*> lift (printLetter Extend layout letter)
+      <*> printLetter Extend layout letter
       <*> pure ""
   where
     lettersWithStates = view _letters key `zip` view _shiftstates key
 
-singletonKeyToPklKey ∷ Layout → SingletonKey → Logger (Maybe PklKey)
+singletonKeyToPklKey ∷ Logger m ⇒ Layout → SingletonKey → m (Maybe PklKey)
 singletonKeyToPklKey layout (pos, action) = runMaybeT $
     PklSpecialKey
       <$> toPklPos pos
       <*> lift (printModifierPosition layout action)
       <*> pure (keyComment pos [action])
 
-toPklPos ∷ Pos → MaybeT Logger String
+toPklPos ∷ Logger m ⇒ Pos → MaybeT m String
 toPklPos P.Alt_R = pure "RAlt"
 toPklPos P.Menu = pure "AppsKey"
 toPklPos pos = maybe e pure $ printf "SC%03x" <$> lookup pos posAndScancode
@@ -264,11 +265,11 @@ keyComment pos letters =
 letterComment ∷ Letter → Maybe String
 letterComment = fmap __dkName ∘ letterToDeadKey
 
-printShortcutPos ∷ Pos → MaybeT Logger String
+printShortcutPos ∷ Logger m ⇒ Pos → MaybeT m String
 printShortcutPos pos = maybe e pure (lookup pos posAndString)
-  where e = MaybeT (Nothing <$ tell [show' pos ⊕ " is not supported in PKL"])
+  where e = tellMaybeT [show' pos ⊕ " is not supported in PKL"]
 
-printLetter ∷ IsExtend → Layout → Letter → Logger String
+printLetter ∷ Logger m ⇒ IsExtend → Layout → Letter → m String
 printLetter isExtend _ (Char ' ') = pure (addBraces isExtend "space")
 printLetter _ _ (Char c) = pure [c]
 printLetter _ _ (Ligature _ x) = pure x
@@ -292,12 +293,12 @@ printLetter isExtend layout l@(Redirect mods pos) =
 printLetter _ _ LNothing = pure "--"
 printLetter _ _ letter = "--" <$ tell [show' letter ⊕ " is not supported in pkl"]
 
-printPklAction ∷ Layout → Letter → PklAction → Logger String
+printPklAction ∷ Logger m ⇒ Layout → Letter → PklAction → m String
 printPklAction _ _ (Simple x) = pure x
 printPklAction layout _ (RedirectLetter letter ms) =
     (("}" ⊕ mapMaybe (`lookup` modifierAndChar) ms ⊕ "{") ⊕) <$> printLetter Extend layout letter
 
-actionToPkl ∷ Layout → Action → Logger String
+actionToPkl ∷ Logger m ⇒ Layout → Action → m String
 actionToPkl layout a =
   case lookup a actionAndPklAction of
     Just pklAction → printPklAction layout (Action a) pklAction
@@ -308,7 +309,7 @@ addBraces _ "--" = "--"
 addBraces Extend x = x
 addBraces NotExtend x = "={" ⊕ x ⊕ "}"
 
-printModifierPosition ∷ Layout → Letter → Logger String
+printModifierPosition ∷ Logger m ⇒ Layout → Letter → m String
 printModifierPosition layout letter
   | Modifiers _ _ ← letter
   = s <&> \case
