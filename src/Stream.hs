@@ -15,7 +15,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.IOData (IOData, readFile, writeFile, hGetContents, hPut)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath (takeDirectory)
-import System.IO (stdin)
+import System.IO (stdin, stdout)
 
 data Stream
     = Standard
@@ -31,7 +31,7 @@ readStream Standard = hGetContents stdin
 readStream (File fname) = readFile fname
 
 writeStream ∷ (MonadIO m, IOData α) ⇒ Stream → α → m ()
-writeStream Standard = hPut stdin
+writeStream Standard = hPut stdout
 writeStream (File fname) = \text → do
     liftIO $ createDirectoryIfMissing True (takeDirectory fname)
     writeFile fname text
