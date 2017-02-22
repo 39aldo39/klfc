@@ -1,7 +1,7 @@
 default partial
 xkb_symbols "basic" {
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND";
-    key <TLDE> { [        grave,   asciitilde,   dead_tilde,     NoSymbol, Pointer_EnableKeys ],
+    key <TLDE> { [        grave,   asciitilde,   dead_tilde,   VoidSymbol, Pointer_EnableKeys ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), LockControls(ctrls=MouseKeys) ] };
     key <AE01> { [            1,       exclam,   exclamdown,  onesuperior,           F1 ] };
     key <AE02> { [            2,           at,    masculine,  twosuperior,           F2 ] };
@@ -23,7 +23,7 @@ xkb_symbols "basic" {
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_ALPHABETIC";
     key <AD03> { [            f,            F,       atilde,       Atilde,     XF86Back ] };
     key <AD04> { [            p,            P,       oslash,       Oslash,  XF86Forward ] };
-    key <AD05> { [            g,            G,  dead_ogonek,     NoSymbol,   Pointer_Up ],
+    key <AD05> { [            g,            G,  dead_ogonek,   VoidSymbol,   Pointer_Up ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+0,y=-8) ] };
     key <AD06> { [            j,            J,      dstroke,      Dstroke,        Prior ] };
     key <AD07> { [            l,            L,      lstroke,      Lstroke,         Home ] };
@@ -34,51 +34,52 @@ xkb_symbols "basic" {
     key <AD11> { [  bracketleft,    braceleft, guillemotleft,        U2039,       Escape ] };
     key <AD12> { [ bracketright,   braceright, guillemotright,        U203A,       Insert ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND";
-    key <BKSL> { [    backslash,          bar,        UE000,     NoSymbol, XF86Favorites, XF86MyComputer ],
+    key <BKSL> { [    backslash,          bar,        UE000,   VoidSymbol, XF86Favorites, XF86MyComputer ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<I165>,clearMods=Shift) ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_ALPHABETIC";
     key <AC01> { [            a,            A,       aacute,       Aacute,        Alt_L ],
-                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Alt) ] };
+                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Alt) ],
+                 vmods=Alt };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_SHIFT+EXTEND_ALPHABETIC";
-    key <AC02> { [            r,            R,   dead_grave,     NoSymbol, XF86ScrollDown, XF86ScrollLeft ],
+    key <AC02> { [            r,            R,   dead_grave,   VoidSymbol, XF86ScrollDown, XF86ScrollLeft ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=5), PtrBtn(button=7) ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_ALPHABETIC";
-    key <AC03> { [            s,            S,       ssharp,     NoSymbol,      Shift_L ],
+    key <AC03> { [            s,            S,       ssharp,   VoidSymbol,      Shift_L ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Shift) ] };
     key <AC04> { [            t,            T,   dead_acute, dead_doubleacute,    Control_L ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), SetMods(mods=Control) ] };
-    key <AC05> { [            d,            D, dead_diaeresis,     NoSymbol, Pointer_Down ],
+    key <AC05> { [            d,            D, dead_diaeresis,   VoidSymbol, Pointer_Down ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+0,y=+8) ] };
-    key <AC06> { [            h,            H,   dead_caron,     NoSymbol,         Next ] };
+    key <AC06> { [            h,            H,   dead_caron,   VoidSymbol,         Next ] };
     key <AC07> { [            n,            N,       ntilde,       Ntilde,         Left ] };
     key <AC08> { [            e,            E,       eacute,       Eacute,         Down ] };
     key <AC09> { [            i,            I,       iacute,       Iacute,        Right ] };
     key <AC10> { [            o,            O,       oacute,       Oacute,    BackSpace ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND";
     key <AC11> { [   apostrophe,     quotedbl,       otilde,       Otilde,         Menu ] };
-    key <LSGT> { [        minus,   underscore,     NoSymbol,     NoSymbol, Pointer_EnableKeys ],
+    key <LSGT> { [        minus,   underscore,   VoidSymbol,   VoidSymbol, Pointer_EnableKeys ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), LockControls(ctrls=MouseKeys) ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_ALPHABETIC";
     key <AB01> { [            z,            Z,           ae,           AE,            z ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB01>,mods=Control) ] };
-    key <AB02> { [            x,            X, dead_circumflex,     NoSymbol,            x ],
+    key <AB02> { [            x,            X, dead_circumflex,   VoidSymbol,            x ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB02>,mods=Control) ] };
     key <AB03> { [            c,            C,     ccedilla,     Ccedilla,            c ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB03>,mods=Control) ] };
     key <AB04> { [            v,            V,           oe,           OE,            v ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB04>,mods=Control) ] };
-    key <AB05> { [            b,            B,   dead_breve,     NoSymbol, Pointer_Button1 ],
+    key <AB05> { [            b,            B,   dead_breve,   VoidSymbol, Pointer_Button1 ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=1) ] };
-    key <AB06> { [            k,            K, dead_abovering,     NoSymbol, Pointer_Button2 ],
+    key <AB06> { [            k,            K, dead_abovering,   VoidSymbol, Pointer_Button2 ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=2) ] };
-    key <AB07> { [            m,            M,  dead_macron,     NoSymbol, Pointer_Button3 ],
+    key <AB07> { [            m,            M,  dead_macron,   VoidSymbol, Pointer_Button3 ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), PtrBtn(button=3) ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND";
-    key <AB08> { [        comma,         less, dead_cedilla,     NoSymbol, Pointer_Left ],
+    key <AB08> { [        comma,         less, dead_cedilla,   VoidSymbol, Pointer_Left ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=-8,y=+0) ] };
-    key <AB09> { [       period,      greater, dead_abovedot,     NoSymbol, Pointer_Right ],
+    key <AB09> { [       period,      greater, dead_abovedot,   VoidSymbol, Pointer_Right ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), MovePtr(x=+8,y=+0) ] };
-    key <AB10> { [        slash,     question, questiondown,     NoSymbol,    Multi_key ] };
+    key <AB10> { [        slash,     question, questiondown,   VoidSymbol,    Multi_key ] };
     key.type[Group1] = "NONE_ALTGR_SHIFT+ALTGR_EXTEND";
     key <SPCE> { [        space,        space, nobreakspace,       Return ] };
     key.type[Group1] = "NONE_EXTEND";
@@ -109,10 +110,10 @@ xkb_symbols "basic" {
                  actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I156>,clearMods=Shift) ] };
     key <FK12> { [          F12, XF86Calculator,  XF86Launch2 ],
                  actions[Group1] = [ NoAction(), NoAction(), Redirect(key=<I157>,clearMods=Shift) ] };
-    
-    key.type[group1] = "ONE_LEVEL";
-    key <CAPS> { [ ISO_Level5_Shift ] };
-    include "level5(modifier_mapping)"
-    
+    key.type[Group1] = "ONE_LEVEL";
+    key <CAPS> { [ ISO_Level5_Shift ],
+                 actions[Group1] = [ SetMods(mods=LevelFive) ],
+                 vmods=LevelFive };
+    modifier_map Mod3 { ISO_Level5_Shift };
     include "level3(ralt_switch)"
 };
