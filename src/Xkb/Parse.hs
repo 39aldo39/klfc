@@ -165,7 +165,6 @@ parseSingletonKey ∷ String → Maybe [SingletonKey]
 parseSingletonKey xs = asum
     [ pure <$> lookupR xs' singleIncludes
     , (\(x,y) → [x,y]) <$> lookupR xs' doubleIncludes
-    , [] <$ lookupR xs' modMappingIncludes
     ]
   where xs' = "include \"" ⊕ xs ⊕ "\""
 

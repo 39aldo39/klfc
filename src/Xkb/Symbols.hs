@@ -8,7 +8,7 @@ import BasePrelude
 import Prelude.Unicode
 import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', lookup', concatMapM, tellMaybeT, (>$>))
+import Util (show', lookup', groupSortWith, concatMapM, tellMaybeT, (>$>))
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP (fromList)
 
@@ -20,7 +20,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Lens.Micro.Platform (view, over, _1, _2, makeLenses)
 
-import Layout.Layout (getPosByLetterAndShiftstate, getLetterByPosAndShiftstate)
+import Layout.Layout (singletonKeyToKey, getPosByLetterAndShiftstate, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux
@@ -140,8 +140,11 @@ printLayouts = fmap mconcat ∘ zipWithM printLayout [1..]
 printLayout ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → m XkbData
 printLayout groupNr layout =
     XkbData
-        <$> (catMaybes <$> traverse (printKey groupNr layout) (view _keys layout))
-        <*> printSingletonKeys (view _singletonKeys layout)
+        <$> (catMaybes <$> traverse (printKey groupNr layout) keys)
+        <*> pure extraKeys
+  where
+    keys = view _keys layout ⧺ map singletonKeyToKey singletonKeys
+    (singletonKeys, extraKeys) = printExtraKeys layout
 
 printKey ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → Key → m (Maybe XkbKey)
 printKey groupNr layout key = runMaybeT $ do
@@ -235,22 +238,34 @@ redirectToLetter mods pos = fromMaybe e $
     getLetterByPosAndShiftstate pos (WP.fromList mods) defaultFullLayout
     where e = error ("redirecting to " ⊕ show' pos ⊕ " is not supported")
 
-printSingletonKeys ∷ Logger m ⇒ [SingletonKey] → m [String]
-printSingletonKeys startSingletonKeys =
-  case over _2 addEmpty (singletonKeysToIncludes startSingletonKeys) of
-    ([], includes) → pure includes
-    (singletonKeys, includes) → do
-        extraKeys ← catMaybes <$> traverse (uncurry printSingletonKey) singletonKeys
-        let modMappings = mapMaybe (flip lookup modMappingIncludes ∘ snd) singletonKeys
-        pure $
-            "":
-            "key.type[group1] = \"ONE_LEVEL\";":
-            extraKeys ⧺
-            modMappings ⧺
-            includes
+printExtraKeys ∷ Layout → ([SingletonKey], [String])
+printExtraKeys layout = (singletonKeys, modMappings ⧺ replacedModMappings ⧺ includes)
   where
-    addEmpty [] = []
-    addEmpty xs = []:xs
+    (singletonKeys, includes) = singletonKeysToIncludes (view _singletonKeys layout)
+
+    modMappings = ($ view (_keys ∘ traverse ∘ _letters) layout ⧺ map snd singletonKeys) $
+        map (fst ∘ runWriter ∘ printLetter) >>>
+        mapMaybe (\symbol → find ((≡ symbol) ∘ snd) extraModifierMaps) >>>
+        groupSortWith fst >>>
+        map (uncurry printModMap ∘ over (_2 ∘ traverse) snd)
+
+    replacedModMappings = ($ view _keys layout) $
+        mapMaybe (\key → (,) (view _pos key) <$> listToMaybe (view _letters key)) >>>
+        (⧺ singletonKeys) >>>
+        over (traverse ∘ _2) (fst ∘ runWriter ∘ printLetter) >>>
+        mapMaybe (uncurry getReplacedModMapping) >>>
+        groupSortWith fst >>>
+        map (uncurry printModMap ∘ over (_2 ∘ traverse) snd)
+
+    getReplacedModMapping pos symbol = do
+        (realMod, origPos) ← lookup symbol defaultModifierMaps
+        guard (origPos ∉ map (view _pos) (view _keys layout))
+        let smallerScancode = liftA2 (<) `on` flip lookup posAndScancode
+        guard =<< pos `smallerScancode` origPos
+        (,) realMod <$> lookup origPos posAndKeycode
+
+    printModMap realMod mods =
+        "modifier_map " ⊕ realMod ⊕ " { " ⊕ intercalate ", " mods ⊕ " };"
 
 singletonKeysToIncludes ∷ [SingletonKey] → ([SingletonKey], [String])
 singletonKeysToIncludes [] = ([], [])
@@ -265,11 +280,3 @@ singletonKeysToIncludes (x:xs) = fromMaybe none (double <|> single)
         s ← lookup x singleIncludes
         pure $ over _2 (s:) (singletonKeysToIncludes xs)
     none = over _1 (x:) (singletonKeysToIncludes xs)
-
-printSingletonKey ∷ Logger m ⇒ Pos → Letter → m (Maybe String)
-printSingletonKey pos letter = runMaybeT $ do
-    p ← maybe e pure (lookup pos posAndKeycode)
-    l ← printLetter letter
-    pure $ "key " ⊕ p ⊕ " { [ " ⊕ l ⊕ " ] };"
-  where
-    e = tellMaybeT [show' pos ⊕ " is not supported in XKB"]

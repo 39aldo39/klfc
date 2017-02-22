@@ -11,8 +11,9 @@ module Lookup.Linux
     , actionAndRedirect
     , actionAndLinuxAction
     , printLinuxAction
-    , modMappingIncludes
     , modifierAndSymbol
+    , defaultModifierMaps
+    , extraModifierMaps
     , modifierAndTypeModifier
     , modifierAndPressedModifier
     , virtualMods
@@ -768,6 +769,32 @@ modifierAndSymbol =
     , ((ME.Lock,  M.Extend),  "ISO_Level5_Lock")
     ]
 
+defaultModifierMaps ∷ [(String, (String, Pos))]
+defaultModifierMaps =
+    [ ("Shift_L", ("Shift", P.Shift_L))
+    , ("Shift_R", ("Shift", P.Shift_R))
+    , ("Caps_Lock", ("Lock", P.CapsLock))
+    , ("Control_L", ("Control", P.Control_L))
+    , ("Control_R", ("Control", P.Control_R))
+    , ("Num_Lock", ("Mod2", P.NumLock))
+    , ("Super_L", ("Mod4", P.Win_L))
+    , ("Super_R", ("Mod4", P.Win_R))
+    , ("Alt_L", ("Mod1", P.Alt_L))
+    , ("Alt_R", ("Mod1", P.Alt_R))
+    ]
+
+extraModifierMaps ∷ [(String, String)]
+extraModifierMaps =
+    [ ("Shift", "ISO_Level2_Latch")
+    , ("Shift", "Shift_Lock")
+    , ("Mod5", "ISO_Level3_Shift")
+    , ("Mod5", "ISO_Level3_Latch")
+    , ("Mod5", "ISO_Level3_Lock")
+    , ("Mod3", "ISO_Level5_Shift")
+    , ("Mod3", "ISO_Level5_Latch")
+    , ("Mod3", "ISO_Level5_Lock")
+    ]
+
 modifierAndTypeModifier ∷ [(Modifier, String)]
 modifierAndTypeModifier =
     [ (M.Shift, "Shift")
@@ -873,12 +900,6 @@ doubleIncludes ∷ [(((Pos, Letter), (Pos, Letter)), String)]
 doubleIncludes =
     [ (((P.CapsLock, Modifiers Shift [M.Control]), (P.Control_L, Modifiers Lock [M.CapsLock])), "include \"ctrl(swapcaps)\"")
     , (((P.CapsLock, Action A.Esc), (P.Esc, Modifiers Lock [M.CapsLock])), "include \"capslock(swapescape)\"")
-    ]
-
-modMappingIncludes ∷ [(Letter, String)]
-modMappingIncludes =
-    [ (Modifiers Shift [M.AltGr],  "include \"level3(modifier_mapping)\"")
-    , (Modifiers Shift [M.Extend], "include \"level5(modifier_mapping)\"")
     ]
 
 presetTypes ∷ [(String, String)]
