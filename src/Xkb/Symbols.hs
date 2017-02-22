@@ -39,7 +39,7 @@ data XkbGroup = XkbGroup
     , __rightGuess ∷ RightGuess
     , __symbols ∷ [Symbol]
     , __actions ∷ [XkbAction]
-    , __virtualMods ∷ Maybe [VirtualMod]
+    , __virtualMods ∷ [VirtualMod]
     }
 data XkbKey = XkbKey
     { __xkbPos ∷ String
@@ -67,7 +67,9 @@ printGroup groupNr (XkbGroup _ _ symbols actions vmods) =
     actions'
       | all (≡ "NoAction()") actions = Nothing
       | otherwise = Just ("actions[Group" ⊕ show groupNr ⊕ "] = " ⊕ printActions actions)
-    vmods' = ("vmods=" ⊕) ∘ intercalate "," <$> vmods
+    vmods'
+      | null vmods = Nothing
+      | otherwise  = Just ∘ ("vmods=" ⊕) ∘ intercalate "," $ vmods
 
 printGroups ∷ [(Group, XkbGroup)] → State Group [String]
 printGroups = concatMapM (uncurry printGroup)
@@ -147,7 +149,7 @@ printKey groupNr layout key = runMaybeT $ do
     statesAndLetters ← filterM (supportedShiftstate ∘ fst) (states `zip` letters)
     ls ← traverse (printLetter ∘ snd) statesAndLetters
     actions ← traverse (uncurry (printAction layout pos)) statesAndLetters
-    let vmods = nub ∘ concat <$> traverse printVirtualMods letters
+    let vmods = nub (concatMap printVirtualMods letters)
     let xkbGroup = XkbGroup (keytypeName key) (isRightGuess key) ls actions vmods
     pure $ XkbKey p (M.singleton groupNr xkbGroup)
   where
@@ -223,10 +225,10 @@ printAction' _ _ _ _ l@(Modifiers effect mods) =
     effectToAction Lock  = LockMods
 printAction' _ _ _ _ _ = pure "NoAction()"
 
-printVirtualMods ∷ Letter → Maybe [String]
-printVirtualMods (Modifiers _ mods) = Just $
+printVirtualMods ∷ Letter → [String]
+printVirtualMods (Modifiers _ mods) =
     mapMaybe (`lookup` modifierAndPressedModifier) (filter (∈ virtualMods) mods)
-printVirtualMods _ = Nothing
+printVirtualMods _ = []
 
 redirectToLetter ∷ [Modifier] → Pos → Letter
 redirectToLetter mods pos = fromMaybe e $
