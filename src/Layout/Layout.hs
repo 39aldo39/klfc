@@ -278,13 +278,15 @@ applyModLayout layoutMod@(Mod nameM _) =
     over (_keys ∘ traverse ∘ _shortcutPos) id -- make the (perhaps) guessed shortcut position explicit
 
 getLetterByPosAndShiftstate ∷ Pos → Shiftstate → Layout → Maybe Letter
-getLetterByPosAndShiftstate pos state =
-    listToMaybe ∘ map toLetter ∘ filter ((≡ pos) ∘ view _pos) ∘ view _keys
+getLetterByPosAndShiftstate pos state = listToMaybe ∘ liftA2 (⧺)
+    (map toLetter ∘ filter ((≡ pos) ∘ view _pos) ∘ view _keys)
+    (map snd ∘ filter ((≡ pos) ∘ fst) ∘ view _singletonKeys)
   where
     toLetter = flip getLetter state
 
 getPosByLetterAndShiftstate ∷ Letter → Shiftstate → Layout → [Pos]
-getPosByLetterAndShiftstate letter state =
-    map (view _pos) ∘ filter ((≡ letter) ∘ toLetter) ∘ view _keys
+getPosByLetterAndShiftstate letter state = liftA2 (⧺)
+    (map (view _pos) ∘ filter ((≡ letter) ∘ toLetter) ∘ view _keys)
+    (map fst ∘ filter ((≡ letter) ∘ snd) ∘ view _singletonKeys)
   where
     toLetter = flip getLetter state
