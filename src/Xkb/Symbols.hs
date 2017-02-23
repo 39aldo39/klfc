@@ -259,7 +259,7 @@ printExtraKeys layout = (singletonKeys, modMappings ⧺ replacedModMappings ⧺ 
 
     getReplacedModMapping pos symbol = do
         (realMod, origPos) ← lookup symbol defaultModifierMaps
-        guard (origPos ∉ map (view _pos) (view _keys layout))
+        guard (origPos ∉ map (view _pos) (view _keys layout) ⧺ map fst (view _singletonKeys layout))
         let smallerScancode = liftA2 (<) `on` flip lookup posAndScancode
         guard =<< pos `smallerScancode` origPos
         (,) realMod <$> lookup origPos posAndKeycode
