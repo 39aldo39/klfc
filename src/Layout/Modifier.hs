@@ -1,24 +1,35 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Layout.Modifier
     ( Modifier(..)
     , Shiftstate
+    , Shiftlevel
     , toBaseModifier
     , toEqualModifiers
     , getEqualModifiers
     , controlMods
+    , parseJSONShiftlevels
+    , empty
+    , singleton
+    , fromList
     , activatedBy
     ) where
 
-import BasePrelude hiding (Alt, Control)
+import BasePrelude hiding (Alt, Control, empty)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
+import Data.Monoid.Unicode ((∅))
 import Util (HumanReadable(..))
+import WithBar (WithBar(..))
+import qualified WithBar as WB
 import WithPlus (WithPlus)
 import qualified WithPlus as WP
 
-import Data.Set (Set)
+import Data.Aeson.Types (Parser, Object, parseJSON)
+import qualified Data.HashMap.Lazy as HM
+import Data.List.NonEmpty (NonEmpty((:|)))
 
 data Modifier
     = Shift
@@ -74,7 +85,31 @@ instance HumanReadable Shiftstate where
     toString = WP.toString
     parseString = WP.parseString
 
-activatedBy ∷ Set Modifier → Shiftstate → Bool
-activatedBy mods state =
+type Shiftlevel = WithBar Shiftstate
+
+instance HumanReadable Shiftlevel where
+    typeName _ = "shiftlevel"
+    toString = WB.toString
+    parseString = WB.parseString
+
+parseJSONShiftlevels ∷ Object → Maybe (Parser [Shiftlevel])
+parseJSONShiftlevels o =
+    parseJSON <$> HM.lookup "shiftlevels" o <|>
+    fmap (map (WithBar ∘ (:| []))) ∘ parseJSON <$> HM.lookup "shiftstates" o
+
+empty ∷ Shiftlevel
+empty = WithBar ((∅) :| [])
+
+singleton ∷ Modifier → Shiftlevel
+singleton = WithBar ∘ (:| []) ∘ WP.singleton
+
+fromList ∷ [Modifier] → Shiftlevel
+fromList = WithBar ∘ (:| []) ∘ WP.fromList
+
+activatedBy ∷ Foldable t ⇒ t Modifier → Shiftlevel → Bool
+activatedBy = any ∘ activatedBy'
+
+activatedBy' ∷ Foldable t ⇒ t Modifier → Shiftstate → Bool
+activatedBy' mods state =
     all (any (∈ state) ∘ toEqualModifiers) mods ∧
     all (any (∈ mods) ∘ getEqualModifiers) state

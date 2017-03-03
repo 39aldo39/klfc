@@ -373,6 +373,7 @@ posAndXkbKeycode =
     , (KP_4, "KP4")
     , (KP_5, "KP5")
     , (KP_6, "KP6")
+    , (KP_Comma, "I129")
     , (KP_1, "KP1")
     , (KP_2, "KP2")
     , (KP_3, "KP3")

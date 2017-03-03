@@ -2,7 +2,7 @@
 // https://en.wikipedia.org/wiki/Compose_key
 // Sequences taken from /usr/share/X11/locale/en_US.UTF-8/Compose
 {
-    "shiftstates": [ "None" ],
+    "shiftlevels": [ "None" ],
     "keys": [
         { "pos": "Iso", "letters": [ "Compose" ], "filter": "only xkb,json" },
         { "pos": "Iso", "letters": [ "cdk:compose" ], "filter": "only keylayout" }

@@ -227,7 +227,7 @@ execExtraOption ∷ ExtraOption → Layout → Layout
 execExtraOption (RemoveShiftstates cols) =
     over (_keys ∘ traverse)
         (over _letters (filterOnIndex (∉ cols)) ∘
-         over _shiftstates (filterOnIndex (∉ cols)))
+         over _shiftlevels (filterOnIndex (∉ cols)))
 execExtraOption RemoveEmptyLetters = over (_keys ∘ traverse) removeEmptyLetters
 execExtraOption CombineMods =
     over _mods (map mconcat ∘ tail ∘ subsequences)

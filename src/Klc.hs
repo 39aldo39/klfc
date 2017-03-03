@@ -39,7 +39,8 @@ prepareLayout =
     _singletonKeys
         emptySingletonKeys >=>
     _keys
-        (over (traverse ∘ _shiftstates ∘ traverse) altGrToControlAlt >>>
+        (over (traverse ∘ _shiftlevels ∘ traverse ∘ traverse) altGrToControlAlt >>>
+        traverse (filterKeyOnShiftstatesM supportedShiftstate) >=>
         over (traverse ∘ _letters ∘ traverse) deadToCustomDead >>>
         setNullChars')
 
@@ -155,7 +156,6 @@ toKlcData ∷ (Logger m, MonadReader KlcConfig m)
           ⇒ Layout → m KlcData
 toKlcData = flip evalStateT privateChars <<<
     prepareLayout >=>
-    (_keys ∘ traverse) (filterKeyOnShiftstatesM supportedShiftstate) >=>
     toKlcData'
 
 toKlcData' ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
@@ -165,7 +165,7 @@ toKlcData' layout =
       <$> pure (view _info layout)
       <*> pure (map winShiftstateFromShiftstate states)
       <*> (catMaybes <$> traverse toKlcKey keys)
-      <*> toKlcLigatures layout
+      <*> toKlcLigatures states layout
       <*> toKlcDeadKeys keys
   where
     (keys, states) = unifyShiftstates (view _keys layout)
@@ -211,12 +211,12 @@ printLetter l@(CustomDead _ (DeadKey _ Nothing _ )) = "-1" <$ tell [show' l ⊕ 
 printLetter LNothing = pure "-1"
 printLetter l = "-1" <$ tell [show' l ⊕ " is not supported in KLC"]
 
-toKlcLigatures ∷ Logger m ⇒ Layout → m [KlcLigature]
-toKlcLigatures = concatMapM toKlcLigature ∘ view _keys
+toKlcLigatures ∷ Logger m ⇒ [Shiftstate] → Layout → m [KlcLigature]
+toKlcLigatures shiftstates = concatMapM (toKlcLigature shiftstates) ∘ view _keys
 
-toKlcLigature ∷ Logger m ⇒ Key → m [KlcLigature]
-toKlcLigature key = fmap catMaybes ∘ sequence $ do
-    (shiftstate, letter) ← view _shiftstates key `zip` view _letters key
+toKlcLigature ∷ Logger m ⇒ [Shiftstate] → Key → m [KlcLigature]
+toKlcLigature shiftstates key = fmap catMaybes ∘ sequence $ do
+    (shiftstate, letter) ← shiftstates `zip` view _letters key
     maybeToList $ toLigature pos (winShiftstateFromShiftstate shiftstate) <$> letterToLigatureString letter
   where
     pos = view _pos key

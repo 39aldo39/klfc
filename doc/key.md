@@ -6,7 +6,7 @@ A key denotes the actions caused by the press of a key on the keyboard. A key ha
 * Position (`pos`).
 * Shortcut position (`shortcutPos`).
 * Letters (`letters`).
-* Shiftstates (`shiftstates`).
+* Shiftlevels (`shiftlevels`).
 * Caps Lock (`capslock`).
 * Filter (`filter`).
 
@@ -16,7 +16,7 @@ If multiple files contain keys with the same positions, the separate keys will b
         "pos": "S",
         "shortcutPos": "R",
         "letters": [ "r", "R" ],
-        "shiftstates": [ "None", "Shift" ],
+        "shiftlevels": [ "None", "Shift" ],
         "capslock": false
     }
 
@@ -26,7 +26,7 @@ and file 2 the key:
         "pos": "S",
         "shortcutPos": "S",
         "letters": [ "s", "S", "ß" ],
-        "shiftstates": [ "None", "Shift", "AltGr" ]
+        "shiftlevels": [ "None", "Shift", "AltGr" ]
     }
 
 the resulting key is:
@@ -35,7 +35,7 @@ the resulting key is:
         "pos": "S",
         "shortcutPos": "S",
         "letters": [ "s", "S", "ß" ],
-        "shiftstates": [ "None", "Shift", "AltGr" ],
+        "shiftlevels": [ "None", "Shift", "AltGr" ],
         "capslock": false
     }
 
@@ -57,7 +57,7 @@ By default, the shortcut position will be the (QWERTY) position of the default l
 Letters
 -------
 
-The `letters` attribute corresponds to a list of letters. The letter in the nth position is activated when the nth shiftstate in the corresponding `shiftstates` attribute is active.
+The `letters` attribute corresponds to a list of letters. The letter in the nth position is activated when the nth shiftlevel in the corresponding `shiftlevels` attribute is active.
 
 A letter can be one of the following:
 
@@ -71,10 +71,10 @@ A letter can be one of the following:
 * A redirected key, e.g. `Control+Shift+T`. This is a list of modifiers with at the end the position to redirect to, all separated by a `+`, optionally prefixed with `redirect:` or `red:`. If a redirected key has no modifiers, it can have the same name as an action. In that case, it is necessary to prepend the letter with `redirect:` or `red:`. Depending on the output format, the position will be adjusted to the keyboard layout. So, `Control+C` should always copy text and `red:C` should always output 'c', independent from the position of the letter 'c' on the keyboard layout.
 * The empty action, denoted by the empty string. Useful for filling up unused modifiers, but often it is better to use multiple files to separate different layout layers.
 
-Shiftstates
+Shiftlevels
 -----------
 
-The same as the global `shiftstates` attribute, but the local one will overwrite the global one. Useful when the shiftstates of only a single key differ from the other.
+The same as the global `shiftlevels` attribute, but the local one will overwrite the global one. Useful when the shiftlevels of only a single key differ from the other.
 
 Caps Lock
 ---------

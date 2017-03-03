@@ -17,7 +17,8 @@ import Control.Monad.State (State, state, evalState, get, modify)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (tell, runWriter)
 import Data.Map (Map)
-import qualified Data.Map as M
+import qualified Data.Map as Map
+import qualified Data.Set as S
 import Lens.Micro.Platform (view, over, _1, _2, makeLenses)
 
 import Layout.Layout (singletonKeyToKey, getPosByLetterAndShiftstate, getLetterByPosAndShiftstate)
@@ -25,7 +26,7 @@ import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux
 import PresetLayout (defaultLayout, defaultFullLayout)
-import Xkb.General (XkbConfig(..), prepareLayout, supportedShiftstate)
+import Xkb.General (XkbConfig(..), prepareLayout)
 import Xkb.Types (keytypeName, isRightGuess)
 
 type Group = Int
@@ -77,7 +78,7 @@ printGroups = concatMapM (uncurry printGroup)
 printXkbKey ∷ XkbKey → [String]
 printXkbKey (XkbKey pos syms) = lines $
     "key " ⊕ pos ⊕ " { " ⊕ intercalate (",\n" ⊕ replicate 13 ' ') syms' ⊕ " };"
-    where syms' = evalState (printGroups (M.toAscList syms)) 1
+    where syms' = evalState (printGroups (Map.toAscList syms)) 1
 
 printXkbKeys ∷ [XkbKey] → [String]
 printXkbKeys = flip (evalState ∘ stateXkbKeys) (∅)
@@ -85,16 +86,16 @@ printXkbKeys = flip (evalState ∘ stateXkbKeys) (∅)
 stateXkbKeys ∷ [XkbKey] → State (Map Group String) [String]
 stateXkbKeys = concatMapM $
     liftA2 (⧺)
-        <$> concatMapM (uncurry stateXkbKey) ∘ M.toAscList ∘ __xkbSymbols
+        <$> concatMapM (uncurry stateXkbKey) ∘ Map.toAscList ∘ __xkbSymbols
         <*> pure ∘ printXkbKey
 
 stateXkbKey ∷ Group → XkbGroup → State (Map Group String) [String]
 stateXkbKey groupNr (XkbGroup typeName rightGuess _ _ _) = do
-    prev ← M.lookup groupNr <$> get
+    prev ← Map.lookup groupNr <$> get
     if maybe rightGuess (≡typeName) prev
       then pure []
       else ["key.type[Group" ⊕ show groupNr ⊕ "] = \"" ⊕ typeName ⊕ "\";"] <$
-           modify (M.insert groupNr typeName)
+           modify (Map.insert groupNr typeName)
 
 type ExtraKey = String
 data XkbData = XkbData
@@ -149,15 +150,14 @@ printLayout groupNr layout =
 printKey ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → Key → m (Maybe XkbKey)
 printKey groupNr layout key = runMaybeT $ do
     p ← maybe unsupportedPos pure (lookup pos posAndKeycode)
-    statesAndLetters ← filterM (supportedShiftstate ∘ fst) (states `zip` letters)
-    ls ← traverse (printLetter ∘ snd) statesAndLetters
-    actions ← traverse (uncurry (printAction layout pos)) statesAndLetters
+    ls ← traverse printLetter letters
+    actions ← zipWithM (printAction layout pos) levels letters
     let vmods = nub (concatMap printVirtualMods letters)
     let xkbGroup = XkbGroup (keytypeName key) (isRightGuess key) ls actions vmods
-    pure $ XkbKey p (M.singleton groupNr xkbGroup)
+    pure $ XkbKey p (Map.singleton groupNr xkbGroup)
   where
     pos = view _pos key
-    states = view _shiftstates key
+    levels = view _shiftlevels key
     letters = view _letters key
     unsupportedPos = tellMaybeT [show' pos ⊕ " is not supported in XKB"]
 
@@ -185,19 +185,19 @@ printLetter (Redirect mods pos) =
 printLetter LNothing =
     pure "VoidSymbol"
 
-printAction ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → Pos → Shiftstate → Letter → m String
-printAction layout pos shiftstate letter = printAction' letter layout pos shiftstate letter
+printAction ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → Pos → Shiftlevel → Letter → m String
+printAction layout pos level letter = printAction' letter layout pos level letter
 
-printAction' ∷ (Logger m, MonadReader XkbConfig m) ⇒ Letter → Layout → Pos → Shiftstate → Letter → m String
-printAction' errorL layout pos shiftstate (Action a) = fromMaybe e $
-    printAction' errorL layout pos shiftstate <$> lookup a actionAndRedirect <|>
+printAction' ∷ (Logger m, MonadReader XkbConfig m) ⇒ Letter → Layout → Pos → Shiftlevel → Letter → m String
+printAction' errorL layout pos level (Action a) = fromMaybe e $
+    printAction' errorL layout pos level <$> lookup a actionAndRedirect <|>
     printLinuxAction <$> lookup a actionAndLinuxAction
   where
     e = "NoAction()" <$ tell [show' a ⊕ " is not supported in XKB"]
-printAction' errorL layout pos shiftstate (Redirect rMods rPos) = do
+printAction' errorL layout pos level (Redirect rMods rPos) = do
     extraClearedMods ← bool [M.Extend] [] <$> asks __redirectClearsExtend
-    let addMods   = rMods ∖ mods
-    let clearMods = mods ∖ (rMods ⧺ extraClearedMods)
+    let addMods   = rMods ∖ modsIntersection
+    let clearMods = modsUnion ∖ (rMods ⧺ extraClearedMods)
     let emptyMods = null addMods ∧ null clearMods
 
     let linuxActionAt p = XkbRedirect symbol p addMods clearMods
@@ -210,7 +210,8 @@ printAction' errorL layout pos shiftstate (Redirect rMods rPos) = do
       (True , False) → pure "NoAction()"
       (True , True ) → printWithAt noOrigRedPos qPosses
   where
-    mods = toList (getSet shiftstate)
+    modsUnion = toList ∘ S.unions ∘ map getSet ∘ toList $ level
+    modsIntersection = foldl1 intersect (fmap toList level)
     rShiftstate = WP.fromList rMods
     letter = redirectToLetter rMods rPos
     symbol = fst ∘ runWriter $ printLetter letter

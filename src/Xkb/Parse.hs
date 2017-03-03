@@ -9,7 +9,6 @@ import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR, whenNothing, (>$>))
-import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Writer (writer, runWriterT, tell)
@@ -62,16 +61,16 @@ key = do
         Left  s → Nothing <$ tell [s]
         Right p → pure ∘ Just $ Key p Nothing shiftstates' letters' Nothing
 
-shiftstates ∷ [Maybe Letter] → [Shiftstate]
+shiftstates ∷ [Maybe Letter] → [Shiftlevel]
 shiftstates = catMaybes ∘ zipWith (<$)
-    [ (∅)
-    , WP.singleton M.Shift
-    , WP.singleton M.AltGr
-    , WP.fromList [M.AltGr, M.Shift]
-    , WP.singleton M.Extend
-    , WP.fromList [M.Extend, M.Shift]
-    , WP.fromList [M.Extend, M.AltGr]
-    , WP.fromList [M.Extend, M.AltGr, M.Shift]
+    [ M.empty
+    , M.singleton M.Shift
+    , M.singleton M.AltGr
+    , M.fromList [M.AltGr, M.Shift]
+    , M.singleton M.Extend
+    , M.fromList [M.Extend, M.Shift]
+    , M.fromList [M.Extend, M.AltGr]
+    , M.fromList [M.Extend, M.AltGr, M.Shift]
     ]
 
 xkbLetters ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe [Maybe Letter])

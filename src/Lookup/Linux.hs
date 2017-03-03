@@ -25,13 +25,12 @@ module Lookup.Linux
 
 import BasePrelude
 import Prelude.Unicode
-import Data.Monoid.Unicode ((∅), (⊕))
+import Data.Monoid.Unicode ((⊕))
 import Util (show', (>$>), whenNothing, allBounded)
-import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.Writer (tell)
 import Data.Map (Map)
-import qualified Data.Map as M
+import qualified Data.Map as Map
 import Lens.Micro.Platform (over, _2)
 
 import qualified Layout.Action as A
@@ -805,8 +804,8 @@ presetTypes =
     , ("NONE_SHIFT+ALT", "SHIFT+ALT")
     ]
 
-defaultTypes ∷ Map Pos (Either Int ([Shiftstate], Maybe Bool))
-defaultTypes = M.fromList
+defaultTypes ∷ Map Pos (Either Int ([Shiftlevel], Maybe Bool))
+defaultTypes = Map.fromList
     [ (P.Esc, Left 1)
     , (P.Iso, Left 4)
     , (P.Backslash, Left 2)
@@ -824,10 +823,10 @@ defaultTypes = M.fromList
     , (P.Win_R, Left 1)
     , (P.Menu, Left 1)
     , (P.Alt_L, Left 2)
-    , (P.Alt_R, Right ([(∅), WP.singleton M.Shift], Just False))
-    , (P.PrintScreen, Right ([(∅), WP.singleton M.Alt], Nothing))
+    , (P.Alt_R, Right ([M.empty, M.singleton M.Shift], Just False))
+    , (P.PrintScreen, Right ([M.empty, M.singleton M.Alt], Nothing))
     , (P.ScrollLock, Left 1)
-    , (P.Pause, Right ([(∅), WP.singleton M.Control], Nothing))
+    , (P.Pause, Right ([M.empty, M.singleton M.Control], Nothing))
     , (P.Insert, Left 1)
     , (P.Delete, Left 1)
     , (P.Home, Left 1)
@@ -839,18 +838,18 @@ defaultTypes = M.fromList
     , (P.Down, Left 1)
     , (P.Right, Left 1)
 
-    , (P.F1, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F2, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F3, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F4, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F5, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F6, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F7, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F8, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F9, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F10, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F11, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
-    , (P.F12, Right ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift, M.AltGr], WP.fromList [M.Control, M.Alt]], Just False))
+    , (P.F1, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F2, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F3, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F4, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F5, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F6, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F7, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F8, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F9, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F10, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F11, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
+    , (P.F12, Right ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift, M.AltGr], M.fromList [M.Control, M.Alt]], Just False))
     ]
 
 charAndString ∷ [(Char, String)]

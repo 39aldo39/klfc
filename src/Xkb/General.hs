@@ -5,15 +5,17 @@
 module Xkb.General where
 
 import BasePrelude
-import Prelude.Unicode
+import Prelude.Unicode hiding ((∈))
+import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show')
+import Util (show', (>$>))
 import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view, over)
 
+import Layout.Key (filterKeyOnShiftstatesM)
 import Layout.Layout (getLetterByPosAndShiftstate, addDefaultKeys, setNullChars)
 import Lookup.Linux (modifierAndTypeModifier, modifierAndPressedModifier)
 import qualified Layout.Modifier as M
@@ -26,14 +28,14 @@ data XkbConfig = XkbConfig
     , __redirectClearsExtend ∷ Bool
     }
 
-prepareLayout ∷ MonadReader XkbConfig m ⇒ Layout → m Layout
-prepareLayout layout =
-    (\addShortcuts →
-    over _keys
-        ( bool id (map addShortcutLetters) addShortcuts >>>
+prepareLayout ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m Layout
+prepareLayout layout = do
+    addShortcuts ← asks __addShortcuts
+    _keys
+        ( traverse (filterKeyOnShiftstatesM supportedShiftstate) >$>
+          bool id (map addShortcutLetters) addShortcuts >>>
           setNullChars
         ) (addDefaultKeys defaultKeys layout)
-    ) <$> asks __addShortcuts
 
 supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedTypeModifier ∘ toList
@@ -49,9 +51,9 @@ supportedPressedModifier modifier
     | otherwise = False <$ tell [show' modifier ⊕ " is not supported in XKB"]
 
 addShortcutLetters ∷ Key → Key
-addShortcutLetters key | WP.singleton M.Control ∈ view _shiftstates key = key
+addShortcutLetters key | any (WP.singleton M.Control ∈) (view _shiftlevels key) = key
 addShortcutLetters key = fromMaybe key $
-    over _shiftstates (WP.singleton M.Control :) <$>
+    over _shiftlevels (M.singleton M.Control :) <$>
     _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultFullLayout) ∘ pure) key
   where
     shortcutPos = view _shortcutPos key

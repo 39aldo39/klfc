@@ -1,7 +1,7 @@
 // Modern Dvorak Simplified Keyboard (US layout)
 // https://en.wikipedia.org/wiki/Dvorak_Simplified_Keyboard
 {
-    "shiftstates": [ "None", "Shift" ],
+    "shiftlevels": [ "None", "Shift" ],
     "keys": [
         { "pos": "~", "letters": [ "`", "~" ] },
         { "pos": "1", "letters": [ "1", "!" ] },

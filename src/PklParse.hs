@@ -15,6 +15,7 @@ import qualified WithPlus as WP (singleton)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriterT, writer, tell)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Text.Lazy as L (Text)
 import Lens.Micro.Platform (set, (<&>))
 import Text.Megaparsec hiding (Pos)
@@ -26,12 +27,13 @@ import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux (posAndScancode)
 import Lookup.Windows
+import WithBar (WithBar(..))
 
 layout ∷ (Logger m, MonadParsec Dec s m, Token s ~ Char) ⇒ m Layout
 layout = do
     PklParseLayout info states keys specialKeys deads ← pklLayout
     ($ keys) $
-      map (set _shiftstates states) >>>
+      map (set _shiftlevels (map (WithBar ∘ (:| [])) states)) >>>
       Layout info specialKeys (∅) >>>
       setDeads deads
 

@@ -5,7 +5,7 @@
     "singletonKeys": [
         [ "Alt_R", "AltGr" ]
     ],
-    "shiftstates": [ "AltGr", "Shift+AltGr" ],
+    "shiftlevels": [ "AltGr", "Shift+AltGr" ],
     "keys": [
         { "pos": "~", "letters": [ "tilde", "" ] },
         { "pos": "1", "letters": [ "¡", "¹" ] },

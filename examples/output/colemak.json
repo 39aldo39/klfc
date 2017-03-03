@@ -9,9 +9,9 @@
         [ "CapsLock", "Extend" ],
         [ "Alt_R", "AltGr" ]
     ],
-    "keysWithShiftstates": [
+    "keysWithShiftlevels": [
         {
-            "shiftstates": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
+            "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
             "keys": [
                 { "pos": "~", "letters": [ "`", "~", "tilde", "", "MouseEnable" ] },
                 { "pos": "1", "letters": [ "1", "!", "¡", "¹", "F1" ] },
@@ -64,13 +64,13 @@
             ]
         },
         {
-            "shiftstates": [ "AltGr", "Shift+AltGr", "Extend" ],
+            "shiftlevels": [ "AltGr", "Shift+AltGr", "Extend" ],
             "keys": [
                 { "pos": "Space", "letters": [ " ", " ", "Enter" ] }
             ]
         },
         {
-            "shiftstates": [ "Extend", "Shift+Extend" ],
+            "shiftlevels": [ "Extend", "Shift+Extend" ],
             "keys": [
                 { "pos": "Escape", "letters": [ "CapsLock" ] },
                 { "pos": "F1", "letters": [ "PlayPause", "AudioPause" ] },

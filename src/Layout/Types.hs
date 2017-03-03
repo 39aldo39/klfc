@@ -11,7 +11,7 @@ module Layout.Types
     , Key
     , _pos
     , _shortcutPos
-    , _shiftstates
+    , _shiftlevels
     , _letters
     , _capslock
     , Information
@@ -33,15 +33,16 @@ module Layout.Types
     , Modifier
     , ModifierEffect(..)
     , Shiftstate
+    , Shiftlevel
     , Pos
     ) where
 
 import Layout.Action (Action)
 import Layout.DeadKey (DeadKey(..), StringMap, ChainedDeadKey(..), ActionMap, ActionResult(..))
-import Layout.Key (Letter(..), Key, _pos, _shortcutPos, _shiftstates, _letters, _capslock)
+import Layout.Key (Letter(..), Key, _pos, _shortcutPos, _shiftlevels, _letters, _capslock)
 import Layout.Layout (Information(..), _fullName, _name, _copyright, _company, _localeId, _version, _description, Layout(..), _info, _singletonKeys, _mods, _keys, SingletonKey)
 import Layout.Mod (Mod(..))
-import Layout.Modifier (Modifier, Shiftstate)
+import Layout.Modifier (Modifier, Shiftstate, Shiftlevel)
 import Layout.ModifierEffect (ModifierEffect(..))
 import Layout.Pos (Pos)
 

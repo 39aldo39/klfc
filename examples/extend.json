@@ -5,7 +5,7 @@
     "singletonKeys": [
         [ "CapsLock", "Extend" ]
     ],
-    "shiftstates": [ "Extend", "Shift+Extend" ],
+    "shiftlevels": [ "Extend", "Shift+Extend" ],
     "keys": [
         { "pos": "Escape", "letters": [ "CapsLock" ] },
         { "pos": "F1", "letters": [ "PlayPause", "AudioPause" ] },

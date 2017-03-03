@@ -10,7 +10,8 @@ module Keylayout
     ) where
 
 import BasePrelude
-import Prelude.Unicode
+import Prelude.Unicode hiding ((∈))
+import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
 import Data.List.Unicode ((∖))
 import Util (show', (>$>), groupSortWith, tellMaybeT)
@@ -56,9 +57,9 @@ supportedModifier modifier
   | otherwise = False <$ tell [show' modifier ⊕ " is not supported in keylayout"]
 
 addShortcutLetters ∷ Key → Key
-addShortcutLetters key | WP.singleton M.Win ∈ view _shiftstates key = key
+addShortcutLetters key | any (WP.singleton M.Win ∈) (view _shiftlevels key) = key
 addShortcutLetters key = fromMaybe key $
-    over _shiftstates (WP.singleton M.Win :) <$>
+    over _shiftlevels (M.singleton M.Win :) <$>
     _letters (liftA2 (:) (getLetterByPosAndShiftstate shortcutPos (∅) defaultLayout) ∘ pure) key
   where
     shortcutPos = view _shortcutPos key
@@ -95,13 +96,13 @@ toKeylayout' layout = do
         , attr "name" (view (_info ∘ _fullName) layout)
         ] <$> sequence
         [ pure $ unode "layouts" layoutElement
-        , pure $ toModifierMap shiftstates
+        , pure $ toModifierMap shiftlevels
         , keyMapSetElementOutputToActions deadKeys <$> toKeyMapSet keys
         , pure $ unode "actions" (map deadKeyToAction deadKeys ⧺ deadKeysToActions chainedDeadKeys)
         , pure $ unode "terminators" (mapMaybe deadKeyToTerminator deadKeys)
         ]
   where
-    (keys, shiftstates) = unifyShiftstates (view _keys layout)
+    (keys, shiftlevels) = unifyShiftlevels (view _keys layout)
     deadKeys = nub (concatMap (mapMaybe letterToDeadKey ∘ view _letters) keys)
     deadKeysToActions =
         concatMap chainedDeadKeyToActions >>>
@@ -129,15 +130,16 @@ removeEmptyElements' ∷ Content → Maybe Content
 removeEmptyElements' (Elem e) = Elem ∘ removeEmptyElementsInside <$> removeEmptyElements e
 removeEmptyElements' c = Just c
 
-toModifierMap ∷ [Shiftstate] → Element
+toModifierMap ∷ [Shiftlevel] → Element
 toModifierMap states = unode "modifierMap" ∘ (,)
     [ attr "id" "defaultModifierMap"
     , attr "defaultIndex" "0"
     ] ∘
-    zipWith toKeyMapSelect [0..] $ map (toModifiers (ignored states)) states
+    zipWith toKeyMapSelect [0..] $ map (toModifiers ignored) states
   where
-    ignored =
-        (map fst modifierAndString ∖) ∘ concatMap (concatMap usedModifiers ∘ toList) >>>
+    ignored = ($ states) $
+        concatMap (concatMap (concatMap usedModifiers)) >>>
+        (map fst modifierAndString ∖) >>>
         removeDoubleModifiers >>>
         mapMaybe (`lookup` modifierAndString) >>>
         map (⊕ "?")
@@ -145,11 +147,10 @@ toModifierMap states = unode "modifierMap" ∘ (,)
 toKeyMapSelect ∷ Int → [Element] → Element
 toKeyMapSelect i = unode "keyMapSelect" ∘ (,) [attr "mapIndex" (show i)]
 
-toModifiers ∷ [String] → Shiftstate → [Element]
-toModifiers ignored state =
-    (:[]) ∘ unode "modifier" ∘ (:[]) ∘ attr "keys" ∘ unwords $ modifiers ⧺ ignored
-  where
-    modifiers = map modifierToString (toList state)
+toModifiers ∷ [String] → Shiftlevel → [Element]
+toModifiers ignored =
+    map (map modifierToString ∘ toList) ∘ toList >$>
+    unode "modifier" ∘ (:[]) ∘ attr "keys" ∘ unwords ∘ (⧺ ignored)
 
 modifierToString ∷ Modifier → String
 modifierToString modifier = fromMaybe e (lookup modifier modifierAndString)

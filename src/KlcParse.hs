@@ -16,6 +16,7 @@ import Util (parseString, (>$>), lookupR, tellMaybeT)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriterT, writer, tell)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Text.Lazy as L (Text)
 import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1)
 import Text.Megaparsec hiding (Pos)
@@ -26,6 +27,7 @@ import Layout.Layout (Layout(..))
 import Layout.Types
 import Lookup.Linux (posAndScancode)
 import Lookup.Windows (shiftstateFromWinShiftstate, posAndString)
+import WithBar (WithBar(..))
 
 data KlcParseLayout = KlcParseLayout
     { __parseInformation ∷ Information
@@ -44,7 +46,7 @@ layout ∷ (Logger m, MonadParsec Dec s m, Token s ~ Char) ⇒ m Layout
 layout = do
     KlcParseLayout info states keys ligs deads ← klcLayout
     ($ keys) $
-      map (set _shiftstates states) >>>
+      map (set _shiftlevels (map (WithBar ∘ (:| [])) states)) >>>
       Layout info (∅) (∅) >>>
       setDeads deads >$>
       setLigatures ligs

@@ -1,7 +1,7 @@
 // AZERTY layout used in France
 // https://en.wikipedia.org/wiki/Azerty
 {
-    "shiftstates": [ "None", "Shift", "AltGr" ],
+    "shiftlevels": [ "None", "Shift", "AltGr" ],
     "keys": [
         { "pos": "~", "letters": [ "²" ] },
         { "pos": "1", "letters": [ "&", "1" ] },

@@ -1,7 +1,7 @@
 // QWERTY (US version)
 // https://en.wikipedia.org/wiki/QWERTY#United_States
 {
-    "shiftstates": [ "None", "Shift" ],
+    "shiftlevels": [ "None", "Shift" ],
     "keys": [
         { "pos": "~", "letters": [ "`", "~" ] },
         { "pos": "1", "letters": [ "1", "!" ] },

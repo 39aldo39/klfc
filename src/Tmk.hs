@@ -12,17 +12,20 @@ import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((⊕))
 import qualified Data.Set.Unicode as S
 import Util (show', toString, (>$>), filterOnFst, groupWith')
-import WithPlus (WithPlus(..), getSet)
+import WithBar (WithBar(..))
+import WithPlus (WithPlus(..))
 
 import Control.Monad.State (State, runState, get, gets, modify)
 import Control.Monad.Writer (runWriter, tell)
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
 import Lens.Micro.Platform (view, over, makeLenses, _1, _2)
 
-import Layout.Key (getLevel)
+import Layout.Key (Key(..), getLevel)
 import Layout.Layout
 import Layout.Modifier (toBaseModifier, getEqualModifiers)
 import Layout.ModifierEffect (defaultModifierEffect)
@@ -85,12 +88,12 @@ data TmkLayer = TmkLayer
     } deriving (Show, Read)
 makeLenses ''TmkLayer
 
-printTmkLayer ∷ Set Modifier → Int → TmkLayer → Tmk [String]
-printTmkLayer modifiersInfluenced i (TmkLayer shiftstate tmkLetters) = do
+printTmkLayer ∷ Set Modifier → Int → (Map Pos TmkLetter, Shiftlevel) → Tmk [String]
+printTmkLayer modifiersInfluenced i (tmkLetters, shiftlevel) = do
     letterMaps ← traverse (printTmkLetter modifiersInfluenced) tmkLetters
     let actions = zipWith (zipWith (\size → printf ("%" ⊕ show size ⊕ "s") ∘ getAction letterMaps)) (__sizes unimap) (__posses unimap)
     pure (
-        [ "// " ⊕ toString shiftstate
+        [ "// " ⊕ toString shiftlevel
         , "[" ⊕ show i ⊕ "] = " ⊕ __name unimap ⊕ "("
         ] ⧺ addCommas (map (intercalate ",") actions) ⧺
         [ "),"
@@ -108,7 +111,7 @@ data TmkKeymap = TmkKeymap
 makeLenses ''TmkKeymap
 
 printTmkKeymap ∷ TmkKeymap → String
-printTmkKeymap (TmkKeymap getMaxIndex layers) = unlines $
+printTmkKeymap (TmkKeymap getMaxIndex layers') = unlines $
     [ "#include \"unimap_trans.h\""
     , "#include \"action_util.h\""
     , "#include \"action_layer.h\""
@@ -158,7 +161,7 @@ printTmkKeymap (TmkKeymap getMaxIndex layers) = unlines $
     [ "uint" ⊕ show indexSize ⊕ "_t virtual_mods = 0;"
     , ""
     , "const uint" ⊕ show layerSize ⊕ "_t layer_states[] = {"
-    ] ⧺ map (\(i, state) → replicate 4 ' ' ⊕ "0x" ⊕ showHex i "," ⊕ " // " ⊕ toString state) (getLayers getMaxIndex layers) ⧺
+    ] ⧺ map (\(i, state) → replicate 4 ' ' ⊕ "0x" ⊕ showHex (layerStateAfterGrouping i) "," ⊕ " // " ⊕ toString state) (getLayers getMaxIndex layers') ⧺
     [ "};"
     , ""
     , "void action_function(keyrecord_t *record, uint8_t id, uint8_t opt) {"
@@ -186,7 +189,8 @@ printTmkKeymap (TmkKeymap getMaxIndex layers) = unlines $
   where
     (printedLayers, functionKeys) = flip runState [] $
         concat <$> zipWithM (printTmkLayer modifiersInfluenced) [0..] layers
-    shiftstates = map __tmkShiftstate layers
+    shiftstates = map __tmkShiftstate layers'
+    (layerStateAfterGrouping, layers) = groupLayers layers'
     modifiersInShiftstates = S.unions ∘ map getSet $ shiftstates
     modifiersInfluenced = S.fromList ∘ concatMap (concatMap getEqualModifiers ∘ toList) $ shiftstates
     modifiersInfluencedList = toList modifiersInfluenced
@@ -201,11 +205,11 @@ printTmkKeymap (TmkKeymap getMaxIndex layers) = unlines $
     (realModsInfluenced, virtualModsInfluenced) = partition isRealModifier modifiersInfluencedList
     asPower2 x
       | x < 1     = 8
-      | otherwise = max 8 (2 ^ (ceiling (logBase 2 (fromIntegral x ∷ Double)) ∷ Int)) ∷ Int
+      | otherwise = max 8 (bit (ceiling (logBase 2 (fromIntegral x ∷ Double)) ∷ Int)) ∷ Int
     indexSize = asPower2 (length modifiersInShiftstates)
-    layerSize = asPower2 (length layers)
+    layerSize = asPower2 (length layers')
 
-    macros = nub (mapMaybe toMacro (concatMap (M.elems ∘ __tmkLetters) layers))
+    macros = nub (mapMaybe toMacro (concatMap (M.elems ∘ fst) layers))
     printMacro (mId, press, release) =
         [ "case " ⊕ mId ⊕ ":"
         , "    return record->event.pressed ?"
@@ -220,7 +224,7 @@ getLayers getMaxIndex layers = ($ shiftstates) $
     S.toAscList ∘ S.unions ∘ map getSet >>> -- get an ascending list of modifiers
     uncurry (⧺) ∘ partition isRealModifier >>> -- place the real modifiers at the front
     map (WithPlus ∘ S.fromList) ∘ subsequences >>> -- generate the substates with the real modifiers at the front
-    map (sum ∘ map (2^) ∘ getActiveStates getMaxIndex shiftstates &&& id)
+    map (sum ∘ map bit ∘ getActiveStates getMaxIndex shiftstates &&& id)
   where
     shiftstates = map __tmkShiftstate layers
 
@@ -240,9 +244,11 @@ toTmkKeymap' layout =
     TmkKeymap getMaxIndex <$> zipWithM lettersToTmkLayer shiftstates letters
   where
     (keys, shiftstates) = unifyShiftstates (view _keys layout)
+    shiftlevels = map (WithBar ∘ (:| [])) shiftstates
     posses = map (view _pos) keys
     letters = map (M.fromList ∘ zip posses) ∘ transpose ∘ map (view _letters) $ keys
-    getMaxIndex = maybe (length shiftstates) (succ ∘ fst) ∘ getLevel shiftstates
+    getMaxIndex = maybe (length shiftstates) (succ ∘ fst) ∘ getLevel keyForShiftstates
+    keyForShiftstates = Key undefined undefined shiftlevels undefined (Just False)
 
 removeTransLayers ∷ TmkKeymap → TmkKeymap
 removeTransLayers (TmkKeymap getMaxIndex layers) = TmkKeymap getMaxIndex' layers'
@@ -265,18 +271,18 @@ letterToTmkLetter' errorL _ (Ligature _ s) =
   where
     mId = map (\x → bool '_' x (isAscii x ∧ isAlphaNum x)) s
     macro =
-        traverse (getPosAndShiftstate ∘ Char) >=>
+        traverse (getPosAndShiftlevel ∘ Char) >=>
         groupWith' snd >>>
-        (traverse ∘ _1) (traverse (flip lookup modifierAndKeycode) ∘ toList) >=>
+        (traverse ∘ _1) (traverse (flip lookup modifierAndKeycode) ∘ toList ∘ NE.head ∘ getNonEmpty) >=>
         (traverse ∘ _2 ∘ traverse) (flip lookup posAndTmkAction ∘ fst) >$>
         concatMap (uncurry modsAndCodesToMacro) >>>
         (["SM()", "CM()"] ⧺) ∘ (⧺ ["RM()"])
-    getPosAndShiftstate letter =
+    getPosAndShiftlevel letter =
         view _keys defaultFullLayout &
-        concatMap (\key → map ((,) (view _pos key)) (getValidShiftstates letter key)) &
+        concatMap (\key → map ((,) (view _pos key)) (getValidShiftlevels letter key)) &
         listToMaybe
-    getValidShiftstates letter key =
-        filterOnFst (≡ letter) (view _letters key `zip` view _shiftstates key)
+    getValidShiftlevels letter key =
+        filterOnFst (≡ letter) (view _letters key `zip` view _shiftlevels key)
     modsAndCodesToMacro modifiers keycodes =
         map (\m → "D(" ⊕ m ⊕ ")") modifiers ⧺
         map (\c → "T(" ⊕ c ⊕ ")") keycodes ⧺
@@ -308,6 +314,16 @@ letterToTmkLetter' _ state letter
     posToAction = flip lookup posAndTmkAction
 letterToTmkLetter' errorL state _ =
     TmkAction "NO" <$ tell [show' errorL ⊕ " is not supported on " ⊕ show' state ⊕ " in TMK"]
+
+groupLayers ∷ [TmkLayer] → (Int → Int, [(Map Pos TmkLetter, Shiftlevel)])
+groupLayers layers = (flip layerStateAfterGrouping &&& layers') groupedLayers
+  where
+    groupedLayers = NE.groupWith __tmkLetters layers
+    layerStateAfterGrouping initState =
+        NE.tail ∘ NE.scanl (\(_, start) gr → (start, start + length gr)) (0, 0) >>>
+        map (any (testBit initState) ∘ range ∘ over _2 pred) >>>
+        sum ∘ zipWith (bool 0 ∘ bit) [0..]
+    layers' = map (__tmkLetters ∘ NE.head &&& WithBar ∘ fmap __tmkShiftstate)
 
 addTransLetters ∷ [TmkLayer] → [TmkLayer]
 addTransLetters [] = []

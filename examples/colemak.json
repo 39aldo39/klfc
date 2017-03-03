@@ -7,7 +7,7 @@
     "copyright": "Public Domain",
     "company": "2006-01-01 Shai Coleman",
     "version": "1.0",
-    "shiftstates": [ "None", "Shift" ],
+    "shiftlevels": [ "None", "Shift" ],
     "singletonKeys": [
         [ "CapsLock", "Backspace" ]
     ],

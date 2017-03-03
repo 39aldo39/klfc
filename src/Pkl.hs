@@ -20,7 +20,7 @@ import qualified WithPlus as WP (fromList, singleton)
 import Control.Monad.State (evalState)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
-import Control.Monad.Writer (tell)
+import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over, (<&>))
 
 import Layout.Key (letterToDeadKey, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
@@ -37,15 +37,16 @@ data IsExtend = Extend | NotExtend
 
 prepareLayout ∷ Layout → Layout
 prepareLayout =
+    over (_keys ∘ traverse ∘ _shiftlevels ∘ traverse ∘ traverse) altGrToControlAlt >>>
     addDefaultKeysWith getDefaultKeys' defaultKeys >>>
     over _singletonKeys (filter (not ∘ isAltRToAltGr)) >>>
     over _keys
-        (over (traverse ∘ _shiftstates ∘ traverse) altGrToControlAlt >>>
-        flip evalState 1 ∘ (traverse ∘ _letters ∘ traverse) toIndexedCustomDeadKey >>>
+        (flip evalState 1 ∘ (traverse ∘ _letters ∘ traverse) toIndexedCustomDeadKey >>>
         setNullChars)
   where
     getDefaultKeys' keys = getDefaultKeys keys ∘ filterNonExtend
-    filterNonExtend = over _keys (filter (any (M.Extend ∉) ∘ view _shiftstates))
+    filterNonExtend = over _keys (filter (any (any supportedNonExtend) ∘ view _shiftlevels))
+    supportedNonExtend = fst ∘ runWriter ∘ supportedShiftstate NotExtend
 
 supportedShiftstate ∷ Logger m ⇒ IsExtend → Shiftstate → m Bool
 supportedShiftstate NotExtend shiftstate = and <$> traverse supportedModifier (toList shiftstate)
@@ -181,7 +182,7 @@ toLayoutData =
   where
     toSupportedShiftstates key
       | not (null (view _letters key))
-      ∧ all (M.Extend ∈) (view _shiftstates key)
+      ∧ all (any (M.Extend ∈)) (view _shiftlevels key)
       = pure Nothing
       | otherwise
       = Just <$> filterKeyOnShiftstatesM (supportedShiftstate NotExtend) key
@@ -241,13 +242,14 @@ keyToPklKey layout key = runMaybeT $
 
 extendKeyToPklKey ∷ Logger m ⇒ Layout → Key → m (Maybe PklKey)
 extendKeyToPklKey layout key = runMaybeT $ do
-    letter ← MaybeT $ listToMaybe <$> filterOnSndM (supportedShiftstate Extend) lettersWithStates
+    letter ← MaybeT $ listToMaybe <$> filterOnSndM supportedLevel lettersWithLevels
     PklSpecialKey
       <$> toPklPos (view _pos key)
       <*> printLetter Extend layout letter
       <*> pure ""
   where
-    lettersWithStates = view _letters key `zip` view _shiftstates key
+    supportedLevel = fmap or ∘ traverse (supportedShiftstate Extend)
+    lettersWithLevels = view _letters key `zip` view _shiftlevels key
 
 singletonKeyToPklKey ∷ Logger m ⇒ Layout → SingletonKey → m (Maybe PklKey)
 singletonKeyToPklKey layout (pos, action) = runMaybeT $

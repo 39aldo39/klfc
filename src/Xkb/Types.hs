@@ -5,14 +5,13 @@ module Xkb.Types where
 
 import BasePrelude
 import Prelude.Unicode
-import Data.Monoid.Unicode ((∅), (⊕))
+import Data.Monoid.Unicode ((⊕))
 import qualified Data.Set.Unicode as S
-import Util (subsets, (>$>))
+import Util (toString, subsets, (>$>))
 import WithPlus (WithPlus(..))
-import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.Reader (MonadReader)
-import qualified Data.Map as M
+import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as S
 
@@ -26,23 +25,23 @@ import Xkb.General (XkbConfig, prepareLayout, supportedTypeModifier)
 isRightGuess ∷ Key → Bool
 isRightGuess key = rightGuessMods ∧ rightCapslock
   where
-    rightGuessMods = view _shiftstates key ≡ guessMods
+    rightGuessMods = view _shiftlevels key ≡ guessMods
     rightCapslock = maybe True (≡ view _capslock key) guessAlph
     (guessMods, guessAlph) =
-      case fromMaybe (Left 0) (M.lookup (view _pos key) defaultTypes) of
+      case fromMaybe (Left 0) (Map.lookup (view _pos key) defaultTypes) of
         Left size →
             if size > length (view _letters key)
-                then (repeat (∅), Nothing)
+                then (repeat M.empty, Nothing)
                 else guessType (view _letters key)
         Right x → x
 
-guessType ∷ [Letter] → ([Shiftstate], Maybe Bool)
+guessType ∷ [Letter] → ([Shiftlevel], Maybe Bool)
 guessType []         = ([], Nothing)
-guessType [_]        = ([(∅)], Nothing)
-guessType [l,l']     = ([(∅), WP.singleton M.Shift], Just (isCapslock l l'))
-guessType [l,l',_]   = ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr], Just (isCapslock l l'))
-guessType [l,l',_,_] = ([(∅), WP.singleton M.Shift, WP.singleton M.AltGr, WP.fromList [M.Shift,M.AltGr]], Just (isCapslock l l'))
-guessType _    = (repeat (∅), Nothing)
+guessType [_]        = ([M.empty], Nothing)
+guessType [l,l']     = ([M.empty, M.singleton M.Shift], Just (isCapslock l l'))
+guessType [l,l',_]   = ([M.empty, M.singleton M.Shift, M.singleton M.AltGr], Just (isCapslock l l'))
+guessType [l,l',_,_] = ([M.empty, M.singleton M.Shift, M.singleton M.AltGr, M.fromList [M.Shift,M.AltGr]], Just (isCapslock l l'))
+guessType _    = (repeat M.empty, Nothing)
 
 -- http://www.charvolant.org/~doug/xkb/html/node5.html#SECTION00054000000000000000
 isCapslock ∷ Letter → Letter → Bool
@@ -54,11 +53,8 @@ keytypeName = (\x → fromMaybe x (lookup x presetTypes)) ∘ keytypeName'
 
 keytypeName' ∷ Key → String
 keytypeName' key =
-    (intercalate "_" ∘ map modsToName ∘ filter (all (∈ map fst modifierAndTypeModifier)) ∘ map toList $ view _shiftstates key) ⊕
+    (intercalate "_" ∘ map (map toUpper ∘ toString) $ view _shiftlevels key) ⊕
     bool "" "_ALPHABETIC" (view _capslock key)
-  where
-    modsToName [] = "NONE"
-    modsToName ms = intercalate "+" ∘ map (map toUpper ∘ show) $ ms
 
 printTypes ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m String
 printTypes = prepareLayout >=> \layout → do
@@ -121,7 +117,7 @@ getTypes =
 getType ∷ Logger m ⇒ Key → m Type
 getType key = getType' key <$> filterMS supportedTypeModifier mods
   where
-    mods       = (S.∪ extraMods) ∘ S.unions ∘ map getSet ∘ view _shiftstates $ key
+    mods       = (S.∪ extraMods) ∘ S.unions ∘ map getSet ∘ concatMap toList ∘ view _shiftlevels $ key
     extraMods  = S.fromList [M.CapsLock | view _capslock key]
     filterMS f = fmap S.fromAscList ∘ filterM f ∘ S.toAscList
 
@@ -129,7 +125,7 @@ getType' ∷ Key → Set Modifier → Type
 getType' key mods = Type
     { __typeName   = keytypeName key
     , __typeMods   = mods
-    , __maps       = zip subMods levels
+    , __maps       = zip subMods xkbLevels
     , __preserves  = filter (not ∘ null ∘ snd) (zip subMods ignoredMods)
     , __levelNames = zip [0..] (map (showLevel ∘ toList) states)
     }
@@ -137,5 +133,5 @@ getType' key mods = Type
     showLevel [] = "Base"
     showLevel xs = concatMap show xs
     subMods = map WithPlus (subsets mods)
-    states = view _shiftstates key
-    (levels, ignoredMods) = unzip (mapMaybe (getLevel states) subMods)
+    states = concatMap toList (view _shiftlevels key)
+    (xkbLevels, ignoredMods) = unzip (mapMaybe (getLevel key) subMods)

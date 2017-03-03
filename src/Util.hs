@@ -112,7 +112,7 @@ split p (x:xs)
   | otherwise = let y :| ys = split p xs in (x:y) :| ys
 
 groupWith' ∷ Eq β ⇒ (α → β) → [α] → [(β, [α])]
-groupWith' f = map (\(x:|xs) → (f x, x:xs)) ∘ NE.groupBy ((≡) `on` f)
+groupWith' f = map (\(x:|xs) → (f x, x:xs)) ∘ NE.groupWith f
 
 groupSortWith ∷ Ord β ⇒ (α → β) → [α] → [(β, [α])]
 groupSortWith f = groupWith' f ∘ sortWith f
@@ -147,10 +147,14 @@ dec2bin = unfoldr f
 stripSuffix ∷ Eq α ⇒ [α] → [α] → Maybe [α]
 stripSuffix xs = fmap reverse ∘ stripPrefix (reverse xs) ∘ reverse
 
-combineWithOn ∷ Eq β ⇒ (α → [α] → α) → (α → β) → [α] → [α] → [α]
-combineWithOn _ _   []     ys = ys
-combineWithOn f key (x:xs) ys = f x eqToX : combineWithOn f key xs ys'
-  where (eqToX, ys') = partition (on (≡) key x) ys
+combineOn ∷ Eq β ⇒ (α → [α] → α) → (α → β) → [α] → [α] → [α]
+combineOn f key = combineWith ((:[]) ∘: f) ((≡) `on` key)
+  where (∘:) = (∘) ∘ (∘)
+
+combineWith ∷ (α → [α] → [α]) → (α → α → Bool) → [α] → [α] → [α]
+combineWith _ _  []     ys = ys
+combineWith f eq (x:xs) ys = f x eqToX ⧺ combineWith f eq xs ys'
+  where (eqToX, ys') = partition (eq x) ys
 
 combineWithOnM ∷ (Eq β, Applicative f) ⇒ (α → [α] → f α) → (α → β) → [α] → [α] → f [α]
 combineWithOnM _ _   []     ys = pure ys
@@ -190,6 +194,9 @@ concatMapM f = fmap concat ∘ traverse f
 
 mconcatMapM ∷ (Monad m, Monoid β) ⇒ (α → m β) → [α] → m β
 mconcatMapM f = fmap mconcat ∘ traverse f
+
+mapMaybeM ∷ Applicative m ⇒ (α → m (Maybe β)) → [α] → m [β]
+mapMaybeM f = foldr (liftA2 (maybe id (:)) ∘ f) (pure [])
 
 tellMaybeT ∷ MonadWriter w m ⇒ w → MaybeT m α
 tellMaybeT x = MaybeT (Nothing <$ tell x)
