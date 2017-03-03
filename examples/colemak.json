@@ -49,7 +49,6 @@
         { "pos": "L", "letters": [ "i", "I" ] },
         { "pos": ";", "letters": [ "o", "O" ] },
         { "pos": "'", "letters": [ "'", "\"" ] },
-        { "pos": "Iso", "shortcutPos": "Iso", "letters": [ "-", "_" ] },
         { "pos": "Z", "letters": [ "z", "Z" ] },
         { "pos": "X", "letters": [ "x", "X" ] },
         { "pos": "C", "letters": [ "c", "C" ] },

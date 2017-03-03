@@ -44,7 +44,6 @@
         { "pos": "L", "letters": [ "í", "Í" ] },
         { "pos": ";", "letters": [ "ó", "Ó" ] },
         { "pos": "'", "letters": [ "õ", "Õ" ] },
-        { "pos": "Iso", "letters": [ "", "" ] },
         { "pos": "Z", "letters": [ "æ", "Æ" ] },
         { "pos": "X", "letters": [ "circumflex", "" ] },
         { "pos": "C", "letters": [ "ç", "Ç" ] },
