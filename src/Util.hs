@@ -13,7 +13,6 @@ import Data.Monoid.Unicode ((⊕))
 
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail (fail)
-import Control.Monad.Trans (MonadTrans, lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer.Class (MonadWriter, tell)
 import Data.Aeson

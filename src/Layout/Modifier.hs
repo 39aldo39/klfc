@@ -4,6 +4,9 @@
 module Layout.Modifier
     ( Modifier(..)
     , Shiftstate
+    , toBaseModifier
+    , toEqualModifiers
+    , getEqualModifiers
     , controlMods
     , activatedBy
     ) where
@@ -40,16 +43,19 @@ instance HumanReadable Modifier where
     typeName _ = "modifier"
     toString = show
 
+toBaseModifier ∷ Modifier → Modifier
+toBaseModifier Shift_L = Shift
+toBaseModifier Shift_R = Shift
+toBaseModifier Win_L = Win
+toBaseModifier Win_R = Win
+toBaseModifier Alt_L = Alt
+toBaseModifier Alt_R = Alt
+toBaseModifier Control_L = Control
+toBaseModifier Control_R = Control
+toBaseModifier modifier = modifier
+
 toEqualModifiers ∷ Modifier → [Modifier]
-toEqualModifiers Shift_L = [Shift, Shift_L]
-toEqualModifiers Shift_R = [Shift, Shift_R]
-toEqualModifiers Win_L = [Win, Win_L]
-toEqualModifiers Win_R = [Win, Win_R]
-toEqualModifiers Alt_L = [Alt, Alt_L]
-toEqualModifiers Alt_R = [Alt, Alt_R]
-toEqualModifiers Control_L = [Control, Control_L]
-toEqualModifiers Control_R = [Control, Control_R]
-toEqualModifiers modifier = [modifier]
+toEqualModifiers modifier = nub [toBaseModifier modifier, modifier]
 
 getEqualModifiers ∷ Modifier → [Modifier]
 getEqualModifiers Shift = [Shift, Shift_L, Shift_R]

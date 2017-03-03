@@ -1,6 +1,7 @@
 // Colemak AltGr layer
 // https://colemak.com/Multilangual
 {
+    "filter": "no tmk",
     "singletonKeys": [
         [ "Alt_R", "AltGr" ]
     ],

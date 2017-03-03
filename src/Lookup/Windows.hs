@@ -168,7 +168,6 @@ posAndString =
     , (P.KP_Enter, "RETURN")
     , (P.KP_0, "NUMPAD0")
     , (P.KP_Dec, "DECIMAL")
---    , (P.KP_Eq, "")
 
     , (P.PlayPause, "MEDIA_PLAY_PAUSE")
     , (P.Previous, "MEDIA_PREV_TRACK")
@@ -189,14 +188,24 @@ posAndString =
     , (P.MediaPlayer, "LAUNCH_MEDIA_SELECT")
     , (P.Browser, "BROWSER_HOME")
     , (P.Mail, "LAUNCH_MAIL")
---    , (P.Search, "")
+    , (P.Help, "HELP")
     , (P.Launch1, "LAUNCH_APP1")
     , (P.Launch2, "LAUNCH_APP2")
 
---    , (P.Power, "")
     , (P.Sleep, "SLEEP")
---    , (P.Wake, "")
 
+    , (P.F13, "F13")
+    , (P.F14, "F14")
+    , (P.F15, "F15")
+    , (P.F16, "F16")
+    , (P.F17, "F17")
+    , (P.F18, "F18")
+    , (P.F19, "F19")
+    , (P.F20, "F20")
+    , (P.F21, "F21")
+    , (P.F22, "F22")
+    , (P.F23, "F23")
+    , (P.F24, "F24")
     ]
 
 modifierAndChar ∷ [(Modifier, Char)]

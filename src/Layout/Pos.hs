@@ -21,7 +21,7 @@ data Pos
 
     | NumLock | KP_Div | KP_Mult | KP_Min
     | KP_7    | KP_8   | KP_9    | KP_Plus
-    | KP_4    | KP_5   | KP_6
+    | KP_4    | KP_5   | KP_6    | KP_Comma
     | KP_1    | KP_2   | KP_3    | KP_Enter
     |       KP_0       | KP_Dec  | KP_Eq
 
@@ -32,11 +32,14 @@ data Pos
 
     | Browser_Back | Browser_Forward | Browser_Refresh | Browser_Stop | Browser_Search | Browser_Favorites
 
-    | Calculator | MediaPlayer | Browser | Mail | Search | Explorer | WWW | MyComputer
+    | Calculator | MediaPlayer | Browser | Mail | Search | Explorer | WWW | MyComputer | Help
     | Launch0 | Launch1 | Launch2 | Launch3 | Launch4 | Launch5 | Launch6 | Launch7
     | Launch8 | Launch9 | LaunchA | LaunchB | LaunchC | LaunchD | LaunchE | LaunchF
 
     | Power | Sleep | Wake | BrightnessDown | BrightnessUp
+
+    | F13 | F14 | F15 | F16 | F17 | F18 | F19 | F20 | F21 | F22 | F23 | F24
+    | Hash | Ro | Yen | Muhenkan | Henkan | Katakana
 
     deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
@@ -162,6 +165,7 @@ posAndString =
     , (KP_4, "KP_4")
     , (KP_5, "KP_5")
     , (KP_6, "KP_6")
+    , (KP_Comma, "KP_Comma")
     , (KP_1, "KP_1")
     , (KP_2, "KP_2")
     , (KP_3, "KP_3")
@@ -205,6 +209,7 @@ posAndString =
     , (Explorer, "Explorer")
     , (WWW, "WWW")
     , (MyComputer, "MyComputer")
+    , (Help, "Help")
     , (Launch0, "Launch0")
     , (Launch1, "Launch1")
     , (Launch2, "Launch2")
@@ -228,6 +233,31 @@ posAndString =
     , (Wake, "Wake")
     , (BrightnessDown, "BrightnessDown")
     , (BrightnessUp, "BrightnessUp")
+
+    -- Extra function keys
+    , (F13, "F13")
+    , (F14, "F14")
+    , (F15, "F15")
+    , (F16, "F16")
+    , (F17, "F17")
+    , (F18, "F18")
+    , (F19, "F19")
+    , (F20, "F20")
+    , (F21, "F21")
+    , (F22, "F22")
+    , (F23, "F23")
+    , (F24, "F24")
+
+    -- International keys
+    , (Hash, "Hash")
+    , (Ro, "Ro")
+    , (Yen, "Yen")
+    , (Muhenkan, "Muhenkan")
+    , (Muhenkan, "Mhen")
+    , (Henkan, "Henkan")
+    , (Henkan, "Henk")
+    , (Katakana, "Katakana")
+    , (Katakana, "Kana")
     ]
 
 instance HumanReadable Pos where

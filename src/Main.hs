@@ -39,6 +39,7 @@ import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
 import Stream (Stream(..), toFname, readStream, writeStream, writeFileStream)
+import Tmk (toTmkKeymap, printTmkKeymap)
 import Xkb (XkbConfig(..), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
 
 data Options = Options
@@ -78,6 +79,7 @@ execOptions o@(Options Nothing (File fname:_) _ _) =
     ".ini"       → execOptions o { __inputType = Just Pkl }
     ".klc"       → execOptions o { __inputType = Just Klc }
     ".keylayout" → execOptions o { __inputType = Just Keylayout }
+    ".c"         → execOptions o { __inputType = Just Tmk }
     xs → fail ("unknown layout type ‘" ⊕ xs ⊕ "’.")
 execOptions o@(Options _ _ [] _) = execOptions o { __outputs = [Output Json Standard] }
 execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ do
@@ -93,6 +95,7 @@ input Xkb =
 input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
 input Keylayout = fail "importing from a keylayout file is not supported"
+input Tmk = fail "importing from a TMK file is not supported"
 
 parseWith ∷ (Logger m, MonadIO m) ⇒ IOData α ⇒ (String → α → Either String (m β)) →
     Stream → m β
@@ -116,6 +119,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Pkl (dir </> "pkl")
     output' Klc (dir </> "klc")
     output' Keylayout (dir </> "keylayout")
+    output' Tmk (dir </> "tmk")
 output (Output Json stream) _ = ($ Json) >>>
     writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
@@ -187,6 +191,11 @@ output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout �
     liftIO $ B.writeFile (dir </> "install-system.sh") (replaceLayout systemFile)
     liftIO $ makeExecutable (dir </> "install-user.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
+output (Output Tmk Standard) _ = const (fail "TMK as output must be written to a directory")
+output (Output Tmk (File dir)) _ = ($ Tmk) >>> \layout → do
+    let name = view (_info ∘ _name) layout
+    when (null name) (error "the layout has an empty name when exported to TMK")
+    writeStream (File $ dir </> "unimap.c") ∘ printTmkKeymap =<< toTmkKeymap layout
 
 replaceVar ∷ B.ByteString → String → B.ByteString → B.ByteString
 replaceVar var val = B8.unlines ∘ replace before after ∘ B8.lines
@@ -269,6 +278,7 @@ parseOutput = asum
     , Output Pkl <$> streamOption (long "pkl" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a PKL directory")
     , Output Klc <$> streamOption (long "klc" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a KLC directory (‘-’ for printing the base layout to stdout)")
     , Output Keylayout <$> streamOption (long "keylayout" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a keylayout directory (‘-’ for printing the base layout to stdout)")
+    , Output Tmk <$> streamOption (long "tmk" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a TMK directory (‘-’ for printing the base layout to stdout)")
     , OutputAll <$> streamOption (long "output" ⊕ short 'o' ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to all file types")
     ]
 

@@ -32,7 +32,7 @@ data Action
     | Browser_Back | Browser_Forward | Browser_Refresh | Browser_Stop | Browser_Search | Browser_Favorites
 
     -- Applications
-    | Calculator | MediaPlayer | Browser | Mail | Search | Explorer | WWW | MyComputer
+    | Calculator | MediaPlayer | Browser | Mail | Search | Explorer | WWW | MyComputer | Help
     | Launch0 | Launch1 | Launch2 | Launch3 | Launch4 | Launch5 | Launch6 | Launch7
     | Launch8 | Launch9 | LaunchA | LaunchB | LaunchC | LaunchD | LaunchE | LaunchF
 
@@ -56,7 +56,7 @@ data Action
     -- Numpad
     | KP_Clear | KP_Div | KP_Mult | KP_Min
     | KP_7     | KP_8   | KP_9    | KP_Plus
-    | KP_4     | KP_5   | KP_6
+    | KP_4     | KP_5   | KP_6    | KP_Comma
     | KP_1     | KP_2   | KP_3    | KP_Enter
     |        KP_0       | KP_Dec  | KP_Eq
 
@@ -64,6 +64,13 @@ data Action
     | KP_Left | KP_Begin | KP_Right
     | KP_End  | KP_Down  | KP_PageDown
     |     KP_Insert      | KP_Delete
+
+    -- Extra function keys
+    | F13 | F14 | F15 | F16 | F17 | F18 | F19 | F20 | F21 | F22 | F23 | F24
+    | F25 | F26 | F27 | F28 | F29 | F30 | F31 | F32 | F33 | F34 | F35
+
+    -- International keys
+    | Ro | Muhenkan | Henkan | Katakana
 
     deriving (Eq, Ord, Show, Read, Enum, Bounded)
 

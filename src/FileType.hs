@@ -13,6 +13,7 @@ data FileType
     | Pkl
     | Klc
     | Keylayout
+    | Tmk
     deriving (Eq, Show, Read, Enum, Bounded)
 
 typeAndString ∷ [(FileType, String)]
@@ -22,6 +23,7 @@ typeAndString =
     , (Pkl, "PKL")
     , (Klc, "KLC")
     , (Keylayout, "keylayout")
+    , (Tmk, "TMK")
     ]
 
 instance HumanReadable FileType where

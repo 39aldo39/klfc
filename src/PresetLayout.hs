@@ -31,25 +31,7 @@ defaultKeys = map (filterKeyOnShiftstates null) defaultFullKeys
 
 defaultFullKeys ∷ [Key]
 defaultFullKeys =
-    [ Key P.Esc Nothing [(∅)] [Action A.Esc] Nothing
-    , Key P.F1 Nothing [(∅)] [Action A.F1] Nothing
-    , Key P.F2 Nothing [(∅)] [Action A.F2] Nothing
-    , Key P.F3 Nothing [(∅)] [Action A.F3] Nothing
-    , Key P.F4 Nothing [(∅)] [Action A.F4] Nothing
-    , Key P.F5 Nothing [(∅)] [Action A.F5] Nothing
-    , Key P.F6 Nothing [(∅)] [Action A.F6] Nothing
-    , Key P.F7 Nothing [(∅)] [Action A.F7] Nothing
-    , Key P.F8 Nothing [(∅)] [Action A.F8] Nothing
-    , Key P.F9 Nothing [(∅)] [Action A.F9] Nothing
-    , Key P.F10 Nothing [(∅)] [Action A.F10] Nothing
-    , Key P.F11 Nothing [(∅)] [Action A.F11] Nothing
-    , Key P.F12 Nothing [(∅)] [Action A.F12] Nothing
-
-    , Key P.PrintScreen Nothing [(∅), WP.singleton M.Alt] [Action A.PrintScreen, Action A.SysRq] Nothing
-    , Key P.ScrollLock Nothing [(∅)] [Action A.ScrollLock] Nothing
-    , Key P.Pause Nothing [(∅), WP.singleton M.Control] [Action A.Pause, Action A.ControlBreak] Nothing
-
-    , Key P.Backspace Nothing [(∅)] [Action A.Backspace] Nothing
+    [ Key P.Backspace Nothing [(∅)] [Action A.Backspace] Nothing
     , Key P.Tab Nothing [(∅), WP.singleton M.Shift] [Action A.Tab, Action A.LeftTab] Nothing
     , Key P.CapsLock Nothing [(∅)] [Modifiers Lock [M.CapsLock]] Nothing
     , Key P.Enter Nothing [(∅)] [Action A.Enter] Nothing
@@ -64,6 +46,23 @@ defaultFullKeys =
     , Key P.Win_R Nothing [(∅)] [Modifiers Shift [M.Win_R]] Nothing
     , Key P.Menu Nothing [(∅)] [Action A.Menu] Nothing
     , Key P.Control_R Nothing [(∅)] [Modifiers Shift [M.Control_R]] Nothing
+
+    , Key P.Esc Nothing [(∅)] [Action A.Esc] Nothing
+    , Key P.F1 Nothing [(∅)] [Action A.F1] Nothing
+    , Key P.F2 Nothing [(∅)] [Action A.F2] Nothing
+    , Key P.F3 Nothing [(∅)] [Action A.F3] Nothing
+    , Key P.F4 Nothing [(∅)] [Action A.F4] Nothing
+    , Key P.F5 Nothing [(∅)] [Action A.F5] Nothing
+    , Key P.F6 Nothing [(∅)] [Action A.F6] Nothing
+    , Key P.F7 Nothing [(∅)] [Action A.F7] Nothing
+    , Key P.F8 Nothing [(∅)] [Action A.F8] Nothing
+    , Key P.F9 Nothing [(∅)] [Action A.F9] Nothing
+    , Key P.F10 Nothing [(∅)] [Action A.F10] Nothing
+    , Key P.F11 Nothing [(∅)] [Action A.F11] Nothing
+    , Key P.F12 Nothing [(∅)] [Action A.F12] Nothing
+    , Key P.PrintScreen Nothing [(∅), WP.singleton M.Alt] [Action A.PrintScreen, Action A.SysRq] Nothing
+    , Key P.ScrollLock Nothing [(∅)] [Action A.ScrollLock] Nothing
+    , Key P.Pause Nothing [(∅), WP.singleton M.Control] [Action A.Pause, Action A.ControlBreak] Nothing
 
     , Key P.Insert Nothing [(∅)] [Action A.Insert] Nothing
     , Key P.Delete Nothing [(∅)] [Action A.Delete] Nothing
@@ -87,6 +86,7 @@ defaultFullKeys =
     , Key P.KP_4 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Left, Action A.KP_4] Nothing
     , Key P.KP_5 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Begin, Action A.KP_5] Nothing
     , Key P.KP_6 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Right, Action A.KP_6] Nothing
+    , Key P.KP_Comma Nothing [(∅)] [Action A.KP_Comma] Nothing
     , Key P.KP_1 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_End, Action A.KP_1] Nothing
     , Key P.KP_2 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Down, Action A.KP_2] Nothing
     , Key P.KP_3 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_PageDown, Action A.KP_3] Nothing
@@ -94,10 +94,6 @@ defaultFullKeys =
     , Key P.KP_0 Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Insert, Action A.KP_0] Nothing
     , Key P.KP_Dec Nothing [(∅), WP.singleton M.NumLock] [Action A.KP_Delete, Action A.KP_Dec] Nothing
     , Key P.KP_Eq Nothing [(∅)] [Action A.KP_Eq] Nothing
-
-    , Key P.Power Nothing [(∅)] [Action A.Power] Nothing
-    , Key P.Sleep Nothing [(∅)] [Action A.Sleep] Nothing
-    , Key P.Wake Nothing [(∅)] [Action A.Wake] Nothing
 
     , Key P.AudioPlay Nothing [(∅)] [Action A.AudioPlay] Nothing
     , Key P.AudioPause Nothing [(∅)] [Action A.AudioPause] Nothing
@@ -112,15 +108,15 @@ defaultFullKeys =
     , Key P.Mute Nothing [(∅)] [Action A.Mute] Nothing
     , Key P.VolumeDown Nothing [(∅)] [Action A.VolumeDown] Nothing
     , Key P.VolumeUp Nothing [(∅)] [Action A.VolumeUp] Nothing
-    , Key P.BrightnessDown Nothing [(∅)] [Action A.BrightnessDown] Nothing
-    , Key P.BrightnessUp Nothing [(∅)] [Action A.BrightnessUp] Nothing
     , Key P.Eject Nothing [(∅)] [Action A.Eject] Nothing
+
     , Key P.Browser_Back Nothing [(∅)] [Action A.Browser_Back] Nothing
     , Key P.Browser_Forward Nothing [(∅)] [Action A.Browser_Forward] Nothing
     , Key P.Browser_Refresh Nothing [(∅)] [Action A.Browser_Refresh] Nothing
     , Key P.Browser_Stop Nothing [(∅)] [Action A.Browser_Stop] Nothing
     , Key P.Browser_Search Nothing [(∅)] [Action A.Browser_Search] Nothing
     , Key P.Browser_Favorites Nothing [(∅)] [Action A.Browser_Favorites] Nothing
+
     , Key P.Calculator Nothing [(∅)] [Action A.Calculator] Nothing
     , Key P.MediaPlayer Nothing [(∅)] [Action A.MediaPlayer] Nothing
     , Key P.Browser Nothing [(∅)] [Action A.Browser] Nothing
@@ -129,6 +125,8 @@ defaultFullKeys =
     , Key P.Explorer Nothing [(∅)] [Action A.Explorer] Nothing
     , Key P.WWW Nothing [(∅)] [Action A.WWW] Nothing
     , Key P.MyComputer Nothing [(∅)] [Action A.MyComputer] Nothing
+    , Key P.Help Nothing [(∅)] [Action A.Help] Nothing
+
     , Key P.Launch0 Nothing [(∅)] [Action A.Launch0] Nothing
     , Key P.Launch1 Nothing [(∅)] [Action A.Launch1] Nothing
     , Key P.Launch2 Nothing [(∅)] [Action A.Launch2] Nothing
@@ -145,6 +143,31 @@ defaultFullKeys =
     , Key P.LaunchD Nothing [(∅)] [Action A.LaunchD] Nothing
     , Key P.LaunchE Nothing [(∅)] [Action A.LaunchE] Nothing
     , Key P.LaunchF Nothing [(∅)] [Action A.LaunchF] Nothing
+
+    , Key P.Power Nothing [(∅)] [Action A.Power] Nothing
+    , Key P.Sleep Nothing [(∅)] [Action A.Sleep] Nothing
+    , Key P.Wake Nothing [(∅)] [Action A.Wake] Nothing
+    , Key P.BrightnessDown Nothing [(∅)] [Action A.BrightnessDown] Nothing
+    , Key P.BrightnessUp Nothing [(∅)] [Action A.BrightnessUp] Nothing
+
+    , Key P.F13 Nothing [(∅)] [Action A.F13] Nothing
+    , Key P.F14 Nothing [(∅)] [Action A.F14] Nothing
+    , Key P.F15 Nothing [(∅)] [Action A.F15] Nothing
+    , Key P.F16 Nothing [(∅)] [Action A.F16] Nothing
+    , Key P.F17 Nothing [(∅)] [Action A.F17] Nothing
+    , Key P.F18 Nothing [(∅)] [Action A.F18] Nothing
+    , Key P.F19 Nothing [(∅)] [Action A.F19] Nothing
+    , Key P.F20 Nothing [(∅)] [Action A.F20] Nothing
+    , Key P.F21 Nothing [(∅)] [Action A.F21] Nothing
+    , Key P.F22 Nothing [(∅)] [Action A.F22] Nothing
+    , Key P.F23 Nothing [(∅)] [Action A.F23] Nothing
+    , Key P.F24 Nothing [(∅)] [Action A.F24] Nothing
+
+    , Key P.Ro Nothing [(∅)] [Action A.Ro] Nothing
+    , Key P.Yen Nothing [(∅)] [Char '¥'] Nothing
+    , Key P.Muhenkan Nothing [(∅)] [Action A.Muhenkan] Nothing
+    , Key P.Henkan Nothing [(∅)] [Action A.Henkan] Nothing
+    , Key P.Katakana Nothing [(∅)] [Action A.Katakana] Nothing
     ]
 
 defaultMacKeys ∷ [Key]
