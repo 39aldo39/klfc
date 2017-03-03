@@ -18,6 +18,7 @@ import Lens.Micro.Platform (view, over)
 
 import Layout.Key (letterToDeadKey, letterToLigatureString, filterKeyOnShiftstatesM)
 import Layout.Layout (addDefaultKeys, setNullChars, unifyShiftstates)
+import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Linux (posAndScancode)
 import Lookup.Windows
@@ -167,8 +168,17 @@ toKlcKey key = runMaybeT $
     unsupported = (≡) "-1" ∘ fst ∘ runWriter ∘ printLetter
 
 printPos ∷ Logger m ⇒ Pos → MaybeT m String
-printPos pos = maybe e pure $ printf "%02x" <$> lookup pos posAndScancode
-  where e = tellMaybeT [show' pos ⊕ " is not supported in KLC"]
+printPos pos
+  | not isSupportedKlcPos = e
+  | otherwise = maybe e pure $ printf "%02x" <$> lookup pos posAndScancode
+  where
+    e = tellMaybeT [show' pos ⊕ " is not supported in KLC"]
+    isSupportedKlcPos = pos ∈
+        [P.Tilde .. P.Plus] ⧺
+        [P.Q .. P.Bracket_R] ⧺
+        [P.A .. P.Apastrophe] ⧺
+        [P.Z .. P.Slash] ⧺
+        [P.Backslash, P.Iso, P.Space, P.KP_Dec]
 
 printShortcutPos ∷ Logger m ⇒ Pos → MaybeT m String
 printShortcutPos pos = maybe e pure $ lookup pos posAndString
