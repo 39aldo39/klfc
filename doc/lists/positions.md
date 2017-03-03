@@ -114,6 +114,7 @@ The supported positions are:
 * `KP_4`
 * `KP_5`
 * `KP_6`
+* `KP_Comma`
 * `KP_1`
 * `KP_2`
 * `KP_3`
@@ -157,6 +158,7 @@ The supported positions are:
 * `Explorer`
 * `WWW`
 * `MyComputer`
+* `Help`
 * `Launch0`
 * `Launch1`
 * `Launch2`
@@ -180,3 +182,25 @@ The supported positions are:
 * `Wake`
 * `BrightnessDown`
 * `BrightnessUp`
+
+###### Extra function keys ######
+* `F13`
+* `F14`
+* `F15`
+* `F16`
+* `F17`
+* `F18`
+* `F19`
+* `F20`
+* `F21`
+* `F22`
+* `F23`
+* `F24`
+
+###### International keys ######
+* `Hash`
+* `Ro`
+* `Yen`
+* `Muhenkan`, `Mhen`
+* `Henkan`, `Henk`
+* `Katakana`, `Kana`
