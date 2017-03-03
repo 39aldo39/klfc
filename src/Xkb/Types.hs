@@ -65,7 +65,6 @@ printTypes = prepareLayout >=> \layout → do
         ] ⧺ printVirtualMods (filter isVirtualModifier (S.toList virtualMods)) ⧺
         concatMap printType types ⧺
         [ "};"
-        , ""
         ]
   where
     isVirtualModifier = (∈ [M.AltGr, M.Extend, M.Win, M.NumLock])
