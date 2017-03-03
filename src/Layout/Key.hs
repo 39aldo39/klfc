@@ -19,6 +19,7 @@ module Layout.Key
     , setCustomDeadKey
     , toIndexedCustomDeadKey
     , setNullChar
+    , setDeadNullChar
     , combineKeys
     , combineKeysWithoutOverwrite
     , nubKeys
@@ -97,9 +98,12 @@ toIndexedCustomDeadKey letter =
 setNullChar ∷ MonadState [Char] m ⇒ Letter → m Letter
 setNullChar (Ligature Nothing xs) =
     flip Ligature xs ∘ Just <$> getPrivateChar
-setNullChar (CustomDead i (DeadKey name Nothing lMap)) =
+setNullChar l = setDeadNullChar l
+
+setDeadNullChar ∷ MonadState [Char] m ⇒ Letter → m Letter
+setDeadNullChar (CustomDead i (DeadKey name Nothing lMap)) =
     CustomDead i ∘ flip (DeadKey name) lMap ∘ Just <$> getPrivateChar
-setNullChar l = pure l
+setDeadNullChar l = pure l
 
 letterToChar ∷ Letter → Maybe Char
 letterToChar (Char c)       = Just c

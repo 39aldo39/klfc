@@ -20,8 +20,8 @@ import Control.Monad.Writer (WriterT, runWriter, execWriterT, tell)
 import Lens.Micro.Platform (view, over)
 
 import Layout.DeadKey (deadKeyToChainedDeadKey)
-import Layout.Key (letterToDeadKey, letterToLigatureString, filterKeyOnShiftstatesM)
-import Layout.Layout (addDefaultKeys, setNullChars', unifyShiftstates)
+import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM)
+import Layout.Layout (addDefaultKeys, unifyShiftstates)
 import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Linux (posAndScancode)
@@ -42,7 +42,7 @@ prepareLayout =
         (over (traverse ∘ _shiftlevels ∘ traverse ∘ traverse) altGrToControlAlt >>>
         traverse (filterKeyOnShiftstatesM supportedShiftstate) >=>
         over (traverse ∘ _letters ∘ traverse) deadToCustomDead >>>
-        setNullChars')
+        (traverse ∘ _letters ∘ traverse) setDeadNullChar)
 
 emptySingletonKeys ∷ Logger m ⇒ [SingletonKey] → m [SingletonKey]
 emptySingletonKeys [] = pure []

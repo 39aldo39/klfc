@@ -14,7 +14,7 @@ import BasePrelude
 import Prelude.Unicode hiding ((∈), (∉))
 import Data.Monoid.Unicode ((⊕))
 import Data.Foldable.Unicode ((∈), (∉))
-import Util (toString, show', ifNonEmpty, (>$>), nubOn, filterOnSnd, filterOnSndM, sequenceTuple, tellMaybeT)
+import Util (toString, show', ifNonEmpty, (>$>), nubOn, filterOnSnd, filterOnSndM, sequenceTuple, tellMaybeT, privateChars)
 import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.State (evalState)
@@ -23,8 +23,8 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over, (<&>))
 
-import Layout.Key (letterToDeadKey, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
-import Layout.Layout (addDefaultKeysWith, getDefaultKeys, setNullChars, unifyShiftstates, getLetterByPosAndShiftstate)
+import Layout.Key (letterToDeadKey, setDeadNullChar, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
+import Layout.Layout (addDefaultKeysWith, getDefaultKeys, unifyShiftstates, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import Layout.ModifierEffect (defaultModifierEffect)
 import qualified Layout.Pos as P
@@ -42,7 +42,7 @@ prepareLayout =
     over _singletonKeys (filter (not ∘ isAltRToAltGr)) >>>
     over _keys
         (flip evalState 1 ∘ (traverse ∘ _letters ∘ traverse) toIndexedCustomDeadKey >>>
-        setNullChars)
+        flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setDeadNullChar)
   where
     getDefaultKeys' keys = getDefaultKeys keys ∘ filterNonExtend
     filterNonExtend = over _keys (filter (any (any supportedNonExtend) ∘ view _shiftlevels))
