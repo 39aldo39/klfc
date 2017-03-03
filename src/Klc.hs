@@ -2,22 +2,26 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Klc
-    ( printKlcData
+    ( KlcConfig(..)
+    , printKlcData
     , toKlcData
     ) where
 
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (show', toString, ifNonEmpty, (>$>), nubOn, concatMapM, tellMaybeT, sequenceTuple)
+import Util (HumanReadable(..), ifNonEmpty, concatMapM, tellMaybeT, privateChars, getPrivateChar)
 
+import Control.Monad.Reader (MonadReader, asks)
+import Control.Monad.State (MonadState, evalStateT)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
-import Control.Monad.Writer (runWriter, tell)
+import Control.Monad.Writer (WriterT, runWriter, execWriterT, tell)
 import Lens.Micro.Platform (view, over)
 
+import Layout.DeadKey (deadKeyToChainedDeadKey)
 import Layout.Key (letterToDeadKey, letterToLigatureString, filterKeyOnShiftstatesM)
-import Layout.Layout (addDefaultKeys, setNullChars, unifyShiftstates)
+import Layout.Layout (addDefaultKeys, setNullChars', unifyShiftstates)
 import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Linux (posAndScancode)
@@ -25,15 +29,19 @@ import Lookup.Windows
 import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultKeys)
 
-prepareLayout ∷ Logger m ⇒ Layout → m Layout
+data KlcConfig = KlcConfig
+    { __chainedDeads ∷ Bool
+    }
+
+prepareLayout ∷ (Logger m, MonadState [Char] m) ⇒ Layout → m Layout
 prepareLayout =
     addDefaultKeys defaultKeys >>>
     _singletonKeys
-        emptySingletonKeys >$>
-    over _keys
+        emptySingletonKeys >=>
+    _keys
         (over (traverse ∘ _shiftstates ∘ traverse) altGrToControlAlt >>>
         over (traverse ∘ _letters ∘ traverse) deadToCustomDead >>>
-        setNullChars)
+        setNullChars')
 
 emptySingletonKeys ∷ Logger m ⇒ [SingletonKey] → m [SingletonKey]
 emptySingletonKeys [] = pure []
@@ -88,10 +96,14 @@ printKlcLigatures ∷ [KlcLigature] → [String]
 printKlcLigatures [] = []
 printKlcLigatures xs = "" : "LIGATURE" : "" : map printKlcLigature xs
 
+data ResultChar = Normal Char | DeadChar String Char deriving (Show, Read)
+resultCharToString ∷ ResultChar → String
+resultCharToString (Normal c) = [c]
+resultCharToString (DeadChar name _) = name
 data KlcDeadKey = KlcDeadKey
     { __klcDeadName ∷ String
     , __klcBaseChar ∷ Char
-    , __klcCharMap ∷ [(Char, Char)]
+    , __klcCharMap ∷ [(Char, ResultChar)]
     } deriving (Show, Read)
 printKlcDeadKey ∷ KlcDeadKey → [String]
 printKlcDeadKey (KlcDeadKey name baseChar charMap) =
@@ -100,7 +112,9 @@ printKlcDeadKey (KlcDeadKey name baseChar charMap) =
     "" :
     map (uncurry showPair) charMap
   where
-    showPair k v = intercalate "\t" [printf "%04x" k, printf "%04x" v, "// " ⊕ [k] ⊕ " → " ⊕ [v] ∷ String]
+    showPair k v = intercalate "\t" [printf "%04x" k, showResultChar v, "// " ⊕ [k] ⊕ " → " ⊕ resultCharToString v]
+    showResultChar (Normal c) = printf "%04x" c
+    showResultChar (DeadChar _ c) = printf "%04x@" c
 
 printKlcDeadKeys ∷ [KlcDeadKey] → [String]
 printKlcDeadKeys = concatMap printKlcDeadKey
@@ -137,13 +151,15 @@ printKlcData (KlcData info winShiftstates keys ligatures deadKeys) = unlines $
 
 -- TO KLC DATA
 
-toKlcData ∷ Logger m ⇒ Layout → m KlcData
-toKlcData =
+toKlcData ∷ (Logger m, MonadReader KlcConfig m)
+          ⇒ Layout → m KlcData
+toKlcData = flip evalStateT privateChars <<<
     prepareLayout >=>
     (_keys ∘ traverse) (filterKeyOnShiftstatesM supportedShiftstate) >=>
     toKlcData'
 
-toKlcData' ∷ Logger m ⇒ Layout → m KlcData
+toKlcData' ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+           ⇒ Layout → m KlcData
 toKlcData' layout =
     KlcData
       <$> pure (view _info layout)
@@ -191,7 +207,7 @@ printLetter (Char c)
 printLetter (Ligature _ _) = pure "%%"
 printLetter (Dead d) = printLetter (CustomDead Nothing (presetDeadKeyToDeadKey d))
 printLetter (CustomDead _ (DeadKey _ (Just c) _)) = (⧺"@") <$> printLetter (Char c)
-printLetter l@(CustomDead _ (DeadKey _ Nothing _ )) = "-1" <$ tell [show' l ⊕ " has no base character"]
+printLetter l@(CustomDead _ (DeadKey _ Nothing _ )) = "-1" <$ tell [show' l ⊕ " has no base character in KLC"]
 printLetter LNothing = pure "-1"
 printLetter l = "-1" <$ tell [show' l ⊕ " is not supported in KLC"]
 
@@ -212,17 +228,43 @@ toLigature pos shiftState s = runMaybeT $
       <*> pure shiftState
       <*> pure s
 
-toKlcDeadKeys ∷ Logger m ⇒ [Key] → m [KlcDeadKey]
+toKlcDeadKeys ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+              ⇒ [Key] → m [KlcDeadKey]
 toKlcDeadKeys =
-    concatMap (mapMaybe letterToDeadKey ∘ view _letters) >>>
-    traverse toKlcDeadKey >$> nubOn __klcBaseChar ∘ catMaybes
+    concatMap (nub ∘ mapMaybe letterToDeadKey ∘ view _letters) >>>
+    concatMapM (chainedDeadKeyToKlcDeadKeys <=< deadKeyToChainedDeadKey)
 
-toKlcDeadKey ∷ Logger m ⇒ DeadKey → m (Maybe KlcDeadKey)
-toKlcDeadKey (DeadKey dName (Just c) stringMap) = Just ∘ KlcDeadKey dName c <$> charMap
-  where
-    charMap = traverse (sequenceTuple ∘ (char *** char)) stringMap
-    char ∷ Logger m ⇒ String → m Char
-    char [x]      = pure x
-    char []       = '\0' <$ tell ["empty string in dead key ‘" ⊕ dName ⊕ "’ in KLC"]
-    char xs@(x:_) = x <$ tell ["the string ‘" ⊕ xs ⊕ "’ is shortened to ‘" ⊕ [x] ⊕ "’ in dead key ‘" ⊕ dName ⊕ "’ in KLC"]
-toKlcDeadKey _ = pure Nothing
+chainedDeadKeyToKlcDeadKeys ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+                            ⇒ ChainedDeadKey → m [KlcDeadKey]
+chainedDeadKeyToKlcDeadKeys = execWriterT ∘ chainedDeadKeyToKlcDeadKeys'
+
+chainedDeadKeyToKlcDeadKeys' ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+                             ⇒ ChainedDeadKey → WriterT [KlcDeadKey] m Char
+chainedDeadKeyToKlcDeadKeys' (ChainedDeadKey name baseChar actionMap) = do
+    c ← maybe getPrivateChar pure baseChar
+    charMap ← catMaybes <$> traverse (printAction name) actionMap
+    c <$ tell [KlcDeadKey name c charMap]
+
+printAction ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+            ⇒ String → (Char, ActionResult) → WriterT [KlcDeadKey] m (Maybe (Char, ResultChar))
+printAction name (c, result) = do
+    output ← printActionResult name result
+    pure $ (,) c <$> output
+
+printActionResult ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+                  ⇒ String → ActionResult → WriterT [KlcDeadKey] m (Maybe ResultChar)
+printActionResult _ (OutString [x]) = pure (Just (Normal x))
+printActionResult name (OutString "") =
+    Nothing <$ lift (tell ["unsupported empty output string in dead key ‘" ⊕ name ⊕ "’ in KLC"])
+printActionResult name (OutString xs) =
+    Nothing <$ lift (tell ["too large output string ‘" ⊕ xs ⊕ "’ in dead key ‘" ⊕ name ⊕ "’ in KLC"])
+printActionResult name (Next cdk) = do
+    chainedDeads ← asks __chainedDeads
+    case chainedDeads of
+      True → Just ∘ DeadChar (__cdkName cdk) <$> chainedDeadKeyToKlcDeadKeys' cdk
+      False → Nothing <$ (lift ∘ tell)
+          [ "chained dead keys are not enabled by default in KLC. " ⧺
+            "Use --klc-chained-deads to enable it. " ⧺
+            "This requires alternative compilation, see <http://archives.miloush.net/michkap/archive/2011/04/16/10154700.html>."
+          , "chained dead key ‘" ⊕ name ⊕ "’ is not enabled in KLC"
+          ]

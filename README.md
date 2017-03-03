@@ -72,6 +72,10 @@ Usage
                              ‘WideAngle’ will be created.
     --unify-shiftstates      Change the shiftstates of all keys such that all keys
                              have the same shiftstates
+##### KLC #####
+    --klc-chained-deads      Use chained dead keys in KLC. This requires
+                             alternative compilation, see
+                             <http://archives.miloush.net/michkap/archive/2011/04/16/10154700.html>.
 ##### PKL #####
     --pkl-compact            Set PKL to compact mode
 ##### XKB #####

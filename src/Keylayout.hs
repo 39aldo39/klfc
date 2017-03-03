@@ -24,6 +24,7 @@ import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, set, over, _1, _2)
 import Text.XML.Light
 
+import Layout.DeadKey (deadKeyToChainedDeadKey)
 import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey)
 import Layout.Layout
 import qualified Layout.Modifier as M
@@ -86,22 +87,24 @@ toKeylayout ∷ Logger m ⇒ KeylayoutConfig → Layout → m Element
 toKeylayout config = prepareLayout config >=> toKeylayout'
 
 toKeylayout' ∷ Logger m ⇒ Layout → m Element
-toKeylayout' layout = removeEmptyElementsInside ∘ unode "keyboard" ∘ (,)
-    [ attr "group" "126"
-    , attr "id" "-1337"
-    , attr "name" (view (_info ∘ _fullName) layout)
-    ] <$> sequence
-    [ pure $ unode "layouts" layoutElement
-    , pure $ toModifierMap shiftstates
-    , keyMapSetElementOutputToActions deadKeys <$> toKeyMapSet keys
-    , pure $ unode "actions" (map deadKeyToAction deadKeys ⧺ deadKeysToActions deadKeys)
-    , pure $ unode "terminators" (mapMaybe deadKeyToTerminator deadKeys)
-    ]
+toKeylayout' layout = do
+    chainedDeadKeys ← traverse deadKeyToChainedDeadKey deadKeys
+    removeEmptyElementsInside ∘ unode "keyboard" ∘ (,)
+        [ attr "group" "126"
+        , attr "id" "-1337"
+        , attr "name" (view (_info ∘ _fullName) layout)
+        ] <$> sequence
+        [ pure $ unode "layouts" layoutElement
+        , pure $ toModifierMap shiftstates
+        , keyMapSetElementOutputToActions deadKeys <$> toKeyMapSet keys
+        , pure $ unode "actions" (map deadKeyToAction deadKeys ⧺ deadKeysToActions chainedDeadKeys)
+        , pure $ unode "terminators" (mapMaybe deadKeyToTerminator deadKeys)
+        ]
   where
     (keys, shiftstates) = unifyShiftstates (view _keys layout)
     deadKeys = nub (concatMap (mapMaybe letterToDeadKey ∘ view _letters) keys)
     deadKeysToActions =
-        concatMap deadKeyToActions >>>
+        concatMap chainedDeadKeyToActions >>>
         groupSortWith fst >>>
         over (traverse ∘ _2 ∘ traverse) snd >>>
         map (\(s, elms) → (s, emptyAction s : elms)) >>>
@@ -189,12 +192,16 @@ deadKeyToAction (DeadKey name _ _) =
     unode "action" ([attr "id" name'], unode "when" [attr "state" "none", attr "next" name'])
   where name' = "dead:" ⊕ name
 
-deadKeyToActions ∷ DeadKey → [(String, Element)]
-deadKeyToActions (DeadKey name _ stringMap) =
-    map (prependLig *** toAttr) stringMap
-  where
-    toAttr outString = unode "when" [attr "state" name', attr "output" outString]
-    name' = "dead:" ⊕ name
+chainedDeadKeyToActions ∷ ChainedDeadKey → [(String, Element)]
+chainedDeadKeyToActions (ChainedDeadKey name _ actionMap) =
+    concatMap (actionToActions name) actionMap
+
+actionToActions ∷ String → (Char, ActionResult) → [(String, Element)]
+actionToActions name (c, OutString s) =
+    [([c], unode "when" [attr "state" ("dead:" ⊕ name), attr "output" s])]
+actionToActions name (c, Next (ChainedDeadKey cName _ actionMap)) =
+    ([c], unode "when" [attr "state" ("dead:" ⊕ name), attr "next" ("dead:" ⊕ cName)]) :
+    concatMap (actionToActions cName) actionMap
 
 deadKeyToTerminator ∷ DeadKey → Maybe Element
 deadKeyToTerminator (DeadKey name (Just baseChar) _) = pure $
@@ -214,7 +221,7 @@ keyElementOutputToAction deads elm = elm { elAttribs = map outputToAction (elAtt
   where
     outputToAction a
       | attrKey a ≡ unqual "output"
-      ∧ attrVal a ∈ concatMap (map fst ∘ __stringMap) deads
+      ∧ attrVal a ∈ map (:[]) (concatMap (concatMap fst ∘ __stringMap) deads)
       = a { attrKey = unqual "action", attrVal = prependLig (attrVal a) }
       | otherwise = a
 

@@ -3,6 +3,7 @@
 {-# LANGUAGE ConstrainedClassMethods #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Util where
 
@@ -13,16 +14,17 @@ import Data.Monoid.Unicode ((⊕))
 
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail (fail)
+import Control.Monad.State (MonadState, state)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer.Class (MonadWriter, tell)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
-import qualified Data.HashMap.Strict as H (keys)
+import qualified Data.HashMap.Strict as H
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
-import qualified Data.Set as S (fromAscList, toAscList)
-import qualified Data.Text as T (Text, pack, unpack)
+import qualified Data.Set as S
+import qualified Data.Text as T
 import Lens.Micro.Platform (Lens')
 
 class HumanReadable α where
@@ -150,9 +152,19 @@ combineWithOn _ _   []     ys = ys
 combineWithOn f key (x:xs) ys = f x eqToX : combineWithOn f key xs ys'
   where (eqToX, ys') = partition (on (≡) key x) ys
 
+combineWithOnM ∷ (Eq β, Applicative f) ⇒ (α → [α] → f α) → (α → β) → [α] → [α] → f [α]
+combineWithOnM _ _   []     ys = pure ys
+combineWithOnM f key (x:xs) ys = liftA2 (:) (f x eqToX) (combineWithOnM f key xs ys')
+  where (eqToX, ys') = partition (on (≡) key x) ys
+
 nubWithOn ∷ Eq β ⇒ (α → [α] → α) → (α → β) → [α] → [α]
 nubWithOn _ _   []     = []
 nubWithOn f key (x:xs) = f x eqToX : nubWithOn f key xs'
+  where (eqToX, xs') = partition (on (≡) key x) xs
+
+nubWithOnM ∷ (Eq β, Applicative f) ⇒ (α → [α] → f α) → (α → β) → [α] → f [α]
+nubWithOnM _ _   []     = pure []
+nubWithOnM f key (x:xs) = liftA2 (:) (f x eqToX) (nubWithOnM f key xs')
   where (eqToX, xs') = partition (on (≡) key x) xs
 
 nubOn ∷ Eq β ⇒ (α → β) → [α] → [α]
@@ -193,6 +205,10 @@ privateChars ∷ [Char]
 privateChars = [chr   0xE000 .. chr   0xF8FF]
              ⧺ [chr  0xF0000 .. chr  0xFFFFD]
              ⧺ [chr 0x100000 .. chr 0x10FFFD]
+
+getPrivateChar ∷ MonadState [Char] m ⇒ m Char
+getPrivateChar = state (fromMaybe e ∘ uncons)
+  where e = error "too many private Unicode characters needed"
 
 allBounded ∷ (Enum α, Bounded α) ⇒ [α]
 allBounded = [minBound .. maxBound]

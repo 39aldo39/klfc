@@ -95,7 +95,7 @@ pklKeyToSingleString (PklSpecialKey _ s _) = Just s
 data PklDeadKey = PklDeadKey
     { __pklName ∷ String
     , __pklInt ∷ Int
-    , __pklCharMap ∷ [(Char, Char)]
+    , __pklCharMap ∷ [(Char, Either Char String)]
     } deriving (Show, Read)
 printPklDeadKey ∷ PklDeadKey → [String]
 printPklDeadKey (PklDeadKey name int charMap) =
@@ -103,11 +103,11 @@ printPklDeadKey (PklDeadKey name int charMap) =
     ("[deadkey" ⊕ show int ⊕ "]\t; " ⊕ name) :
     map (uncurry showPair) charMap
   where
-    showPair k v = intercalate "\t"
-        [ show (ord k)
+    showPair inC outS = intercalate "\t"
+        [ show (ord inC)
         , "="
-        , show (ord v)
-        , "; " ⊕ [k] ⊕ " → " ⊕ [v]
+        , either (show ∘ ord) id outS
+        , "; " ⊕ [inC] ⊕ " → " ⊕ either (:[]) id outS
         ]
 
 printPklKeys ∷ [PklKey] → [String]
@@ -210,11 +210,17 @@ toLayoutData' layout =
 deadToPkl ∷ Logger m ⇒ Int → DeadKey → m PklDeadKey
 deadToPkl i d = PklDeadKey (__dkName d) i <$> charMap
   where
-    charMap = traverse (sequenceTuple ∘ (char *** char)) (__stringMap d)
-    char ∷ Logger m ⇒ String → m Char
-    char [x]      = pure x
-    char []       = '\0' <$ tell ["empty string in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") in PKL"]
-    char xxs@(x:_) = x <$ tell ["the string '" ⊕ xxs ⊕ " is shortened to '" ⊕ [x] ⊕ " in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") in PKL"]
+    charMap = catMaybes <$> traverse (fmap sequenceTuple ∘ sequenceTuple ∘ (inS *** outS)) (__stringMap d)
+    inS ∷ Logger m ⇒ String → m (Maybe Char)
+    inS [x] = pure (Just x)
+    inS [] = Nothing <$ tell ["empty input in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") in PKL"]
+    inS _ = Nothing <$ tell ["chained dead key in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") is not supported in PKL"]
+    outS ∷ Logger m ⇒ String → m (Maybe (Either Char String))
+    outS [x] = pure (Just (Left x))
+    outS [] = pure (Just (Right "0"))
+    outS xs
+      | all isDigit xs = Nothing <$ tell ["the output ‘" ⊕ xs ⊕ "’ is unsupported in dk" ⊕ show i ⊕ " (" ⊕ __dkName d ⊕ ") in PKL (all chars are digits)"]
+      | otherwise = pure (Just (Right xs))
 
 toPklData ∷ Logger m ⇒ Layout → Layout → m PklData
 toPklData shortcutLayout =

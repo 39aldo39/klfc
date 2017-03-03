@@ -31,7 +31,7 @@ import FileType (FileType(..))
 import JsonComments (removeJsonComments)
 import JsonPretty (Config(..), encodePretty')
 import Keylayout (KeylayoutConfig(..), printKeylayout, toKeylayout)
-import Klc (printKlcData, toKlcData)
+import Klc (KlcConfig(..), printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
 import Layout.Layout (isEmptyLayout, layoutOrd, layoutDelims, applyModLayout, removeEmptyLetters, unifyShiftstates)
 import Layout.Mod (isEmptyMod)
@@ -59,6 +59,8 @@ data ExtraOption
     | RemoveEmptyLetters
     | CombineMods
     | UnifyShiftstates
+
+    | KlcChainedDeads
 
     | PklCompact
 
@@ -164,15 +166,17 @@ output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
         writeFileStream (layoutFile nameM' layout') =<< printedLayoutData layout'
     pklFile ← liftIO $ B.readFile "pkl/pkl.exe" <|> pure defPklFile
     liftIO $ B.writeFile (dir </> "pkl.exe") pklFile
-output (Output Klc Standard) _ = ($ Klc) >>>
-    writeStream Standard ∘ printKlcData <=< toKlcData
-output (Output Klc (File dir)) _ = ($ Klc) >>> \layout → do
+output (Output Klc Standard) extraOptions = ($ Klc) >>>
+    let klcConfig = KlcConfig (KlcChainedDeads ∈ extraOptions)
+    in  writeStream Standard ∘ printKlcData <=< flip runReaderT klcConfig ∘ toKlcData
+output (Output Klc (File dir)) extraOptions = ($ Klc) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (fail "the layout has an empty name when exported to KLC")
+    let klcConfig = KlcConfig (KlcChainedDeads ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "klc"
     forM_ ((∅) : view _mods layout) $ \layoutMod → do
         let layout' = applyModLayout layoutMod layout
-        writeFileStream (fname layout') ∘ printKlcData =<< toKlcData layout'
+        writeFileStream (fname layout') ∘ printKlcData =<< runReaderT (toKlcData layout') klcConfig
 output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>>
     toKeylayout (KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)) >=>
     writeStream Standard ∘ printKeylayout
@@ -253,6 +257,7 @@ options = Options
     <*> (usageText "OUTPUTS" *> helpHeader "\n\b\bOutput files:" *> many parseOutput)
     <*> (usageText "OPTIONS" *> helpHeader "\n\b\bExtra Options:" *> (many ∘ asum)
             [ parseExtraOption
+            , helpHeader "\b\bKLC:" *> parseKlcOption
             , helpHeader "\b\bPKL:" *> parsePklOption
             , helpHeader "\b\bXKB:" *> parseXkbOption
             , helpHeader "\b\bKeylayout:" *> parseKeylayoutOption
@@ -289,6 +294,10 @@ parseExtraOption = asum
     , flag' CombineMods (long "combine-mods" ⊕ hidden ⊕ help "Combine all the mods in the layout. For example, if the layout has the mods ‘Wide’ and ‘Angle’, a new mod ‘WideAngle’ will be created.")
     , flag' UnifyShiftstates (long "unify-shiftstates" ⊕ hidden ⊕ help "Change the shiftstates of all keys such that all keys have the same shiftstates")
     ]
+
+parseKlcOption ∷ Parser ExtraOption
+parseKlcOption =
+    flag' KlcChainedDeads (long "klc-chained-deads" ⊕ hidden ⊕ help "Use chained dead keys in KLC. This requires alternative compilation, see <http://archives.miloush.net/michkap/archive/2011/04/16/10154700.html>.")
 
 parsePklOption ∷ Parser ExtraOption
 parsePklOption =

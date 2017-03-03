@@ -4,6 +4,7 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Layout.Layout
     ( Information(..)
@@ -24,6 +25,7 @@ module Layout.Layout
     , addSingletonKeysAsKeys
     , singletonKeyToKey
     , setNullChars
+    , setNullChars'
     , layoutOrd
     , layoutDelims
     , applyModLayout
@@ -41,7 +43,7 @@ import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lensWithDefault', expectedKeys, combineWithOn, nubWithOn, groupWith', privateChars, mconcatMapM)
 
-import Control.Monad.State (evalState)
+import Control.Monad.State (MonadState, evalState)
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON, fieldLabelModifier, omitNothingFields)
@@ -249,7 +251,10 @@ setCustomDeads ∷ [DeadKey] → [Key] → Either String [Key]
 setCustomDeads = traverse ∘ _letters ∘ traverse ∘ setCustomDeadKey
 
 setNullChars ∷ [Key] → [Key]
-setNullChars = flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setNullChar
+setNullChars = flip evalState privateChars ∘ setNullChars'
+
+setNullChars' ∷ MonadState [Char] m ⇒ [Key] → m [Key]
+setNullChars' = (traverse ∘ _letters ∘ traverse) setNullChar
 
 layoutOrd ∷ T.Text → T.Text → Ordering
 layoutOrd = keyOrder'

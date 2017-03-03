@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Layout.Key
     ( Letter(..)
@@ -34,11 +35,11 @@ import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
-import Util (HumanReadable(..), lensWithDefault, expectedKeys, (!?), (>$>), combineWithOn, nubWithOn, split)
+import Util (HumanReadable(..), lensWithDefault, expectedKeys, (!?), (>$>), combineWithOn, nubWithOn, split, getPrivateChar)
 
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.State (State, state)
+import Control.Monad.State (MonadState, state)
 import Data.Aeson
 import Data.Functor.Identity (runIdentity)
 import Data.List.NonEmpty (NonEmpty((:|)))
@@ -86,19 +87,17 @@ setCustomDeadKey deads (CustomDead i (DeadKey name _ _)) =
     Nothing → Left ("the custom dead key ‘" ⊕ name ⊕ "’ is not defined")
 setCustomDeadKey _ l = Right l
 
-toIndexedCustomDeadKey ∷ Letter → State Int Letter
+toIndexedCustomDeadKey ∷ MonadState Int m ⇒ Letter → m Letter
 toIndexedCustomDeadKey letter =
   case letterToDeadKey letter of
     Just d → flip CustomDead d ∘ Just <$> state (id &&& succ)
     Nothing → pure letter
 
-setNullChar ∷ Letter → State [Char] Letter
+setNullChar ∷ MonadState [Char] m ⇒ Letter → m Letter
 setNullChar (Ligature Nothing xs) =
-    flip Ligature xs ∘ Just <$> state (fromMaybe e ∘ uncons)
-  where e = error "too many ligatures"
+    flip Ligature xs ∘ Just <$> getPrivateChar
 setNullChar (CustomDead i (DeadKey name Nothing lMap)) =
-    CustomDead i ∘ flip (DeadKey name) lMap ∘ Just <$> state (fromMaybe e ∘ uncons)
-  where e = error "too many dead keys"
+    CustomDead i ∘ flip (DeadKey name) lMap ∘ Just <$> getPrivateChar
 setNullChar l = pure l
 
 letterToChar ∷ Letter → Maybe Char
