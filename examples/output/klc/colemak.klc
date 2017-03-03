@@ -54,7 +54,6 @@ LAYOUT
 26	I	1	i	I	00ed	00cd	// QWERTY L: i, I, í, Í
 27	O	1	o	O	00f3	00d3	// QWERTY ;: o, O, ó, Ó
 28	OEM_7	0	0027	0022	00f5	00d5	// QWERTY ': ', ", õ, Õ
-56	OEM_102	0	002d	005f	// QWERTY Iso: -, _
 2c	Z	1	z	Z	00e6	00c6	// QWERTY Z: z, Z, æ, Æ
 2d	X	1	x	X	005e@	// QWERTY X: x, X, cdk:circumflex
 2e	C	1	c	C	00e7	00c7	// QWERTY C: c, C, ç, Ç

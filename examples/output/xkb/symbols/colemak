@@ -57,8 +57,6 @@ xkb_symbols "basic" {
     key <AC10> { [            o,            O,       oacute,       Oacute,    BackSpace ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND";
     key <AC11> { [   apostrophe,     quotedbl,       otilde,       Otilde,         Menu ] };
-    key <LSGT> { [        minus,   underscore,   VoidSymbol,   VoidSymbol, Pointer_EnableKeys ],
-                 actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), LockControls(ctrls=MouseKeys) ] };
     key.type[Group1] = "NONE_SHIFT_ALTGR_SHIFT+ALTGR_EXTEND_ALPHABETIC";
     key <AB01> { [            z,            Z,           ae,           AE,            z ],
                  actions[Group1] = [ NoAction(), NoAction(), NoAction(), NoAction(), Redirect(key=<AB01>,mods=Control) ] };

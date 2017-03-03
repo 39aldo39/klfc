@@ -69,7 +69,6 @@
       <key code="37" action="i" />
       <key code="41" action="o" />
       <key code="39" output="&#39;" />
-      <key code="50" output="-" />
       <key code="6" action="z" />
       <key code="7" action="x" />
       <key code="8" action="c" />
@@ -167,7 +166,6 @@
       <key code="37" action="I" />
       <key code="41" action="O" />
       <key code="39" output="&#34;" />
-      <key code="50" output="_" />
       <key code="6" action="Z" />
       <key code="7" action="X" />
       <key code="8" action="C" />
@@ -445,7 +443,6 @@
       <key code="37" action="I" />
       <key code="41" action="O" />
       <key code="39" output="&#39;" />
-      <key code="50" output="-" />
       <key code="6" action="Z" />
       <key code="7" action="X" />
       <key code="8" action="C" />
@@ -543,7 +540,6 @@
       <key code="37" action="i" />
       <key code="41" action="o" />
       <key code="39" output="&#34;" />
-      <key code="50" output="_" />
       <key code="6" action="z" />
       <key code="7" action="x" />
       <key code="8" action="c" />

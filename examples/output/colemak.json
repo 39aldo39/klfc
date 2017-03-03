@@ -50,7 +50,6 @@
                 { "pos": "L", "letters": [ "i", "I", "í", "Í", "Right" ] },
                 { "pos": ";", "letters": [ "o", "O", "ó", "Ó", "Backspace" ] },
                 { "pos": "'", "letters": [ "'", "\"", "õ", "Õ", "Menu" ] },
-                { "pos": "Iso", "shortcutPos": "Iso", "letters": [ "-", "_", "", "", "MouseEnable" ] },
                 { "pos": "Z", "letters": [ "z", "Z", "æ", "Æ", "Undo" ] },
                 { "pos": "X", "letters": [ "x", "X", "circumflex", "", "Cut" ] },
                 { "pos": "C", "letters": [ "c", "C", "ç", "Ç", "Copy" ] },
