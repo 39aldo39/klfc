@@ -1,12 +1,15 @@
 Keyboard Layout Files Creator
 =============================
 
-Keyboard Layout Files Creator is a tool to create keyboard layout files in various formats. Currently, exporting to XKB, PKL, KLC, keylayout and TMK is supported. The layout is stored in a JSON file, which format is documented in [doc/layout.md](doc/layout.md), and can be imported from a XKB, PKL or KLC file.
+Keyboard Layout Files Creator is a tool to create keyboard layout files in various formats.
+Currently, exporting to XKB, PKL, KLC, keylayout and TMK is supported.
+The layout is stored in a JSON file, which format is documented in [doc/layout.md](doc/layout.md), and can be imported from a XKB, PKL or KLC file.
 
 Note on Windows
 ---------------
 
-On Windows, a UTF-8 codepage is required to be able to output non-ASCII characters. This is done by executing `chcp 65001` in the command line.
+On Windows, a UTF-8 codepage is required to be able to output non-ASCII characters.
+This is done by executing `chcp 65001` in the command line.
 
 Example
 -------
@@ -22,7 +25,10 @@ Installation and building
 
 The easiest way to get KLFC is to download a pre-built binary from the [releases page](https://github.com/39aldo39/klfc/releases).
 
-KLFC can also be built from source. It is written in Haskell and can be installed with the [Haskell toolchain](https://www.haskell.org/downloads). With the Haskell toolchain installed, KLFC is built by executing `cabal install` inside the root directory of this project. This will create a binary `klfc` in `~/.cabal/bin/`.
+KLFC can also be built from source.
+It is written in Haskell and can be installed with the [Haskell toolchain](https://www.haskell.org/downloads).
+With the Haskell toolchain installed, KLFC is built by executing `cabal install` inside the root directory of this project.
+This will create a binary `klfc` in `~/.cabal/bin/`.
 
 Usage
 -----

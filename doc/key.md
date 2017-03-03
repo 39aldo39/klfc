@@ -1,7 +1,8 @@
 Key
 ===
 
-A key denotes the actions caused by the press of a key on the keyboard. A key has the following attributes:
+A key denotes the actions caused by the press of a key on the keyboard.
+A key has the following attributes:
 
 * Position (`pos`).
 * Shortcut position (`shortcutPos`).
@@ -10,7 +11,9 @@ A key denotes the actions caused by the press of a key on the keyboard. A key ha
 * Caps Lock (`capslock`).
 * Filter (`filter`).
 
-If multiple files contain keys with the same positions, the separate keys will be merged. The letters will be combined and the last explicit definition of a shortcut position, the influence of Caps Lock or a letter is used. For example, if file 1 contains the key:
+If multiple files contain keys with the same positions, the separate keys will be merged.
+The letters will be combined and the last explicit definition of a shortcut position, the influence of Caps Lock or a letter is used.
+For example, if file 1 contains the key:
 
     {
         "pos": "S",
@@ -50,14 +53,18 @@ For a full list of available positions, see [lists/positions.md](lists/positions
 Shortcut position
 -----------------
 
-The `shortcutPos` attribute corresponds to the position used in shortcuts. If `qwertyShortcuts` is `true`, it will be set to the QWERTY location.
+The `shortcutPos` attribute corresponds to the position used in shortcuts.
+If `qwertyShortcuts` is `true`, it will be set to the QWERTY location.
 
-By default, the shortcut position will be the (QWERTY) position of the default letter. That is, the letter that is typed when no modifier is pressed. If the default letter has no corresponding position, the shortcut position will be the same as the normal position.
+By default, the shortcut position will be the (QWERTY) position of the default letter.
+That is, the letter that is typed when no modifier is pressed.
+If the default letter has no corresponding position, the shortcut position will be the same as the normal position.
 
 Letters
 -------
 
-The `letters` attribute corresponds to a list of letters. The letter in the nth position is activated when the nth shiftlevel in the corresponding `shiftlevels` attribute is active.
+The `letters` attribute corresponds to a list of letters.
+The letter in the nth position is activated when the nth shiftlevel in the corresponding `shiftlevels` attribute is active.
 
 A letter can be one of the following:
 
@@ -74,14 +81,18 @@ A letter can be one of the following:
 Shiftlevels
 -----------
 
-The same as the global `shiftlevels` attribute, but the local one will overwrite the global one. Useful when the shiftlevels of only a single key differ from the other.
+The same as the global `shiftlevels` attribute, but the local one will overwrite the global one.
+Useful when the shiftlevels of only a single key differ from the other.
 
 Caps Lock
 ---------
 
-The `capslock` attribute corresponds to the influence of the Caps Lock state. If `capslock` is `true` and Caps Lock is active, the pressed letter will be capitalized. If `capslock` is `false`, the Caps Lock state will be ignored.
+The `capslock` attribute corresponds to the influence of the Caps Lock state.
+If `capslock` is `true` and Caps Lock is active, the pressed letter will be capitalized.
+If `capslock` is `false`, the Caps Lock state will be ignored.
 
-By default, Caps Lock will be set iff the default letter is an alphabetic character. The default letter is the letter that is types when no modifiers are pressed.
+By default, Caps Lock will be set iff the default letter is an alphabetic character.
+The default letter is the letter that is types when no modifiers are pressed.
 
 Filter
 ------
