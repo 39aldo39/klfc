@@ -5,17 +5,20 @@ module Xkb.XCompose where
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (escape)
+import Util (escape, privateChars)
 
+import Control.Monad.State (evalState)
 import Control.Monad.Writer (runWriter)
 import Lens.Micro.Platform (view, over, _1)
 
-import Layout.Layout (setNullChars)
+import Layout.Key (setNullChar)
 import Layout.Types
 import Xkb.Symbols (printLetter)
 
 printXCompose ∷ Layout → String
-printXCompose = unlines ∘ (:) "include \"%L\"" ∘ ((⧺) <$> printLigatures <*> printCustomDeadKeys) ∘ over _keys setNullChars
+printXCompose =
+    over _keys (flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setNullChar) >>>
+    unlines ∘ (:) "include \"%L\"" ∘ ((⧺) <$> printLigatures <*> printCustomDeadKeys)
 
 printLigatures ∷ Layout → [String]
 printLigatures = concatMap (mapMaybe printLigature ∘ view _letters) ∘ view _keys

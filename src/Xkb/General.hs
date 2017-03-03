@@ -8,15 +8,16 @@ import BasePrelude
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', (>$>))
+import Util (show', (>$>), privateChars)
 import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Reader (MonadReader, asks)
+import Control.Monad.State (evalState)
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Key (filterKeyOnShiftstatesM)
-import Layout.Layout (getLetterByPosAndShiftstate, addDefaultKeys, setNullChars)
+import Layout.Key (setNullChar, filterKeyOnShiftstatesM)
+import Layout.Layout (getLetterByPosAndShiftstate, addDefaultKeys)
 import Lookup.Linux (modifierAndTypeModifier, modifierAndPressedModifier)
 import qualified Layout.Modifier as M
 import Layout.Types
@@ -34,7 +35,7 @@ prepareLayout layout = do
     _keys
         ( traverse (filterKeyOnShiftstatesM supportedShiftstate) >$>
           bool id (map addShortcutLetters) addShortcuts >>>
-          setNullChars
+          flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setNullChar
         ) (addDefaultKeys defaultKeys layout)
 
 supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool

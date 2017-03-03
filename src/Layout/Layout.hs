@@ -24,8 +24,6 @@ module Layout.Layout
     , isEmptyLayout
     , addSingletonKeysAsKeys
     , singletonKeyToKey
-    , setNullChars
-    , setNullChars'
     , layoutOrd
     , layoutDelims
     , applyModLayout
@@ -42,9 +40,8 @@ module Layout.Layout
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (parseString, lensWithDefault', expectedKeys, combineOn, nubWithOn, groupWith', privateChars, mconcatMapM)
+import Util (parseString, lensWithDefault', expectedKeys, combineOn, nubWithOn, groupWith', mconcatMapM)
 
-import Control.Monad.State (MonadState, evalState)
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON, fieldLabelModifier, omitNothingFields)
@@ -273,12 +270,6 @@ removeEmptyLetters key =
 
 setCustomDeads ∷ [DeadKey] → [Key] → Either String [Key]
 setCustomDeads = traverse ∘ _letters ∘ traverse ∘ setCustomDeadKey
-
-setNullChars ∷ [Key] → [Key]
-setNullChars = flip evalState privateChars ∘ setNullChars'
-
-setNullChars' ∷ MonadState [Char] m ⇒ [Key] → m [Key]
-setNullChars' = (traverse ∘ _letters ∘ traverse) setNullChar
 
 layoutOrd ∷ T.Text → T.Text → Ordering
 layoutOrd = keyOrder'
