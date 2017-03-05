@@ -5,12 +5,6 @@ Keyboard Layout Files Creator is a tool to create keyboard layout files in vario
 Currently, exporting to XKB, PKL, KLC, keylayout and TMK is supported.
 The layout is stored in a JSON file, which format is documented in [doc/layout.md](doc/layout.md), and can be imported from a XKB, PKL or KLC file.
 
-Note on Windows
----------------
-
-On Windows, a UTF-8 codepage is required to be able to output non-ASCII characters.
-This is done by executing `chcp 65001` in the command line.
-
 Example
 -------
 

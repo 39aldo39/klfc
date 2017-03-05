@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
 
 import BasePrelude
 import Prelude.Unicode
@@ -26,6 +27,9 @@ import qualified Options.Applicative (Mod)
 import System.Directory (getPermissions, setPermissions, setOwnerExecutable, createDirectoryIfMissing)
 import System.FilePath ((</>), (<.>), takeExtension)
 import System.IO (hPutStrLn, stderr)
+#ifdef mingw32_HOST_OS
+import System.Process (callCommand)
+#endif
 
 import FileType (FileType(..))
 import JsonComments (removeJsonComments)
@@ -240,7 +244,11 @@ printLog =
     traverse_ (\xs → hPutStrLn stderr $ "klfc: warning: " ⊕ xs ⊕ ".") ∘ nub
 
 main ∷ IO ()
-main = (execParser opts >>= execOptions) `catch` handler
+main =
+#ifdef mingw32_HOST_OS
+    callCommand "chcp 65001" >>
+#endif
+    (execParser opts >>= execOptions) `catch` handler
   where
     opts = info (helper <*> options)
       ( fullDesc

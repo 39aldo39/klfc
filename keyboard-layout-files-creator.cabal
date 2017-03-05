@@ -31,5 +31,6 @@ executable klfc
                    fail,
                    file-embed,
                    xml,
-                   chunked-data
+                   chunked-data,
+                   process >= 1.2.0.0
   ghc-options:     -Wall
