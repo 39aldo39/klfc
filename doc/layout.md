@@ -1,7 +1,7 @@
 Layout
 ======
 
-The JSON file denotes a (part of a) keyboard layout. The file has the following attributes:
+The JSON file denotes (a part of) a keyboard layout. The file has the following attributes:
 
 * Miscellaneous information.
 * QWERTY shortcuts (`qwertyShortcuts`).
@@ -15,14 +15,12 @@ The JSON file denotes a (part of a) keyboard layout. The file has the following 
 It is possible to split a layout definition into multiple files.
 For example, a layout can be split into a `base.json` and a `altgr.json` file, where the `base.json` file contains the letters that are active when nothing or Shift is pressed and the `altgr.json` file the letters that are active when AltGr is pressed.
 This can make the layout more clear and modular.
-For example, the AltGr layer can easily be swapped for another one or can't be activated for certain output formats.
+For example, the AltGr layer can easily be swapped for another one or be disabled for certain output formats.
 
 Miscellaneous information
 -------------------------
 
 Miscellaneous information about the keyboard layout.
-Most keyboard layout formats use some of them.
-The attributes are used at the top level.
 
 * Full name of the layout (`fullName`), used when a human readable name is required.
 * Short name of the layout (`name`), used when a short name of the layout is required, for example in file names.
@@ -45,9 +43,9 @@ Filter
 The `filter` attribute causes the current layout file to only be active at certain outputs.
 This is useful when a few outputs support a feature, and the absence of that feature at the other outputs causes undesired behavior.
 
-A filter starts with `only` or `no`, followed by a list of outputs, separated with a comma or a space, for example `no KLC,PKL` A filter of the form `only outputs` causes the layout to only be active for the outputs in `outputs`.
+A filter starts with `only` or `no`, followed by a list of outputs, separated with a comma or a space, for example `no KLC,PKL`. A filter of the form `only outputs` causes the layout to only be active for the outputs in `outputs`.
 A filter of the form `no outputs` causes the layout to only be active for the outputs not in `outputs`.
-The supported outputs are `JSON`, `XKB`, `PKL`, `KLC` and `keylayout`.
+The supported outputs are `JSON`, `XKB`, `PKL`, `KLC`, `keylayout` and `TMK`.
 
 Shiftlevels
 -----------
@@ -56,7 +54,7 @@ The `shiftlevels` attribute determines which layer is activated when modifiers a
 It is a list of multiple modifiers, where the nth layer will be active if the nth modifiers are pressed.
 For example, `[ "None", "Shift", "AltGr", "Shift+AltGr" ]` will trigger the first layer when no modifiers are active, the second layer when shift is pressed, etc.
 Each element in the list are multiple modifiers separated with `+`, where `None` can be used to denote the absence of modifiers.
-It is also possible to separate multiple possibilities with z `|`.
+It is also possible to separate multiple possibilities with a `|`.
 For example, `[ "None", "NumLock|Shift+AltGr" ]` will trigger the second layer when Num Lock is pressed or when shift and AltGr are both pressed.
 
 The supported modifiers are:
