@@ -72,33 +72,22 @@ add_models () {
   file=$1
   mods=$2
   layout=$3
+  header="! model	=	keycodes"
 
-  for group in 0 1 2 3 4; do
-    if [ "$group" -eq 0 ]; then
-      header="! model	=	keycodes"
-    else
-      header="! model[$group]	=	keycodes"
+  header_written=false
+  for mod in $mods; do
+    line="  mod_$mod	=	+$layout($mod)"
+
+    if grep -qFx "$line" "$file"; then
+      continue
     fi
 
-    header_written=false
-    for mod in $mods; do
-      if [ "$group" -eq 0 ]; then
-        line="  mod_$mod	=	+$layout($mod)"
-      else
-        line="  mod_$mod	=	+$layout($mod):$group"
-      fi
-
-      if grep -qFx "$line" "$file"; then
-        continue
-      fi
-
-      if [ "$header_written" = false ]; then
-        echo "" >> "$file"
-        echo "$header" >> "$file"
-        header_written=true
-      fi
-      echo "$line" >> "$file"
-    done
+    if [ "$header_written" = false ]; then
+      echo "" >> "$file"
+      echo "$header" >> "$file"
+      header_written=true
+    fi
+    echo "$line" >> "$file"
   done
 }
 
