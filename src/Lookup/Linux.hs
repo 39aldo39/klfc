@@ -743,49 +743,49 @@ deadKeysAndLinuxDeadKeys =
     , (D.Greek, "dead_greek")
     ]
 
-singleIncludes ∷ [((Pos, Letter), String)]
+singleIncludes ∷ [(SingletonKey, String)]
 singleIncludes =
-    [ ((P.Alt_R,     Modifiers Shift [M.AltGr]), "include \"level3(ralt_switch)\"")
-    , ((P.Alt_L,     Modifiers Shift [M.AltGr]), "include \"level3(lalt_switch)\"")
-    , ((P.Control_R, Modifiers Shift [M.AltGr]), "include \"level3(switch)\"")
-    , ((P.Menu,      Modifiers Shift [M.AltGr]), "include \"level3(menu_switch)\"")
-    , ((P.Win_L,     Modifiers Shift [M.AltGr]), "include \"level3(lwin_switch)\"")
-    , ((P.Win_R,     Modifiers Shift [M.AltGr]), "include \"level3(rwin_switch)\"")
-    , ((P.KP_Enter,  Modifiers Shift [M.AltGr]), "include \"level3(enter_switch)\"")
-    , ((P.CapsLock,  Modifiers Shift [M.AltGr]), "include \"level3(caps_switch)\"")
-    , ((P.Backslash, Modifiers Shift [M.AltGr]), "include \"level3(bksl_switch)\"")
-    , ((P.Iso,       Modifiers Shift [M.AltGr]), "include \"level3(lsgt_switch)\"")
+    [ (SingletonKey P.Alt_R     (Modifiers Shift [M.AltGr]), "include \"level3(ralt_switch)\"")
+    , (SingletonKey P.Alt_L     (Modifiers Shift [M.AltGr]), "include \"level3(lalt_switch)\"")
+    , (SingletonKey P.Control_R (Modifiers Shift [M.AltGr]), "include \"level3(switch)\"")
+    , (SingletonKey P.Menu      (Modifiers Shift [M.AltGr]), "include \"level3(menu_switch)\"")
+    , (SingletonKey P.Win_L     (Modifiers Shift [M.AltGr]), "include \"level3(lwin_switch)\"")
+    , (SingletonKey P.Win_R     (Modifiers Shift [M.AltGr]), "include \"level3(rwin_switch)\"")
+    , (SingletonKey P.KP_Enter  (Modifiers Shift [M.AltGr]), "include \"level3(enter_switch)\"")
+    , (SingletonKey P.CapsLock  (Modifiers Shift [M.AltGr]), "include \"level3(caps_switch)\"")
+    , (SingletonKey P.Backslash (Modifiers Shift [M.AltGr]), "include \"level3(bksl_switch)\"")
+    , (SingletonKey P.Iso       (Modifiers Shift [M.AltGr]), "include \"level3(lsgt_switch)\"")
 
-    , ((P.Control_R, Modifiers Shift [M.Extend]), "include \"level5(rctrl_switch)\"")
-    , ((P.Iso,       Modifiers Shift [M.Extend]), "include \"level5(lsgt_switch)\"")
-    , ((P.Alt_R,     Modifiers Shift [M.Extend]), "include \"level5(ralt_switch)\"")
+    , (SingletonKey P.Control_R (Modifiers Shift [M.Extend]), "include \"level5(rctrl_switch)\"")
+    , (SingletonKey P.Iso       (Modifiers Shift [M.Extend]), "include \"level5(lsgt_switch)\"")
+    , (SingletonKey P.Alt_R     (Modifiers Shift [M.Extend]), "include \"level5(ralt_switch)\"")
 
-    , ((P.Alt_R,       Action A.Compose), "include \"compose(ralt)\"")
-    , ((P.Win_L,       Action A.Compose), "include \"compose(lwin)\"")
-    , ((P.Win_R,       Action A.Compose), "include \"compose(rwin)\"")
-    , ((P.Menu,        Action A.Compose), "include \"compose(menu)\"")
-    , ((P.Control_R,   Action A.Compose), "include \"compose(rctrl)\"")
-    , ((P.Control_L,   Action A.Compose), "include \"compose(lctrl)\"")
-    , ((P.CapsLock,    Action A.Compose), "include \"compose(caps)\"")
-    , ((P.Iso,         Action A.Compose), "include \"compose(102)\"")
-    , ((P.Pause,       Action A.Compose), "include \"compose(paus)\"")
-    , ((P.PrintScreen, Action A.Compose), "include \"compose(prsc)\"")
-    , ((P.ScrollLock,  Action A.Compose), "include \"compose(sclk)\"")
+    , (SingletonKey P.Alt_R       (Action A.Compose), "include \"compose(ralt)\"")
+    , (SingletonKey P.Win_L       (Action A.Compose), "include \"compose(lwin)\"")
+    , (SingletonKey P.Win_R       (Action A.Compose), "include \"compose(rwin)\"")
+    , (SingletonKey P.Menu        (Action A.Compose), "include \"compose(menu)\"")
+    , (SingletonKey P.Control_R   (Action A.Compose), "include \"compose(rctrl)\"")
+    , (SingletonKey P.Control_L   (Action A.Compose), "include \"compose(lctrl)\"")
+    , (SingletonKey P.CapsLock    (Action A.Compose), "include \"compose(caps)\"")
+    , (SingletonKey P.Iso         (Action A.Compose), "include \"compose(102)\"")
+    , (SingletonKey P.Pause       (Action A.Compose), "include \"compose(paus)\"")
+    , (SingletonKey P.PrintScreen (Action A.Compose), "include \"compose(prsc)\"")
+    , (SingletonKey P.ScrollLock  (Action A.Compose), "include \"compose(sclk)\"")
 
-    , ((P.CapsLock, Modifiers Shift [M.Control]), "include \"ctrl(nocaps)\"")
-    , ((P.Menu,     Modifiers Shift [M.Control]), "include \"ctrl(menu_rctrl)\"")
-    , ((P.Alt_R,    Modifiers Shift [M.Control]), "include \"ctrl(ralt_rctrl)\"")
+    , (SingletonKey P.CapsLock (Modifiers Shift [M.Control]), "include \"ctrl(nocaps)\"")
+    , (SingletonKey P.Menu     (Modifiers Shift [M.Control]), "include \"ctrl(menu_rctrl)\"")
+    , (SingletonKey P.Alt_R    (Modifiers Shift [M.Control]), "include \"ctrl(ralt_rctrl)\"")
 
-    , ((P.CapsLock, Action A.Esc), "include \"capslock(escape)\"")
-    , ((P.CapsLock, Action A.Backspace), "include \"capslock(backspace)\"")
-    , ((P.CapsLock, Modifiers Shift [M.Win]), "include \"capslock(super)\"")
-    , ((P.CapsLock, Modifiers Shift [M.NumLock]), "include \"capslock(numlock)\"")
+    , (SingletonKey P.CapsLock (Action A.Esc), "include \"capslock(escape)\"")
+    , (SingletonKey P.CapsLock (Action A.Backspace), "include \"capslock(backspace)\"")
+    , (SingletonKey P.CapsLock (Modifiers Shift [M.Win]), "include \"capslock(super)\"")
+    , (SingletonKey P.CapsLock (Modifiers Shift [M.NumLock]), "include \"capslock(numlock)\"")
     ]
 
-doubleIncludes ∷ [(((Pos, Letter), (Pos, Letter)), String)]
+doubleIncludes ∷ [((SingletonKey, SingletonKey), String)]
 doubleIncludes =
-    [ (((P.CapsLock, Modifiers Shift [M.Control]), (P.Control_L, Modifiers Lock [M.CapsLock])), "include \"ctrl(swapcaps)\"")
-    , (((P.CapsLock, Action A.Esc), (P.Esc, Modifiers Lock [M.CapsLock])), "include \"capslock(swapescape)\"")
+    [ ((SingletonKey P.CapsLock (Modifiers Shift [M.Control]), SingletonKey P.Control_L (Modifiers Lock [M.CapsLock])), "include \"ctrl(swapcaps)\"")
+    , ((SingletonKey P.CapsLock (Action A.Esc), SingletonKey P.Esc (Modifiers Lock [M.CapsLock])), "include \"capslock(swapescape)\"")
     ]
 
 presetTypes ∷ [(String, String)]

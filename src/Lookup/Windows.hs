@@ -46,7 +46,7 @@ shiftstateFromWinShiftstate = WP.fromList ∘ catMaybes ∘ zipWith toModifier (
           toModifier n _ = lookupR n modifierAndWinShiftstate
 
 isAltRToAltGr ∷ SingletonKey → Bool
-isAltRToAltGr (P.Alt_R, Modifiers Shift [M.AltGr]) = True
+isAltRToAltGr (SingletonKey P.Alt_R (Modifiers Shift [M.AltGr])) = True
 isAltRToAltGr _ = False
 
 altGrToControlAlt ∷ Shiftstate → Shiftstate

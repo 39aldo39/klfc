@@ -200,7 +200,7 @@ toLayoutData' layout =
     (keys, states) = unifyShiftstates (view _keys layout)
     pklKeys = catMaybes <$> traverse (keyToPklKey layout) keys
     pklModifierKeys = catMaybes <$> traverse (singletonKeyToPklKey layout) (view _singletonKeys layout)
-    extendPos = listToMaybe $ filterOnSnd (≡ Modifiers Shift [M.Extend]) (view _singletonKeys layout)
+    extendPos = listToMaybe $ filterOnSnd (≡ Modifiers Shift [M.Extend]) (map (view _sPos &&& view _sLetter) (view _singletonKeys layout))
     extendPosToPklPos P.CapsLock = pure "CapsLock"
     extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndString) <|> toPklPos pos
     fromPklDead (CustomDead (Just i) d) = Just (i, d)
@@ -252,7 +252,7 @@ extendKeyToPklKey layout key = runMaybeT $ do
     lettersWithLevels = view _letters key `zip` view _shiftlevels key
 
 singletonKeyToPklKey ∷ Logger m ⇒ Layout → SingletonKey → m (Maybe PklKey)
-singletonKeyToPklKey layout (pos, action) = runMaybeT $
+singletonKeyToPklKey layout (SingletonKey pos action) = runMaybeT $
     PklSpecialKey
       <$> toPklPos pos
       <*> lift (printModifierPosition layout action)

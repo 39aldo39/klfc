@@ -244,7 +244,7 @@ printExtraKeys layout = (singletonKeys, modMappings ⧺ replacedModMappings ⧺ 
   where
     (singletonKeys, includes) = singletonKeysToIncludes (view _singletonKeys layout)
 
-    modMappings = ($ view (_keys ∘ traverse ∘ _letters) layout ⧺ map snd singletonKeys) $
+    modMappings = ($ view (_keys ∘ traverse ∘ _letters) layout ⧺ map (view _sLetter) singletonKeys) $
         map (fst ∘ runWriter ∘ printLetter) >>>
         mapMaybe (\symbol → find ((≡ symbol) ∘ snd) extraModifierMaps) >>>
         groupSortWith fst >>>
@@ -252,7 +252,7 @@ printExtraKeys layout = (singletonKeys, modMappings ⧺ replacedModMappings ⧺ 
 
     replacedModMappings = ($ view _keys layout) $
         mapMaybe (\key → (,) (view _pos key) <$> listToMaybe (view _letters key)) >>>
-        (⧺ singletonKeys) >>>
+        (⧺ map (view _sPos &&& view _sLetter) singletonKeys) >>>
         over (traverse ∘ _2) (fst ∘ runWriter ∘ printLetter) >>>
         mapMaybe (uncurry getReplacedModMapping) >>>
         groupSortWith fst >>>
@@ -260,7 +260,7 @@ printExtraKeys layout = (singletonKeys, modMappings ⧺ replacedModMappings ⧺ 
 
     getReplacedModMapping pos symbol = do
         (realMod, origPos) ← lookup symbol defaultModifierMaps
-        guard (origPos ∉ map (view _pos) (view _keys layout) ⧺ map fst (view _singletonKeys layout))
+        guard (origPos ∉ map (view _pos) (view _keys layout) ⧺ map (view _sPos) (view _singletonKeys layout))
         let smallerScancode = liftA2 (<) `on` flip lookup posAndScancode
         guard =<< pos `smallerScancode` origPos
         (,) realMod <$> lookup origPos posAndKeycode

@@ -100,7 +100,7 @@ globalSection ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m PklParseLayout
 globalSection = mconcat ∘ map (uncurry field) <$> many nameValue
   where
     field ∷ String → String → PklParseLayout
-    field "extend_key" = maybe (∅) ((\ks → (∅) { parseSingletonKeys = [ks]}) ∘ flip (,) (Modifiers Shift [M.Extend])) ∘ parseString
+    field "extend_key" = maybe (∅) ((\ks → (∅) { parseSingletonKeys = [ks]}) ∘ flip SingletonKey (Modifiers Shift [M.Extend])) ∘ parseString
     field "shiftstates" = (\ms → (∅) { parseShiftstates = ms }) ∘ map shiftstateFromWinShiftstate ∘ catMaybes ∘ map readMaybe ∘ shiftstates
     field _ = const (∅)
 

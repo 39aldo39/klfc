@@ -16,11 +16,13 @@ module Layout.Layout
     , _version
     , _description
     , Layout(..)
-    , SingletonKey
     , _info
     , _singletonKeys
     , _mods
     , _keys
+    , SingletonKey(..)
+    , _sPos
+    , _sLetter
     , isEmptyLayout
     , addSingletonKeysAsKeys
     , singletonKeyToKey
@@ -96,7 +98,11 @@ $(deriveJSON defaultOptions
     , omitNothingFields = True
     } ''Information)
 
-type SingletonKey = (Pos, Letter)
+data SingletonKey = SingletonKey
+    { __sPos ∷ Pos
+    , __sLetter ∷ Letter
+    } deriving (Eq, Show, Read)
+makeLenses ''SingletonKey
 data Layout = Layout
     { __info ∷ Information
     , __singletonKeys ∷ [SingletonKey]
@@ -120,17 +126,17 @@ instance Monoid Layout where
                (c1 ⊕ c2) (keys1 `combineKeys` keys2)
 
 nubSingletonKeys ∷ [SingletonKey] → [SingletonKey]
-nubSingletonKeys = nubWithOn (\(pos,l) ks → (pos, NE.last (l :| map snd ks))) fst
+nubSingletonKeys = nubWithOn (\k ks → NE.last (k :| ks)) (view _sPos)
 
 combineSingletonKeys ∷ [SingletonKey] → [SingletonKey] → [SingletonKey]
-combineSingletonKeys = combineOn (\(pos,l) ks → (pos, NE.last (l :| map snd ks))) fst
+combineSingletonKeys = combineOn (\k ks → NE.last(k :| ks)) (view _sPos)
 
 addSingletonKeysAsKeys ∷ Layout → Layout
 addSingletonKeysAsKeys layout = set _singletonKeys [] $
     over _keys (⧺ map singletonKeyToKey (view _singletonKeys layout)) layout
 
 singletonKeyToKey ∷ SingletonKey → Key
-singletonKeyToKey (pos, letter) = Key pos Nothing [M.empty] [letter] Nothing
+singletonKeyToKey (SingletonKey pos letter) = Key pos Nothing [M.empty] [letter] Nothing
 
 unifyShiftstates ∷ [Key] → ([Key], [Shiftstate])
 unifyShiftstates keys = (map (setLevels levels) keys, shiftstates)
@@ -160,6 +166,16 @@ setLevels levels key
   | otherwise = set _shiftlevels levels ∘ set _letters letters $ key
   where
     letters = map (getLetter key ∘ NE.head ∘ getNonEmpty) levels
+
+instance ToJSON SingletonKey where
+    toJSON (SingletonKey pos letter) = toJSON (pos, letter)
+
+instance FromJSON (FileType → Maybe SingletonKey) where
+    parseJSON (Object o) = do
+        filt ← o .:? "filter" .!= Filter (const True)
+        sKey ← liftA2 SingletonKey (o .: "pos") (o .: "letter")
+        pure (bool Nothing (Just sKey) ∘ runFilter filt)
+    parseJSON v = pure ∘ Just ∘ uncurry SingletonKey <$> parseJSON v
 
 instance ToJSON Layout where
     toJSON (Layout info singletonKeys mods keys) =
@@ -222,16 +238,18 @@ instance FromJSON (FileType → Layout) where
         expectedKeys ("filter" : infoKeys ⧺ layoutKeys) o
         filt ← o .:? "filter" .!= Filter (const True)
         info ← parseJSON (Object o)
+        allSingletonKeysFilt ← sequence <$> o .:? "singletonKeys" .!= []
+        let singletonKeysFilt = nubSingletonKeys ∘ catMaybes <$> allSingletonKeysFilt
+        mods ← o .:? "mods" .!= []
         customDeadKeys  ← o .:? "customDeadKeys"  .!= []
         qwertyShortcuts ← o .:? "qwertyShortcuts" .!= False
-        singletonKeys ← nubSingletonKeys <$> o .:? "singletonKeys" .!= []
-        keys ← (fmap ∘ fmap)
-                   (nubKeys >>>
-                    either error id ∘ setCustomDeads customDeadKeys >>>
-                    bool id (map (liftA2 (set _shortcutPos) (view _pos) id)) qwertyShortcuts
-                   ) (parseJSON' o)
-        layout ← Layout info singletonKeys <$> o .:? "mods" .!= []
-        pure (bool (∅) ∘ layout ∘ keys <*> runFilter filt)
+        keysFilt ← (fmap ∘ fmap)
+            (nubKeys >>>
+             either error id ∘ setCustomDeads customDeadKeys >>>
+             bool id (map (liftA2 (set _shortcutPos) (view _pos) id)) qwertyShortcuts
+            ) (parseJSON' o)
+        let layoutFilt = Layout info <$> singletonKeysFilt <*> pure mods <*> keysFilt
+        pure (bool (∅) ∘ layoutFilt <*> runFilter filt)
 
 parseJSON' ∷ Object → Parser (FileType → [Key])
 parseJSON' = lift3A2 (⧺) parseKeys parseKeysWithShiftlevels
@@ -296,19 +314,20 @@ applyModLayout layoutMod | isEmptyMod layoutMod = id
 applyModLayout layoutMod@(Mod nameM _) =
     over (_info ∘ _fullName) (⊕ (" (" ⊕ nameM ⊕ ")")) ∘
     over (_info ∘ _name) (⊕ ('_':nameM)) ∘
+    over (_singletonKeys ∘ traverse ∘ _sPos) (applyMod layoutMod) ∘
     over (_keys ∘ traverse ∘ _pos) (applyMod layoutMod) ∘
     over (_keys ∘ traverse ∘ _shortcutPos) id -- make the (perhaps) guessed shortcut position explicit
 
 getLetterByPosAndShiftstate ∷ Pos → Shiftstate → Layout → Maybe Letter
 getLetterByPosAndShiftstate pos state = listToMaybe ∘ liftA2 (⧺)
     (map toLetter ∘ filter ((≡ pos) ∘ view _pos) ∘ view _keys)
-    (map snd ∘ filter ((≡ pos) ∘ fst) ∘ view _singletonKeys)
+    (map (view _sLetter) ∘ filter ((≡ pos) ∘ view _sPos) ∘ view _singletonKeys)
   where
     toLetter = flip getLetter state
 
 getPosByLetterAndShiftstate ∷ Letter → Shiftstate → Layout → [Pos]
 getPosByLetterAndShiftstate letter state = liftA2 (⧺)
     (map (view _pos) ∘ filter ((≡ letter) ∘ toLetter) ∘ view _keys)
-    (map fst ∘ filter ((≡ letter) ∘ snd) ∘ view _singletonKeys)
+    (map (view _sPos) ∘ filter ((≡ letter) ∘ view _sLetter) ∘ view _singletonKeys)
   where
     toLetter = flip getLetter state

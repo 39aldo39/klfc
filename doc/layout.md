@@ -103,6 +103,9 @@ If multiple singleton keys are defined on the same position, only the last one i
 Since JSON does not support tuples, a list of length 2 is used.
 For example, to let the Caps Lock key behave as extended modifier, use the 'tuple' `[ "CapsLock", "Extend" ]`.
 
+It is also possible to use the `filter` attribute on singleton keys.
+In that case, the move verbose syntax `{ "pos": "POS", "letter": "LETTER", "filter": "FILTER" }` should be used.
+
 Custom dead keys
 ----------------
 
