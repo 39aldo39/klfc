@@ -21,13 +21,13 @@
       <modifier keys="caps anyControl? command?" />
     </keyMapSelect>
     <keyMapSelect mapIndex="5">
-      <modifier keys="anyShift caps anyControl? command?" />
+      <modifier keys="caps anyShift anyControl? command?" />
     </keyMapSelect>
     <keyMapSelect mapIndex="6">
       <modifier keys="caps anyOption anyControl? command?" />
     </keyMapSelect>
     <keyMapSelect mapIndex="7">
-      <modifier keys="anyShift caps anyOption anyControl? command?" />
+      <modifier keys="caps anyShift anyOption anyControl? command?" />
     </keyMapSelect>
   </modifierMap>
   <keyMapSet id="defaultKeyMapSet">
