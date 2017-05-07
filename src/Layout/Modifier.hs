@@ -20,22 +20,23 @@ module Layout.Modifier
 import BasePrelude hiding (Alt, Control, empty)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
-import Data.Monoid.Unicode ((∅))
-import Util (HumanReadable(..))
+import Data.Monoid.Unicode ((∅), (⊕))
+import Util (HumanReadable(..), lookupByR)
 import WithBar (WithBar(..))
 import qualified WithBar as WB
 import WithPlus (WithPlus)
 import qualified WithPlus as WP
 
+import qualified Control.Monad.Fail as Fail (fail)
 import Data.Aeson.Types (Parser, Object, parseJSON)
 import qualified Data.HashMap.Lazy as HM
 import Data.List.NonEmpty (NonEmpty((:|)))
 
 data Modifier
-    = Shift
+    = CapsLock
+    | Shift
     | Shift_L
     | Shift_R
-    | CapsLock
     | Win
     | Win_L
     | Win_R
