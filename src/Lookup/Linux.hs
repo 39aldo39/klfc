@@ -316,7 +316,6 @@ printLinuxAction (XkbRedirect _ pos mods clearMods) = do
         | otherwise = ",mods=" ⊕ s
     printClearMods s
         | null s    = ""
-        | sort clearMods ≡ [minBound .. maxBound] = ",clearMods=all"
         | otherwise = ",clearMods=" ⊕ s
 printModsWithPlus ∷ Logger m ⇒ [Modifier] → m String
 printModsWithPlus =

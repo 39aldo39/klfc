@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Layout.Modifier
     ( Modifier(..)
@@ -53,11 +54,22 @@ data Modifier
     | NumLock
     | AltGr
     | Extend
-    deriving (Eq, Ord, Show, Read, Enum, Bounded)
+    | ExtraExtend Int
+    deriving (Eq, Ord, Show, Read)
+
+baseStringList ∷ [(Modifier, String)]
+baseStringList = map (id &&& show) [CapsLock, Shift, Shift_L, Shift_R, Win, Win_L, Win_R, Alt, Alt_L, Alt_R, Control, Control_L, Control_R, NumLock, AltGr, Extend]
 
 instance HumanReadable Modifier where
     typeName _ = "modifier"
-    toString = show
+    parseString s
+      | Just n ← readMaybe =<< stripPrefix "Extend" s = pure (ExtraExtend n)
+      | otherwise = maybe e pure (lookupByR eq s baseStringList)
+      where
+        eq = (≡) `on` map toLower ∘ filter (≢'_')
+        e = Fail.fail ("‘" ⊕ s ⊕ "’ is not a valid modifier")
+    toString (ExtraExtend n) = "Extend" ⊕ show n
+    toString m = show m
 
 toBaseModifier ∷ Modifier → Modifier
 toBaseModifier Shift_L = Shift
@@ -83,14 +95,16 @@ getEqualModifiers modifier = [modifier]
 controlMods ∷ [Modifier]
 controlMods = [Win, Win_L, Win_R, Alt, Alt_L, Alt_R, Control, Control_L, Control_R]
 
-type ExtendId = ()
+type ExtendId = Maybe Int
 
 toExtendId ∷ Modifier → Maybe ExtendId
-toExtendId Extend = Just ()
+toExtendId Extend = Just Nothing
+toExtendId (ExtraExtend n) = Just (Just n)
 toExtendId _ = Nothing
 
 fromExtendId ∷ ExtendId → Modifier
-fromExtendId () = Extend
+fromExtendId Nothing = Extend
+fromExtendId (Just n) = ExtraExtend n
 
 isExtend ∷ Modifier → Bool
 isExtend = isJust ∘ toExtendId
