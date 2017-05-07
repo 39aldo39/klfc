@@ -25,8 +25,7 @@ import Text.Megaparsec.Prim (MonadParsec)
 import Layout.Key (Key(..))
 import Layout.Layout (Layout(..))
 import Layout.Types
-import Lookup.Linux (posAndScancode)
-import Lookup.Windows (shiftstateFromWinShiftstate, posAndString)
+import Lookup.Windows
 import WithBar (WithBar(..))
 
 data KlcParseLayout = KlcParseLayout
@@ -128,7 +127,7 @@ parseScancode xs = maybe e pure (readMaybe ('0':'x':xs) >>= (`lookupR` posAndSca
   where e = tellMaybeT ["unknown position ‘" ⊕ xs ⊕ "’"]
 
 parseShortcutPos ∷ Logger m ⇒ String → MaybeT m Pos
-parseShortcutPos xs = maybe e pure (lookupR xs posAndString <|> parseString xs)
+parseShortcutPos xs = maybe e pure (lookupR xs posAndVkString <|> parseString xs)
   where e = tellMaybeT ["unknown position ‘" ⊕ xs ⊕ "’"]
 
 parseCapslock ∷ Logger m ⇒ String → MaybeT m Bool

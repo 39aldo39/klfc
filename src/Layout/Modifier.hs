@@ -10,6 +10,10 @@ module Layout.Modifier
     , toEqualModifiers
     , getEqualModifiers
     , controlMods
+    , ExtendId
+    , toExtendId
+    , fromExtendId
+    , isExtend
     , parseJSONShiftlevels
     , empty
     , singleton
@@ -78,6 +82,18 @@ getEqualModifiers modifier = [modifier]
 
 controlMods ∷ [Modifier]
 controlMods = [Win, Win_L, Win_R, Alt, Alt_L, Alt_R, Control, Control_L, Control_R]
+
+type ExtendId = ()
+
+toExtendId ∷ Modifier → Maybe ExtendId
+toExtendId Extend = Just ()
+toExtendId _ = Nothing
+
+fromExtendId ∷ ExtendId → Modifier
+fromExtendId () = Extend
+
+isExtend ∷ Modifier → Bool
+isExtend = isJust ∘ toExtendId
 
 type Shiftstate = WithPlus Modifier
 

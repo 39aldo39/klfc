@@ -31,6 +31,7 @@ import System.IO (hPutStrLn, stderr)
 import System.Process (callCommand)
 #endif
 
+import Ahk (printAhk, toAhk)
 import FileType (FileType(..))
 import JsonComments (removeJsonComments)
 import JsonPretty (Config(..), encodePretty')
@@ -38,7 +39,7 @@ import Keylayout (KeylayoutConfig(..), printKeylayout, toKeylayout)
 import Klc (KlcConfig(..), printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
 import Layout.Layout (isEmptyLayout, layoutOrd, layoutDelims, applyModLayout, removeEmptyLetters, unifyShiftstates)
-import Layout.Mod (isEmptyMod)
+import Layout.Mod (isEmptyMod, applyInverseMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
@@ -86,6 +87,7 @@ execOptions o@(Options Nothing (File fname:_) _ _) =
     ".klc"       → execOptions o { __inputType = Just Klc }
     ".keylayout" → execOptions o { __inputType = Just Keylayout }
     ".c"         → execOptions o { __inputType = Just Tmk }
+    ".ahk"       → execOptions o { __inputType = Just Ahk }
     xs → fail ("unknown layout type ‘" ⊕ xs ⊕ "’.")
 execOptions o@(Options _ _ [] _) = execOptions o { __outputs = [Output Json Standard] }
 execOptions (Options (Just inputType) inputs outputs extraOptions) = printLog $ do
@@ -102,6 +104,7 @@ input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
 input Keylayout = fail "importing from a keylayout file is not supported"
 input Tmk = fail "importing from a TMK file is not supported"
+input Ahk = fail "importing from a AHK file is not supported"
 
 parseWith ∷ (Logger m, MonadIO m) ⇒ IOData α ⇒ (String → α → Either String (m β)) →
     Stream → m β
@@ -126,6 +129,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Klc (dir </> "klc")
     output' Keylayout (dir </> "keylayout")
     output' Tmk (dir </> "tmk")
+    output' Ahk (dir </> "ahk")
 output (Output Json stream) _ = ($ Json) >>>
     writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
@@ -204,6 +208,16 @@ output (Output Tmk (File dir)) _ = ($ Tmk) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (error "the layout has an empty name when exported to TMK")
     writeStream (File $ dir </> "unimap.c") ∘ printTmkKeymap =<< toTmkKeymap layout
+output (Output Ahk Standard) _ = ($ Ahk) >>>
+    writeStream Standard ∘ printAhk <=< toAhk id
+output (Output Ahk (File dir)) _ = ($ Ahk) >>> \layout → do
+    let name = view (_info ∘ _name) layout
+    when (null name) (fail "the layout has an empty name when exported to AHK")
+    let fname l = dir </> view (_info ∘ _name) l <.> "ahk"
+    forM_ ((∅) : view _mods layout) $ \layoutMod → do
+        let layout' = applyModLayout layoutMod layout
+        let getOrigPos = applyInverseMod layoutMod
+        writeFileStream (fname layout') ∘ printAhk =<< toAhk getOrigPos layout'
 
 replaceVar ∷ B.ByteString → String → B.ByteString → B.ByteString
 replaceVar var val = B8.unlines ∘ replace before after ∘ B8.lines
@@ -292,6 +306,7 @@ parseOutput = asum
     , Output Klc <$> streamOption (long "klc" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a KLC directory (‘-’ for printing the base layout to stdout)")
     , Output Keylayout <$> streamOption (long "keylayout" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a keylayout directory (‘-’ for printing the base layout to stdout)")
     , Output Tmk <$> streamOption (long "tmk" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a TMK directory (‘-’ for printing the base layout to stdout)")
+    , Output Ahk <$> streamOption (long "ahk" ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to a AHK directory (‘-’ for printing the base layout to stdout)")
     , OutputAll <$> streamOption (long "output" ⊕ short 'o' ⊕ metavar "DIRECTORY" ⊕ hidden ⊕ help "Export to all file types")
     ]
 

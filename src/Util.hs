@@ -161,12 +161,12 @@ combineWithOnM _ _   []     ys = pure ys
 combineWithOnM f key (x:xs) ys = liftA2 (:) (f x eqToX) (combineWithOnM f key xs ys')
   where (eqToX, ys') = partition (on (≡) key x) ys
 
-nubWithOn ∷ Eq β ⇒ (α → [α] → α) → (α → β) → [α] → [α]
+nubWithOn ∷ Eq β ⇒ (α → [α] → γ) → (α → β) → [α] → [γ]
 nubWithOn _ _   []     = []
 nubWithOn f key (x:xs) = f x eqToX : nubWithOn f key xs'
   where (eqToX, xs') = partition (on (≡) key x) xs
 
-nubWithOnM ∷ (Eq β, Applicative f) ⇒ (α → [α] → f α) → (α → β) → [α] → f [α]
+nubWithOnM ∷ (Eq β, Applicative f) ⇒ (α → [α] → f γ) → (α → β) → [α] → f [γ]
 nubWithOnM _ _   []     = pure []
 nubWithOnM f key (x:xs) = liftA2 (:) (f x eqToX) (nubWithOnM f key xs')
   where (eqToX, xs') = partition (on (≡) key x) xs

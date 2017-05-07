@@ -29,7 +29,6 @@ import qualified Layout.Modifier as M
 import Layout.ModifierEffect (defaultModifierEffect)
 import qualified Layout.Pos as P
 import Layout.Types
-import Lookup.Linux (posAndScancode)
 import Lookup.Windows
 import PresetLayout (defaultKeys, defaultFullLayout)
 
@@ -202,7 +201,7 @@ toLayoutData' layout =
     pklModifierKeys = catMaybes <$> traverse (singletonKeyToPklKey layout) (view _singletonKeys layout)
     extendPos = listToMaybe $ filterOnSnd (≡ Modifiers Shift [M.Extend]) (map (view _sPos &&& view _sLetter) (view _singletonKeys layout))
     extendPosToPklPos P.CapsLock = pure "CapsLock"
-    extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndString) <|> toPklPos pos
+    extendPosToPklPos pos = maybe (e pos) pure (lookup pos posAndVkString) <|> toPklPos pos
     fromPklDead (CustomDead (Just i) d) = Just (i, d)
     fromPklDead _ = Nothing
     e ∷ Logger m ⇒ Pos → MaybeT m α
@@ -274,7 +273,7 @@ letterComment ∷ Letter → Maybe String
 letterComment = fmap __dkName ∘ letterToDeadKey
 
 printShortcutPos ∷ Logger m ⇒ Pos → MaybeT m String
-printShortcutPos pos = maybe e pure (lookup pos posAndString)
+printShortcutPos pos = maybe e pure (lookup pos posAndVkString)
   where e = tellMaybeT [show' pos ⊕ " is not supported in PKL"]
 
 printLetter ∷ Logger m ⇒ IsExtend → Layout → Letter → m String
@@ -304,7 +303,7 @@ printLetter _ _ letter = "--" <$ tell [show' letter ⊕ " is not supported in pk
 printPklAction ∷ Logger m ⇒ Layout → Letter → PklAction → m String
 printPklAction _ _ (Simple x) = pure x
 printPklAction layout _ (RedirectLetter letter ms) =
-    (("}" ⊕ mapMaybe (`lookup` modifierAndChar) ms ⊕ "{") ⊕) <$> printLetter Extend layout letter
+    (("}" ⊕ concat (mapMaybe (`lookup` modifierAndString) ms) ⊕ "{") ⊕) <$> printLetter Extend layout letter
 
 actionToPkl ∷ Logger m ⇒ Layout → Action → m String
 actionToPkl layout a =

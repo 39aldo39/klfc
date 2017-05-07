@@ -5,7 +5,7 @@
     "shiftlevels": [ "None" ],
     "keys": [
         { "pos": "Iso", "letters": [ "Compose" ], "filter": "only xkb,json" },
-        { "pos": "Iso", "letters": [ "cdk:compose" ], "filter": "only keylayout" }
+        { "pos": "Iso", "letters": [ "cdk:compose" ], "filter": "only keylayout,ahk" }
     ],
     "customDeadKeys": [
         {

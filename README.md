@@ -2,7 +2,7 @@ Keyboard Layout Files Creator
 =============================
 
 Keyboard Layout Files Creator is a tool to create advanced keyboard layouts in various formats.
-Currently, exporting to XKB, PKL, KLC, keylayout and TMK is supported.
+Currently, exporting to XKB, PKL, KLC, keylayout, TMK and AHK is supported.
 Layouts are stored in JSON files, of which examples can be found in the [examples](examples) folder.
 The full format is documented in [doc/layout.md](doc/layout.md).
 It is also possible to import an existing keyboard layout from a XKB, PKL or KLC file.
@@ -59,6 +59,8 @@ Usage
     --keylayout DIRECTORY    Export to a keylayout directory (‘-’ for printing the
                              base layout to stdout)
     --tmk DIRECTORY          Export to a TMK directory (‘-’ for printing the base
+                             layout to stdout)
+    --ahk DIRECTORY          Export to a AHK directory (‘-’ for printing the base
                              layout to stdout)
     -o,--output DIRECTORY    Export to all file types
 

@@ -25,7 +25,6 @@ import Layout.Key (Key(Key))
 import Layout.Layout (Layout(Layout))
 import qualified Layout.Modifier as M
 import Layout.Types
-import Lookup.Linux (posAndScancode)
 import Lookup.Windows
 import WithBar (WithBar(..))
 
@@ -138,7 +137,7 @@ parseScancode xs =
     e2 = tellMaybeT ["unknown position ‘" ⊕ xs ⊕ "’"]
 
 parseShortcutPos ∷ Logger m ⇒ String → MaybeT m Pos
-parseShortcutPos xs = maybe e pure (lookupR xs posAndString <|> parseString xs)
+parseShortcutPos xs = maybe e pure (lookupR xs posAndVkString <|> parseString xs)
   where e = tellMaybeT ["unknown position ‘" ⊕ xs ⊕ "’"]
 
 parseCapslock ∷ Logger m ⇒ String → MaybeT m Bool

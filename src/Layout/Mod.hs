@@ -5,6 +5,7 @@ module Layout.Mod
     ( Mod(Mod)
     , isEmptyMod
     , applyMod
+    , applyInverseMod
     ) where
 
 import BasePrelude
@@ -14,7 +15,7 @@ import Data.Monoid.Unicode ((∅), (⊕))
 import Data.Aeson
 
 import Layout.Pos (Pos)
-import Permutation (Permutation, isEmptyPermutation, permutate)
+import Permutation (Permutation, isEmptyPermutation, permutate, inverse)
 
 data Mod = Mod
     { name ∷ String
@@ -34,3 +35,6 @@ instance FromJSON Mod
 
 applyMod ∷ Mod → Pos → Pos
 applyMod = permutate ∘ permutation
+
+applyInverseMod ∷ Mod → Pos → Pos
+applyInverseMod = permutate ∘ inverse ∘ permutation

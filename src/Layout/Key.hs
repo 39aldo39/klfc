@@ -26,6 +26,8 @@ module Layout.Key
     , setDefaultShiftstates
     , getLetter
     , getLevel
+    , toLettersAndShiftlevels
+    , toLettersAndShiftstates
     , filterKeyOnShiftstatesM
     , filterKeyOnShiftstates
     , addCapslock
@@ -284,6 +286,14 @@ getLevel' key mods =
           S.deleteFindMin >>>
           sequence ∘ (S.insert *** getLevel' key) >$>
           uncurry (over _2)
+
+toLettersAndShiftlevels ∷ Key → [(Letter, Shiftlevel)]
+toLettersAndShiftlevels = uncurry zip ∘ (view _letters &&& view _shiftlevels)
+
+toLettersAndShiftstates ∷ Key → [(Letter, Shiftstate)]
+toLettersAndShiftstates =
+    toLettersAndShiftlevels >>>
+    concatMap (uncurry zip ∘ (repeat *** toList))
 
 filterKeyOnShiftstatesM ∷ Monad m ⇒ (Shiftstate → m Bool) → Key → m Key
 filterKeyOnShiftstatesM p key = do

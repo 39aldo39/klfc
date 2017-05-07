@@ -7,8 +7,11 @@ module Lookup.Windows
     , shiftstateFromWinShiftstate
     , isAltRToAltGr
     , altGrToControlAlt
-    , posAndString
-    , modifierAndChar
+    , altGrToLControlRAlt
+    , posAndScancode
+    , posAndVkString
+    , posAndVkInt
+    , modifierAndString
     , PklAction(..)
     , actionAndPklAction
     , modifierAndPklAction
@@ -28,6 +31,7 @@ import qualified Layout.Action as A
 import qualified Layout.Modifier as M
 import qualified Layout.Pos as P
 import Layout.Types
+import qualified Lookup.Linux as LL (posAndScancode)
 
 type WinShiftstate = Int
 modifierAndWinShiftstate ∷ [(Modifier, WinShiftstate)]
@@ -54,8 +58,53 @@ altGrToControlAlt xs@(WithPlus s)
   | M.AltGr ∈ xs = WithPlus (S.delete M.AltGr s S.∪ S.fromList [M.Control, M.Alt])
   | otherwise    = xs
 
-posAndString ∷ [(Pos, String)]
-posAndString =
+altGrToLControlRAlt ∷ Shiftstate → Shiftstate
+altGrToLControlRAlt xs@(WithPlus s)
+  | M.AltGr ∈ xs = WithPlus (S.delete M.AltGr s S.∪ S.fromList [M.Control_L, M.Alt_R])
+  | otherwise    = xs
+
+posAndScancode ∷ [(Pos, Int)]
+posAndScancode =
+    [ (P.Win_L, 0x15B)
+    , (P.Alt_R, 0x138)
+    , (P.Win_R, 0x15C)
+    , (P.Menu, 0x15D)
+    , (P.Control_R, 0x11D)
+    , (P.Insert, 0x152)
+    , (P.Delete, 0x153)
+    , (P.Home, 0x147)
+    , (P.End, 0x14F)
+    , (P.PageUp, 0x149)
+    , (P.PageDown, 0x151)
+    , (P.Up, 0x148)
+    , (P.Left, 0x14B)
+    , (P.Down, 0x150)
+    , (P.Right, 0x14D)
+    , (P.KP_Enter, 0x11C)
+
+    , (P.Power, 0x15E)
+    , (P.Sleep, 0x15F)
+    , (P.Wake, 0x163)
+    , (P.Mute, 0x120)
+    , (P.VolumeUp, 0x130)
+    , (P.VolumeDown, 0x12E)
+--    , (P.Cut, 0x117)
+--    , (P.Copy, 0x118)
+--    , (P.Paste, 0x10A)
+    , (P.Help, 0x13B)
+--    , (P.Undo, 0x108)
+--    , (P.Redo, 0x107)
+    , (P.PlayPause, 0x122)
+    , (P.Stop, 0x124)
+    , (P.Previous, 0x110)
+    , (P.Next, 0x119)
+    , (P.Eject, 0x12C)
+    , (P.Mail, 0x11E)
+    , (P.Browser, 0x132)
+    ] ⧺ LL.posAndScancode
+
+posAndVkString ∷ [(Pos, String)]
+posAndVkString =
     [ (P.Esc, "ESCAPE")
     , (P.F1, "F1")
     , (P.F2, "F2")
@@ -208,12 +257,174 @@ posAndString =
     , (P.F24, "F24")
     ]
 
-modifierAndChar ∷ [(Modifier, Char)]
-modifierAndChar =
-    [ (M.Shift, '+')
-    , (M.Control, '^')
-    , (M.Alt, '!')
-    , (M.Win, '#')
+posAndVkInt ∷ [(Pos, Int)]
+posAndVkInt =
+    [ (P.Esc, 0x1B)
+    , (P.F1, 0x70)
+    , (P.F2, 0x71)
+    , (P.F3, 0x72)
+    , (P.F4, 0x73)
+    , (P.F5, 0x74)
+    , (P.F6, 0x75)
+    , (P.F7, 0x76)
+    , (P.F8, 0x77)
+    , (P.F9, 0x78)
+    , (P.F10, 0x79)
+    , (P.F11, 0x7A)
+    , (P.F12, 0x7B)
+    , (P.PrintScreen, 0x2C)
+    , (P.ScrollLock, 0x91)
+    , (P.Pause, 0x13)
+
+    , (P.Tilde, 0xC0)
+    , (P.N1, 0x31)
+    , (P.N2, 0x32)
+    , (P.N3, 0x33)
+    , (P.N4, 0x34)
+    , (P.N5, 0x35)
+    , (P.N6, 0x36)
+    , (P.N7, 0x37)
+    , (P.N8, 0x38)
+    , (P.N9, 0x39)
+    , (P.N0, 0x30)
+    , (P.Minus, 0xBD)
+    , (P.Plus, 0xBB)
+    , (P.Backspace, 0x08)
+
+    , (P.Tab, 0x09)
+    , (P.Q, 0x51)
+    , (P.W, 0x57)
+    , (P.E, 0x45)
+    , (P.R, 0x52)
+    , (P.T, 0x54)
+    , (P.Y, 0x59)
+    , (P.U, 0x55)
+    , (P.I, 0x49)
+    , (P.O, 0x4F)
+    , (P.P, 0x50)
+    , (P.Bracket_L, 0xDB)
+    , (P.Bracket_R, 0xDD)
+    , (P.Backslash, 0xDC)
+
+    , (P.CapsLock, 0x14)
+    , (P.A, 0x41)
+    , (P.S, 0x53)
+    , (P.D, 0x44)
+    , (P.F, 0x46)
+    , (P.G, 0x47)
+    , (P.H, 0x48)
+    , (P.J, 0x4A)
+    , (P.K, 0x4B)
+    , (P.L, 0x4C)
+    , (P.Semicolon, 0xBA)
+    , (P.Apastrophe, 0xDE)
+    , (P.Enter, 0x0D)
+
+    , (P.Shift_L, 0xA0)
+    , (P.Iso, 0xE2)
+    , (P.Z, 0x5A)
+    , (P.X, 0x58)
+    , (P.C, 0x43)
+    , (P.V, 0x56)
+    , (P.B, 0x42)
+    , (P.N, 0x4E)
+    , (P.M, 0x4D)
+    , (P.Comma, 0xBC)
+    , (P.Period, 0xBE)
+    , (P.Slash, 0xBF)
+    , (P.Shift_R, 0xA1)
+
+    , (P.Control_L, 0xA2)
+    , (P.Win_L, 0x5B)
+    , (P.Alt_L, 0xA4)
+    , (P.Space, 0x20)
+    , (P.Alt_R, 0xA5)
+    , (P.Win_R, 0x5C)
+    , (P.Menu, 0x5D)
+    , (P.Control_R, 0xA3)
+
+    , (P.Insert, 0x2D)
+    , (P.Delete, 0x2E)
+    , (P.Home, 0x24)
+    , (P.End, 0x23)
+    , (P.PageUp, 0x21)
+    , (P.PageDown, 0x22)
+    , (P.Up, 0x26)
+    , (P.Left, 0x25)
+    , (P.Down, 0x28)
+    , (P.Right, 0x27)
+
+    , (P.NumLock, 0x90)
+    , (P.KP_Div, 0x6F)
+    , (P.KP_Mult, 0x6A)
+    , (P.KP_Min, 0x6D)
+    , (P.KP_7, 0x67)
+    , (P.KP_8, 0x68)
+    , (P.KP_9, 0x69)
+    , (P.KP_Plus, 0x6B)
+    , (P.KP_4, 0x64)
+    , (P.KP_5, 0x65)
+    , (P.KP_6, 0x66)
+    , (P.KP_1, 0x61)
+    , (P.KP_2, 0x62)
+    , (P.KP_3, 0x63)
+    , (P.KP_Enter, 0x0D)
+    , (P.KP_0, 0x60)
+    , (P.KP_Dec, 0x6E)
+
+    , (P.PlayPause, 0xB3)
+    , (P.Previous, 0xB1)
+    , (P.Next, 0xB0)
+    , (P.Stop, 0xB2)
+    , (P.Mute, 0xAD)
+    , (P.VolumeDown, 0xAE)
+    , (P.VolumeUp, 0xAF)
+
+    , (P.Browser_Back, 0xA6)
+    , (P.Browser_Forward, 0xA7)
+    , (P.Browser_Refresh, 0xA8)
+    , (P.Browser_Stop, 0xA9)
+    , (P.Browser_Search, 0xAA)
+    , (P.Browser_Favorites, 0xAB)
+
+    , (P.Calculator, 0xB7)
+    , (P.MediaPlayer, 0xB5)
+    , (P.Browser, 0xAC)
+    , (P.Mail, 0xB4)
+    , (P.Help, 0x2F)
+    , (P.Launch1, 0xB6)
+    , (P.Launch2, 0xB7)
+
+    , (P.Sleep, 0x5F)
+
+    , (P.F13, 0x7C)
+    , (P.F14, 0x7D)
+    , (P.F15, 0x7E)
+    , (P.F16, 0x7F)
+    , (P.F17, 0x80)
+    , (P.F18, 0x81)
+    , (P.F19, 0x82)
+    , (P.F20, 0x83)
+    , (P.F21, 0x84)
+    , (P.F22, 0x85)
+    , (P.F23, 0x86)
+    , (P.F24, 0x87)
+    ]
+
+modifierAndString ∷ [(Modifier, String)]
+modifierAndString =
+    [ (M.Shift, "+")
+    , (M.Shift_L, "<+")
+    , (M.Shift_R, ">+")
+    , (M.Control, "^")
+    , (M.Control_L, "<^")
+    , (M.Control_R, ">^")
+    , (M.Alt, "!")
+    , (M.Alt_L, "<!")
+    , (M.Alt_R, ">!")
+    , (M.Win, "#")
+    , (M.Win_L, "<#")
+    , (M.Win_R, ">#")
     ]
 
 data PklAction
@@ -303,6 +514,7 @@ actionAndPklAction =
     , (A.MediaPlayer, Simple "Launch_Media")
     , (A.Browser, Simple "Browser_Home")
     , (A.Mail, Simple "Launch_Mail")
+    , (A.MyComputer, Simple "Launch_App1")
     , (A.Launch1, Simple "Launch_App1")
     , (A.Launch2, Simple "Launch_App2")
 
@@ -351,5 +563,5 @@ modifierAndPklAction =
     , (M.Control, Simple "Ctrl")
     , (M.Control_L, Simple "LCtrl")
     , (M.Control_R, Simple "RCtrl")
-    , (M.AltGr, Simple "RAlt")
+    , (M.NumLock, Simple "NumLock")
     ]

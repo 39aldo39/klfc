@@ -24,7 +24,6 @@ import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, fil
 import Layout.Layout (addDefaultKeys, unifyShiftstates)
 import qualified Layout.Pos as P
 import Layout.Types
-import Lookup.Linux (posAndScancode)
 import Lookup.Windows
 import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultKeys)
@@ -197,7 +196,7 @@ printPos pos
         [P.Backslash, P.Iso, P.Space, P.KP_Dec]
 
 printShortcutPos ∷ Logger m ⇒ Pos → MaybeT m String
-printShortcutPos pos = maybe e pure $ lookup pos posAndString
+printShortcutPos pos = maybe e pure $ lookup pos posAndVkString
   where e = tellMaybeT [show' pos ⊕ " is not supported in KLC"]
 
 printLetter ∷ Logger m ⇒ Letter → m String
