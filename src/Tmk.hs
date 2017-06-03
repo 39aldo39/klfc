@@ -153,12 +153,12 @@ printTmkKeymap (TmkKeymap getMaxIndex layers') = unlines $
     ⧺ map (\m → "#define " ⊕ showMask m ⊕ " (" ⊕ intercalate "|" (map (\m' → "MOD_BIT(" ⊕ showKeycode m' ⊕ ")") (modifierToRealModifiers m)) ⊕ ")") realModsInShiftstates
     ⧺ bool [""] [] (null realModsInShiftstates)
     ⧺ bool (
-    [ "enum virtual_mod_mask {"
+    [ "enum vmod_mask {"
     ] ⧺ zipWith (\i m → replicate 4 ' ' ⊕ showMask m ⊕ " = " ⊕ show (2^i ∷ Int) ⊕ ",") [0 ∷ Int ..] virtualModsInShiftstates ⧺
     [ "};"
     , ""
     ]) [] (null virtualModsInShiftstates) ⧺
-    [ "uint" ⊕ show indexSize ⊕ "_t virtual_mods = 0;"
+    [ "uint" ⊕ show indexSize ⊕ "_t vmods = 0;"
     , ""
     , "const uint" ⊕ show layerSize ⊕ "_t layer_states[] = {"
     ] ⧺ map (\(i, state) → replicate 4 ' ' ⊕ "0x" ⊕ showHex (layerStateAfterGrouping i) "," ⊕ " // " ⊕ toString state) (getLayers getMaxIndex layers') ⧺
@@ -172,14 +172,14 @@ printTmkKeymap (TmkKeymap getMaxIndex layers') = unlines $
     , "            switch (opt) {"
     ] ⧺
     map (\m → "                case " ⊕ showMod m ⊕ ": pressed ? add_key(" ⊕ showKeycode m ⊕ ") : del_key(" ⊕ showKeycode m ⊕ "); break;") realModsInfluenced ⧺
-    map (\m → "                case " ⊕ showMod m ⊕ ": pressed ? (virtual_mods |= " ⊕ showMask m ⊕ ") : (virtual_mods &= ~" ⊕ showMask m ⊕ "); break;") virtualModsInfluenced ⧺
+    map (\m → "                case " ⊕ showMod m ⊕ ": pressed ? (vmods |= " ⊕ showMask m ⊕ ") : (vmods &= ~" ⊕ showMask m ⊕ "); break;") virtualModsInfluenced ⧺
     [ "            }"
     , ""
     , "            // Update the layer"
     , "            uint8_t mods = get_mods();"
     , "            uint" ⊕ show indexSize ⊕ "_t layer_index = 0;"
     ] ⧺ zipWith (\i m → "            layer_index |= mods & " ⊕ showMask m ⊕ " ? " ⊕ show (2^i ∷ Int) ⊕ " : 0;") [0 ∷ Int ..] realModsInShiftstates ⧺
-    [ "            layer_index |= virtual_mods << " ⊕ show (length realModsInShiftstates) ⊕ ";"
+    [ "            layer_index |= vmods << " ⊕ show (length realModsInShiftstates) ⊕ ";"
     , "            layer_clear();"
     , "            layer_or(layer_states[layer_index]);"
     , "            break;"
@@ -199,7 +199,7 @@ printTmkKeymap (TmkKeymap getMaxIndex layers') = unlines $
         let e = error (show' modifier ⊕ " is not a real modifier in TMK")
         in "KC_" ⊕ fromMaybe e (lookup modifier modifierAndKeycode)
     showMask modifier =
-        bool "VIRTUAL_" "" (isRealModifier modifier) ⊕
+        bool "V" "" (isRealModifier modifier) ⊕
         showMod (toBaseModifier modifier) ⊕ "_MASK"
     (realModsInShiftstates, virtualModsInShiftstates) = partition isRealModifier (toList modifiersInShiftstates)
     (realModsInfluenced, virtualModsInfluenced) = partition isRealModifier modifiersInfluencedList
