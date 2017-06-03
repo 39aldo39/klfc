@@ -25,7 +25,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Lens.Micro.Platform (view, over, makeLenses, _1, _2)
 
-import Layout.Key (Key(..), getLevel)
+import Layout.Key (Key(..), getLevel, filterKeyOnShiftstatesM)
 import Layout.Layout
 import Layout.Modifier (toBaseModifier, getEqualModifiers)
 import Layout.ModifierEffect (defaultModifierEffect)
@@ -39,7 +39,10 @@ prepareLayout =
     addSingletonKeysAsKeys >>>
     addDefaultKeys defaultKeys >>>
     addDefaultKeysWith getDefaultKeys' defaultFullKeys >>>
-    _keys (filterM (supportedPos ∘ view _pos))
+    _keys
+        ( filterM (supportedPos ∘ view _pos) >=>
+          traverse (filterKeyOnShiftstatesM supportedShiftstate)
+        )
   where
     getDefaultKeys' = flip $ \layout →
         filter (liftA2 (∧) (∉ posses layout) isSupportedPos ∘ view _pos)
@@ -50,6 +53,14 @@ supportedPos ∷ Logger m ⇒ Pos → m Bool
 supportedPos pos
   | pos S.∈ __usedPosses unimap = pure True
   | otherwise = False <$ tell [show' pos ⊕ " is not supported in TMK"]
+
+supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
+supportedShiftstate = fmap and ∘ traverse supportedModifier ∘ toList
+
+supportedModifier ∷ Logger m ⇒ Modifier → m Bool
+supportedModifier modifier
+    | defaultModifierEffect modifier ≡ Shift = pure True
+    | otherwise = False <$ tell [show' modifier ⊕ " is not supported for layer selection in TMK"]
 
 data TmkLetter
     = TmkAction String
