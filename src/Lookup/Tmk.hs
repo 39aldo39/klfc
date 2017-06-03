@@ -257,6 +257,20 @@ posAndTmkAction =
     , (P.Katakana, "KANA")
     ]
 
+posAndModifier ∷ [(Pos, Modifier)]
+posAndModifier =
+    [ (P.CapsLock, M.CapsLock)
+    , (P.Shift_L, M.Shift_L)
+    , (P.Shift_R, M.Shift_R)
+    , (P.Control_L, M.Control_L)
+    , (P.Win_L, M.Win_L)
+    , (P.Alt_L, M.Alt_L)
+    , (P.Alt_R, M.Alt_R)
+    , (P.Win_R, M.Win_R)
+    , (P.Control_R, M.Control_R)
+    , (P.NumLock, M.NumLock)
+    ]
+
 actionAndTmkAction ∷ [(Action, String)]
 actionAndTmkAction =
     [ (A.MouseUp, "MS_U")

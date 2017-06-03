@@ -6,8 +6,8 @@
 module Tmk where
 
 import BasePrelude
-import Prelude.Unicode hiding ((∈), (∉))
-import Data.Foldable.Unicode ((∈), (∉))
+import Prelude.Unicode hiding ((∈))
+import Data.Foldable.Unicode ((∈))
 import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((⊕))
 import qualified Data.Set.Unicode as S
@@ -16,7 +16,7 @@ import WithBar (WithBar(..))
 import WithPlus (WithPlus(..))
 
 import Control.Monad.State (State, runState, get, gets, modify)
-import Control.Monad.Writer (runWriter, tell)
+import Control.Monad.Writer (tell)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import Data.Map (Map)
@@ -32,22 +32,16 @@ import Layout.ModifierEffect (defaultModifierEffect)
 import Layout.Types
 import Lookup.Linux (actionAndRedirect)
 import Lookup.Tmk
-import PresetLayout (defaultKeys, defaultFullKeys, defaultFullLayout)
+import PresetLayout (defaultKeys, defaultFullLayout)
 
 prepareLayout ∷ Logger m ⇒ Layout → m Layout
 prepareLayout =
     addSingletonKeysAsKeys >>>
     addDefaultKeys defaultKeys >>>
-    addDefaultKeysWith getDefaultKeys' defaultFullKeys >>>
     _keys
         ( filterM (supportedPos ∘ view _pos) >=>
           traverse (filterKeyOnShiftstatesM supportedShiftstate)
         )
-  where
-    getDefaultKeys' = flip $ \layout →
-        filter (liftA2 (∧) (∉ posses layout) isSupportedPos ∘ view _pos)
-    isSupportedPos = fst ∘ runWriter ∘ supportedPos
-    posses = map (view _pos) ∘ view _keys
 
 supportedPos ∷ Logger m ⇒ Pos → m Bool
 supportedPos pos
@@ -101,8 +95,7 @@ makeLenses ''TmkLayer
 
 printTmkLayer ∷ Set Modifier → Int → (Map Pos TmkLetter, Shiftlevel) → Tmk [String]
 printTmkLayer modifiersInfluenced i (tmkLetters, shiftlevel) = do
-    letterMaps ← traverse (printTmkLetter modifiersInfluenced) tmkLetters
-    let actions = zipWith (zipWith (\size → printf ("%" ⊕ show size ⊕ "s") ∘ getAction letterMaps)) (__sizes unimap) (__posses unimap)
+    actions ← zipWithM (zipWithM printPos) (__sizes unimap) (__posses unimap)
     pure (
         [ "// " ⊕ toString shiftlevel
         , "[" ⊕ show i ⊕ "] = " ⊕ __name unimap ⊕ "("
@@ -110,7 +103,16 @@ printTmkLayer modifiersInfluenced i (tmkLetters, shiftlevel) = do
         [ "),"
         ])
   where
-    getAction lMaps pos = fromMaybe "NO" $ M.lookup pos lMaps <|> lookup pos posAndTmkAction
+    printPos size =
+        printTmkLetter modifiersInfluenced ∘ getTmkLetter >$>
+        printf ("%" ⊕ show size ⊕ "s")
+    getTmkLetter pos
+      | i ≡ 0 = fromMaybe (TmkAction "NO") $ asum
+          [ M.lookup pos tmkLetters
+          , TmkModifier <$> lookup pos posAndModifier
+          , TmkAction <$> lookup pos posAndTmkAction
+          ]
+      | otherwise = fromMaybe (TmkAction "TRNS") $ M.lookup pos tmkLetters
     addCommas [] = []
     addCommas [x] = [x]
     addCommas (x:xs) = x ⊕ "," : addCommas xs
