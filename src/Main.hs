@@ -274,15 +274,15 @@ main =
 
 options ∷ Parser Options
 options = Options
-    <$> (usageText "IMPORT TYPE" *> helpHeader "\n\b\bImport types:" *> optional parseInputType)
-    <*> (helpHeader "\n\b\bImport files:" *> some parseInput)
-    <*> (usageText "OUTPUTS" *> helpHeader "\n\b\bOutput files:" *> many parseOutput)
-    <*> (usageText "OPTIONS" *> helpHeader "\n\b\bExtra Options:" *> (many ∘ asum)
+    <$> (usageText "IMPORT TYPE" *> headerStr "\n\b\bImport types:" *> optional parseInputType)
+    <*> (headerStr "\n\b\bImport files:" *> some parseInput)
+    <*> (usageText "OUTPUTS" *> headerStr "\n\b\bOutput files:" *> many parseOutput)
+    <*> (usageText "OPTIONS" *> headerStr "\n\b\bExtra Options:" *> (many ∘ asum)
             [ parseExtraOption
-            , helpHeader "\b\bKLC:" *> parseKlcOption
-            , helpHeader "\b\bPKL:" *> parsePklOption
-            , helpHeader "\b\bXKB:" *> parseXkbOption
-            , helpHeader "\b\bKeylayout:" *> parseKeylayoutOption
+            , headerStr "\b\bKLC:" *> parseKlcOption
+            , headerStr "\b\bPKL:" *> parsePklOption
+            , headerStr "\b\bXKB:" *> parseXkbOption
+            , headerStr "\b\bKeylayout:" *> parseKeylayoutOption
             ]
         )
 
@@ -342,8 +342,8 @@ parseKeylayoutOption =
 usageText ∷ String → Parser ()
 usageText s = option disabled (value () ⊕ metavar s)
 
-helpHeader ∷ String → Parser ()
-helpHeader s = option disabled (value () ⊕ metavar s ⊕ hidden ⊕ helpDoc (pure (∅)))
+headerStr ∷ String → Parser ()
+headerStr s = option disabled (value () ⊕ metavar s ⊕ hidden ⊕ helpDoc (pure (∅)))
 
 streamOption ∷ Options.Applicative.Mod OptionFields Stream → Parser Stream
 streamOption = option (parseStream <$> str)
