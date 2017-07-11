@@ -146,15 +146,18 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let replaceLayout = replaceVar "layout" name
     let replaceDescription = replaceVar "description" description
     let replaceMods = replaceVar "mods" (intercalate " " mods)
-    sessionFile ← liftIO $ B.readFile "xkb/run-session.sh"  <|> pure defXkbSession
-    systemFile  ← liftIO $ B.readFile "xkb/install-system.sh" <|> pure defXkbSystem
-    xmlFile     ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
+    sessionFile  ← liftIO $ B.readFile "xkb/run-session.sh"  <|> pure defXkbSession
+    systemFile   ← liftIO $ B.readFile "xkb/install-system.sh" <|> pure defXkbSystem
+    xcomposeFile ← liftIO $ B.readFile "xkb/install-xcompose.sh" <|> pure defXkbXCompose
+    xmlFile      ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
     liftIO $ B.writeFile (dir </> "run-session.sh") (replaceLayout sessionFile)
     liftIO $ B.writeFile (dir </> "install-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) systemFile)
+    liftIO $ B.writeFile (dir </> "install-xcompose.sh") (replaceLayout xcomposeFile)
     liftIO $ createDirectoryIfMissing True (dir </> "scripts")
     liftIO $ B.writeFile (dir </> "scripts/add-layout-to-xml.py") ((replaceDescription ∘ replaceLayout) xmlFile)
     liftIO $ makeExecutable (dir </> "run-session.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
+    liftIO $ makeExecutable (dir </> "install-xcompose.sh")
     liftIO $ makeExecutable (dir </> "scripts/add-layout-to-xml.py")
 output (Output Pkl Standard) _ = const (fail "PKL as output must be written to a directory")
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
@@ -230,11 +233,13 @@ makeExecutable fname =
     getPermissions fname >>=
     setPermissions fname ∘ setOwnerExecutable True
 
-defPklFile, defXkbSession, defXkbSystem, defXkbXml, defKeylayoutUser, defKeylayoutSystem ∷ B.ByteString
-defPklFile    = $(embedFile "files/pkl/pkl.exe")
-defXkbSession = $(embedFile "files/xkb/run-session.sh")
-defXkbSystem  = $(embedFile "files/xkb/install-system.sh")
-defXkbXml     = $(embedFile "files/xkb/scripts/add-layout-to-xml.py")
+defPklFile, defXkbSession, defXkbSystem, defXkbXCompose, defXkbXml,
+    defKeylayoutUser, defKeylayoutSystem ∷ B.ByteString
+defPklFile     = $(embedFile "files/pkl/pkl.exe")
+defXkbSession  = $(embedFile "files/xkb/run-session.sh")
+defXkbSystem   = $(embedFile "files/xkb/install-system.sh")
+defXkbXCompose = $(embedFile "files/xkb/install-xcompose.sh")
+defXkbXml      = $(embedFile "files/xkb/scripts/add-layout-to-xml.py")
 defKeylayoutUser   = $(embedFile "files/keylayout/install-user.sh")
 defKeylayoutSystem = $(embedFile "files/keylayout/install-system.sh")
 
