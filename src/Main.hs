@@ -7,7 +7,7 @@
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', replace, replaceWith, escape, filterOnIndex, (>$>))
+import Util (show', replace, replaceWith, escape, filterOnIndex, versionStr, (>$>))
 
 import Control.Monad.Reader (runReaderT)
 import Control.Monad.Trans (MonadIO, liftIO)
@@ -264,10 +264,11 @@ main =
 #endif
     (execParser opts >>= execOptions) `catch` handler
   where
-    opts = info (helper <*> options)
+    opts = info (helper <*> versionOption <*> options)
       ( fullDesc
       ⊕ header "Keyboard Layout Files Creator - export a keyboard layout to different formats"
       )
+    versionOption = infoOption versionStr (long "version" ⊕ hidden ⊕ help "Show version")
     handler e
       | isUserError e = putStrLn ("klfc: " ⊕ ioeGetErrorString e)
       | otherwise = ioError e

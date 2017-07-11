@@ -25,7 +25,9 @@ import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.Text as T
+import Data.Version (showVersion)
 import Lens.Micro.Platform (Lens')
+import Paths_keyboard_layout_files_creator (version)
 
 class HumanReadable α where
     typeName ∷ Proxy α → String
@@ -207,6 +209,9 @@ sequenceTuple = uncurry (liftA2 (,))
 whenNothing ∷ Applicative f ⇒ f () → Maybe α → f (Maybe α)
 whenNothing s Nothing = Nothing <$ s
 whenNothing _ x       = pure x
+
+versionStr ∷ String
+versionStr = showVersion version
 
 privateChars ∷ [Char]
 privateChars = [chr   0xE000 .. chr   0xF8FF]
