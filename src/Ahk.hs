@@ -311,7 +311,7 @@ printLetter blind pos (Modifiers effect modifiers) = do
             map ("  " ⊕) (printSend blind "Down" shiftStrings) ⧺
             ["Locked" ⊕ pos ⊕ " := not Locked" ⊕ pos]
         ⧺ printSend blind "" (map (⊕"Lock") lockStrings) ⧺
-        map (printf "%s := not %s") extendStrings
+        map (\s → printf "%s := not %s" s s) extendStrings
 printLetter blind pos (Action a)
   | Just (RedirectLetter letter modifiers) ← lookup a actionAndPklAction
   , redirectPos:_ ← getPosByLetterAndShiftstate letter (WP.fromList modifiers) defaultFullLayout
