@@ -34,6 +34,7 @@ Usage
 ### Available options ###
 
     -h,--help                Show this help text
+    --version                Show version
 
 #### Import types ####
     --from-json              Read from a JSON file
