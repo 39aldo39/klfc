@@ -338,7 +338,7 @@ groupLayers layers = (flip layerStateAfterGrouping &&& layers') groupedLayers
     layerStateAfterGrouping initState =
         NE.tail ∘ NE.scanl (\(_, start) gr → (start, start + length gr)) (0, 0) >>>
         map (any (testBit initState) ∘ range ∘ over _2 pred) >>>
-        sum ∘ zipWith (bool 0 ∘ bit) [0..]
+        sum ∘ (\xs → zipWith (bool 0 ∘ bit) [0..length xs] xs)
     layers' = map (__tmkLetters ∘ NE.head &&& WithBar ∘ fmap __tmkShiftstate)
 
 addTransLetters ∷ [TmkLayer] → [TmkLayer]
