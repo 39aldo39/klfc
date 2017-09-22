@@ -8,11 +8,14 @@ import Data.Monoid.Unicode ((⊕))
 
 import Data.Maybe (fromMaybe)
 import Data.Char (isLetter)
+import Data.Void (Void)
 import Data.List (intercalate, groupBy)
 import Data.Function (on)
 import Text.Read (readMaybe)
 import Text.Megaparsec
-import Text.Megaparsec.Text.Lazy (Parser)
+import Text.Megaparsec.Char
+
+type Parser = Parsec Void String
 
 type MdList = [Either Category PartOfMdList]
 type Category = String

@@ -1,6 +1,6 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module PklParse
     ( parsePklLayout
@@ -17,9 +17,10 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriterT, writer, tell)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Text.Lazy as L (Text)
+import Data.Void (Void)
 import Lens.Micro.Platform (set, (<&>))
 import Text.Megaparsec hiding (Pos)
-import Text.Megaparsec.Prim (MonadParsec)
+import Text.Megaparsec.Char
 
 import Layout.Key (Key(Key))
 import Layout.Layout (Layout(Layout))
@@ -28,7 +29,9 @@ import Layout.Types
 import Lookup.Windows
 import WithBar (WithBar(..))
 
-layout ∷ (Logger m, MonadParsec Dec s m, Token s ~ Char) ⇒ m Layout
+type Parser = MonadParsec Void L.Text
+
+layout ∷ (Logger m, Parser m) ⇒ m Layout
 layout = do
     PklParseLayout info states keys specialKeys deads ← pklLayout
     ($ keys) $
@@ -58,11 +61,11 @@ instance Monoid PklParseLayout where
     PklParseLayout a1 a2 a3 a4 a5 `mappend` PklParseLayout b1 b2 b3 b4 b5 =
         PklParseLayout (a1 ⊕ b1) (a2 ⊕ b2) (a3 ⊕ b3) (a4 ⊕ b4) (a5 ⊕ b5)
 
-pklLayout ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m PklParseLayout
+pklLayout ∷ (Logger m, Parser m) ⇒ m PklParseLayout
 pklLayout = mconcat <$> many ((sectionName >>= section) <* many nonSectionLine)
   where
     sectionName = char '[' *> manyTill anyChar (char ']') <* endLine
-    section ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ String → m PklParseLayout
+    section ∷ (Logger m, Parser m) ⇒ String → m PklParseLayout
     section "informations" = (\l → (∅) { parseInformation = l }) <$> informationsSection
     section "global" = globalSection
     section "layout" = (\ks → (∅) { parseKeys = ks }) <$> layoutSection
@@ -74,7 +77,7 @@ pklLayout = mconcat <$> many ((sectionName >>= section) <* many nonSectionLine)
         where num = readMaybe (drop 7 xs) ∷ Maybe Int
     nonSectionLine = lookAhead (noneOf "[") *> many (noneOf "\r\n") *> eol
 
-informationsSection ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m Information
+informationsSection ∷ (Logger m, Parser m) ⇒ m Information
 informationsSection = mconcat <$> (many nameValue >>= traverse (uncurry field))
   where
     field ∷ Logger m ⇒ String → String → m Information
@@ -90,12 +93,12 @@ informationsSection = mconcat <$> (many nameValue >>= traverse (uncurry field))
     field "modified_after_generate" = pure ∘ const (∅)
     field name = const $ (∅) <$ tell ["unknown information ‘" ⊕ name ⊕ "’"]
 
-nameValue ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (String, String)
+nameValue ∷ Parser m ⇒ m (String, String)
 nameValue = liftA2 (,)
             (lookAhead (noneOf "[") *> some (noneOf "= \t"))
             (spacing *> char '=' *> spacing *> endLine)
 
-globalSection ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m PklParseLayout
+globalSection ∷ Parser m ⇒ m PklParseLayout
 globalSection = mconcat ∘ map (uncurry field) <$> many nameValue
   where
     field ∷ String → String → PklParseLayout
@@ -110,12 +113,12 @@ shiftstates xs =
     (s, [])   → [s]
     (s, _:ss) → s : shiftstates ss
 
-layoutSection ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m [Key]
+layoutSection ∷ (Logger m, Parser m) ⇒ m [Key]
 layoutSection = catMaybes <$> many (try key <|> Nothing <$ unknownLine)
   where
     unknownLine = lookAhead (noneOf "[") *> eol
 
-key ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe Key)
+key ∷ (Logger m, Parser m) ⇒ m (Maybe Key)
 key = runMaybeT $ do
     pos ← parseScancode =<< lift (oneOf "sS" *> oneOf "cC" *> some hexDigitChar)
     void ∘ lift $ spacing *> char '=' *> spacing
@@ -171,14 +174,14 @@ parseLetter s' = maybe (LNothing <$ tell ["unknown letter ‘" ⊕ s' ⊕ "’"]
     parseDead _ = Nothing
     parseAction = fmap Action ∘ asum ∘ map (`lookupR` actionAndPklAction) ∘ ap [Simple] ∘ pure
 
-deadkeySection ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m DeadKey
+deadkeySection ∷ Parser m ⇒ m DeadKey
 deadkeySection = do
     deadkeyMap ← many deadkeyValue
     let name = maybe "" snd (listToMaybe deadkeyMap)
     let c = listToMaybe name
     pure (DeadKey name c deadkeyMap)
 
-deadkeyValue ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (String, String)
+deadkeyValue ∷ Parser m ⇒ m (String, String)
 deadkeyValue = do
     from ← readMaybe <$> many digitChar
     void $ spacing >> char '=' >> spacing
@@ -187,7 +190,7 @@ deadkeyValue = do
     maybe (fail "could not parse deadkey") pure $
         (,) <$> fmap (pure ∘ chr) from <*> fmap (pure ∘ chr) to
 
-extendSection ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m PklParseLayout
+extendSection ∷ (Logger m, Parser m) ⇒ m PklParseLayout
 extendSection = many nameValue >>= traverse (uncurry field) <&> (\ks → (∅)
                     { parseShiftstates = [WP.singleton M.Extend]
                     , parseKeys = catMaybes ks
@@ -203,19 +206,19 @@ extendSection = many nameValue >>= traverse (uncurry field) <&> (\ks → (∅)
                 <*> pure Nothing
     field _ xs = Nothing <$ tell ["unknown letter ‘" ⊕ xs ⊕ "’"]
 
-spacing ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+spacing ∷ Parser m ⇒ m String
 spacing = many (oneOf " \t")
 
-endLine ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+endLine ∷ Parser m ⇒ m String
 endLine = manyTill anyChar (try eol) <* emptyOrCommentLines
 
-comment ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+comment ∷ Parser m ⇒ m String
 comment = spacing *> char ';' *> manyTill anyChar (try eol)
 
-emptyLine ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+emptyLine ∷ Parser m ⇒ m String
 emptyLine = spacing <* eol
 
-emptyOrCommentLines ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [String]
+emptyOrCommentLines ∷ Parser m ⇒ m [String]
 emptyOrCommentLines = many (try emptyLine <|> comment)
 
 parsePklLayout ∷ Logger m ⇒ String → L.Text → Either String (m Layout)

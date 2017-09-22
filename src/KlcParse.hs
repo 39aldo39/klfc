@@ -1,8 +1,8 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module KlcParse
     ( parseKlcLayout
@@ -17,16 +17,19 @@ import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriterT, writer, tell)
 import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.Void (Void)
 import qualified Data.Text.Lazy as L (Text)
 import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1)
 import Text.Megaparsec hiding (Pos)
-import Text.Megaparsec.Prim (MonadParsec)
+import Text.Megaparsec.Char
 
 import Layout.Key (Key(..))
 import Layout.Layout (Layout(..))
 import Layout.Types
 import Lookup.Windows
 import WithBar (WithBar(..))
+
+type Parser = MonadParsec Void L.Text
 
 data KlcParseLayout = KlcParseLayout
     { __parseInformation ∷ Information
@@ -41,7 +44,7 @@ instance Monoid KlcParseLayout where
     KlcParseLayout a1 a2 a3 a4 a5 `mappend` KlcParseLayout b1 b2 b3 b4 b5 =
         KlcParseLayout (a1 ⊕ b1) (a2 ⊕ b2) (a3 ⊕ b3) (a4 ⊕ b4) (a5 ⊕ b5)
 
-layout ∷ (Logger m, MonadParsec Dec s m, Token s ~ Char) ⇒ m Layout
+layout ∷ (Logger m, Parser m) ⇒ m Layout
 layout = do
     KlcParseLayout info states keys ligs deads ← klcLayout
     ($ keys) $
@@ -71,7 +74,7 @@ setLigatures' xs key = foldr setLigature key ligs
     ligs = filter ((≡) (view _pos key) ∘ view _1) xs
     setLigature (_, i, s) = set (_letters ∘ ix i) (Ligature Nothing s)
 
-klcLayout ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m KlcParseLayout
+klcLayout ∷ (Logger m, Parser m) ⇒ m KlcParseLayout
 klcLayout = many >$> mconcat $
         set' _parseInformation <$> try kbdField
     <|> set' _parseShiftstates <$> try shiftstates
@@ -92,27 +95,27 @@ klcLayout = many >$> mconcat $
     field "VERSION" = pure ∘ set' _version ∘ Just
     field f = const $ (∅) <$ tell ["unknown field ‘" ⊕ f ⊕ "’"]
 
-kbdField ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m Information
+kbdField ∷ Parser m ⇒ m Information
 kbdField = do
     ["KBD", l1, l2] ← readLine
     pure ∘ set _name l1 ∘ set _fullName l2 $ (∅)
 
-shiftstates ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [Shiftstate]
+shiftstates ∷ Parser m ⇒ m [Shiftstate]
 shiftstates = do
     ["SHIFTSTATE"] ← readLine
     map shiftstateFromWinShiftstate <$> many (try shiftstate)
 
-shiftstate ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m Int
+shiftstate ∷ Parser m ⇒ m Int
 shiftstate = do
     [i] ← readLine
     maybe (fail $ "‘" ⊕ show i ⊕ "’ is not an integer") pure (readMaybe i)
 
-klcKeys ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m [Key]
+klcKeys ∷ (Logger m, Parser m) ⇒ m [Key]
 klcKeys = do
     try $ spacing *> string "LAYOUT" *> endLine *> pure ()
     catMaybes <$> many (isHex *> klcKey)
 
-klcKey ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe Key)
+klcKey ∷ (Logger m, Parser m) ⇒ m (Maybe Key)
 klcKey = runMaybeT $ do
     sc:vk:caps:letters ← lift readLine
     Key
@@ -149,12 +152,12 @@ parseLetter xs
           Just c → pure (Char c)
           Nothing → LNothing <$ tell ["unknown letter ‘" ⊕ xs ⊕ "’"]
 
-ligatures ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m [(Pos, Int, String)]
+ligatures ∷ (Logger m, Parser m) ⇒ m [(Pos, Int, String)]
 ligatures = do
     ["LIGATURE"] ← readLine
     catMaybes <$> many (try ligature)
 
-ligature ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m (Maybe (Pos, Int, String))
+ligature ∷ (Logger m, Parser m) ⇒ m (Maybe (Pos, Int, String))
 ligature = runMaybeT $ do
     sc:i:chars ← lift readLine
     guard (not (null chars))
@@ -166,7 +169,7 @@ ligature = runMaybeT $ do
     letterToChar (Char c) = Just c
     letterToChar _ = Nothing
 
-deadKey ∷ (Logger m, MonadParsec e s m, Token s ~ Char) ⇒ m [(Char, StringMap)]
+deadKey ∷ (Logger m, Parser m) ⇒ m [(Char, StringMap)]
 deadKey = do
     ["DEADKEY", s] ← readLine
     let i = maybeToList (readMaybe ('0':'x':s))
@@ -174,52 +177,52 @@ deadKey = do
     m ← many (isHex *> deadPair)
     pure (zip c [m])
 
-deadPair ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (String, String)
+deadPair ∷ Parser m ⇒ m (String, String)
 deadPair = do
     [x, y] ← map (\s → maybe '\0' chr (readMaybe ('0':'x':s))) <$> readLine
     pure ([x], [y])
 
-keyName ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [(String, String)]
+keyName ∷ Parser m ⇒ m [(String, String)]
 keyName = do
     ['K':'E':'Y':'N':'A':'M':'E':_] ← readLine
     many (try nameValue)
 
-endKbd ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m ()
+endKbd ∷ Parser m ⇒ m ()
 endKbd = do
     ["ENDKBD"] ← readLine
     pure ()
 
-nameValue ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m (String, String)
+nameValue ∷ Parser m ⇒ m (String, String)
 nameValue = do
     [name, value] ← readLine
     pure (name, value)
 
-readLine ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [String]
+readLine ∷ Parser m ⇒ m [String]
 readLine = takeWhile (not ∘ isComment) <$> some (klcValue <* spacing) <* emptyOrCommentLines
   where
     isComment (';':_) = True
     isComment ('/':'/':_) = True
     isComment _ = False
 
-klcValue ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
-klcValue = try (char '"' *> manyTill anyChar (char '"')) <|> try (some (noneOf " \t\r\n")) <?> "klc value"
+klcValue ∷ Parser m ⇒ m String
+klcValue = try (char '"' *> manyTill anyChar (char '"')) <|> try (some (noneOf [' ','\t','\r','\n'])) <?> "klc value"
 
-isHex ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m Char
+isHex ∷ Parser m ⇒ m Char
 isHex = (lookAhead ∘ try) (spacing *> satisfy ((∧) <$> isHexDigit <*> not ∘ isUpper))
 
-spacing ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
-spacing = many (oneOf " \t")
+spacing ∷ Parser m ⇒ m String
+spacing = many (oneOf [' ','\t'])
 
-comment ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+comment ∷ Parser m ⇒ m String
 comment = spacing *> (string ";" <|> string "//") *> manyTill anyChar (try eol)
 
-endLine ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+endLine ∷ Parser m ⇒ m String
 endLine = manyTill anyChar (try eol) <* emptyOrCommentLines
 
-emptyLine ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m String
+emptyLine ∷ Parser m ⇒ m String
 emptyLine = spacing <* eol
 
-emptyOrCommentLines ∷ (MonadParsec e s m, Token s ~ Char) ⇒ m [String]
+emptyOrCommentLines ∷ Parser m ⇒ m [String]
 emptyOrCommentLines = many (try emptyLine <|> try comment)
 
 parseKlcLayout ∷ Logger m ⇒ String → L.Text → Either String (m Layout)
