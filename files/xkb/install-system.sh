@@ -159,24 +159,28 @@ add_description () {
   mv "$file.tmp" "$file"
 }
 
-copy_file "$xkb_dir_from/symbols/$layout" "$xkb_dir_to/symbols/$layout"
-copy_file "$xkb_dir_from/types/$layout" "$xkb_dir_to/types/$layout"
-copy_file "$xkb_dir_from/keycodes/$layout" "$xkb_dir_to/keycodes/$layout"
+if [ "$(id -u)" -ne 0 ] && command -v sudo > /dev/null 2>&1; then
+  sudo klfc_child=true "$0" "$@"
+else
+  copy_file "$xkb_dir_from/symbols/$layout" "$xkb_dir_to/symbols/$layout"
+  copy_file "$xkb_dir_from/types/$layout" "$xkb_dir_to/types/$layout"
+  copy_file "$xkb_dir_from/keycodes/$layout" "$xkb_dir_to/keycodes/$layout"
 
-add_type "$xkb_dir_to/rules/base" "$layout"
-add_type "$xkb_dir_to/rules/evdev" "$layout"
+  add_type "$xkb_dir_to/rules/base" "$layout"
+  add_type "$xkb_dir_to/rules/evdev" "$layout"
 
-add_models "$xkb_dir_to/rules/base" "$mods" "$layout"
-add_models "$xkb_dir_to/rules/evdev" "$mods" "$layout"
+  add_models "$xkb_dir_to/rules/base" "$mods" "$layout"
+  add_models "$xkb_dir_to/rules/evdev" "$mods" "$layout"
 
-add_description "$xkb_dir_to/rules/base.lst" "$layout" "$description"
-add_description "$xkb_dir_to/rules/evdev.lst" "$layout" "$description"
+  add_description "$xkb_dir_to/rules/base.lst" "$layout" "$description"
+  add_description "$xkb_dir_to/rules/evdev.lst" "$layout" "$description"
 
-"$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/base.xml" "$layout" "$description"
-"$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout" "$description"
+  "$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/base.xml" "$layout" "$description"
+  "$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout" "$description"
+fi
 
 if [ "$(id -u)" -eq 0 ]; then
-  if [ "$(cat "$xkb_dir_from/XCompose" | wc -l)" -gt 2 ]; then
+  if [ "${klfc_child-false}" = false ] && [ "$(cat "$xkb_dir_from/XCompose" | wc -l)" -gt 2 ]; then
     echo "Run install-xcompose.sh as user to install the XCompose file."
     echo "This is needed to make ligatures and custom dead keys work correctly."
   fi

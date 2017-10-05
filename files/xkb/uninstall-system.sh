@@ -88,24 +88,28 @@ remove_description () {
   remove_line "$file" "$line"
 }
 
-remove_file "$xkb_dir_to/symbols/$layout"
-remove_file "$xkb_dir_to/types/$layout"
-remove_file "$xkb_dir_to/keycodes/$layout"
+if [ "$(id -u)" -ne 0 ] && command -v sudo > /dev/null 2>&1; then
+  sudo klfc_child=true "$0" "$@"
+else
+  remove_file "$xkb_dir_to/symbols/$layout"
+  remove_file "$xkb_dir_to/types/$layout"
+  remove_file "$xkb_dir_to/keycodes/$layout"
 
-remove_type "$xkb_dir_to/rules/base" "$layout"
-remove_type "$xkb_dir_to/rules/evdev" "$layout"
+  remove_type "$xkb_dir_to/rules/base" "$layout"
+  remove_type "$xkb_dir_to/rules/evdev" "$layout"
 
-remove_models "$xkb_dir_to/rules/base" "$mods" "$layout"
-remove_models "$xkb_dir_to/rules/evdev" "$mods" "$layout"
+  remove_models "$xkb_dir_to/rules/base" "$mods" "$layout"
+  remove_models "$xkb_dir_to/rules/evdev" "$mods" "$layout"
 
-remove_description "$xkb_dir_to/rules/base.lst" "$layout" "$description"
-remove_description "$xkb_dir_to/rules/evdev.lst" "$layout" "$description"
+  remove_description "$xkb_dir_to/rules/base.lst" "$layout" "$description"
+  remove_description "$xkb_dir_to/rules/evdev.lst" "$layout" "$description"
 
-"$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/base.xml" "$layout"
-"$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout"
+  "$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/base.xml" "$layout"
+  "$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout"
+fi
 
 if [ "$(id -u)" -eq 0 ]; then
-  if [ "$(cat "$xkb_dir_from/XCompose" | wc -l)" -gt 2 ]; then
+  if [ "${klfc_child-false}" = false ] && [ "$(cat "$xkb_dir_from/XCompose" | wc -l)" -gt 2 ]; then
     echo "Run uninstall-xcompose.sh as user to uninstall the XCompose file."
   fi
 else
