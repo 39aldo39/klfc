@@ -12,4 +12,4 @@ if [ -f "$xcompose_file" ]; then
   mv "$xcompose_file.tmp" "$xcompose_file"
 fi
 
-rm "$HOME/.XCompose-klfc-$layout"
+[ -f "$HOME/.XCompose-klfc-$layout" ] && rm "$HOME/.XCompose-klfc-$layout"

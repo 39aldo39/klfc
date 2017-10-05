@@ -153,6 +153,7 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     uxcomposeFile ← liftIO $ B.readFile "xkb/uninstall-xcompose.sh" <|> pure defXkbUXCompose
     xmlFile       ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
     removeXmlFile ← liftIO $ B.readFile "xkb/scripts/remove-layout-from-xml.py" <|> pure defXkbRemoveXml
+    functionsFile ← liftIO $ B.readFile "xkb/scripts/functions.sh" <|> pure defXkbFunctions
     liftIO $ B.writeFile (dir </> "run-session.sh") (replaceLayout sessionFile)
     liftIO $ B.writeFile (dir </> "install-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) systemFile)
     liftIO $ B.writeFile (dir </> "uninstall-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) usystemFile)
@@ -161,6 +162,7 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     liftIO $ createDirectoryIfMissing True (dir </> "scripts")
     liftIO $ B.writeFile (dir </> "scripts/add-layout-to-xml.py") xmlFile
     liftIO $ B.writeFile (dir </> "scripts/remove-layout-from-xml.py") removeXmlFile
+    liftIO $ B.writeFile (dir </> "scripts/functions.sh") functionsFile
     liftIO $ makeExecutable (dir </> "run-session.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
     liftIO $ makeExecutable (dir </> "uninstall-system.sh")
@@ -168,6 +170,7 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     liftIO $ makeExecutable (dir </> "uninstall-xcompose.sh")
     liftIO $ makeExecutable (dir </> "scripts/add-layout-to-xml.py")
     liftIO $ makeExecutable (dir </> "scripts/remove-layout-from-xml.py")
+    liftIO $ makeExecutable (dir </> "scripts/functions.sh")
 output (Output Pkl Standard) _ = const (fail "PKL as output must be written to a directory")
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let name = view (_info ∘ _name) layout
@@ -243,7 +246,7 @@ makeExecutable fname =
     setPermissions fname ∘ setOwnerExecutable True
 
 defPklFile,
-    defXkbSession, defXkbSystem, defXkbUSystem, defXkbXCompose, defXkbUXCompose, defXkbXml, defXkbRemoveXml
+    defXkbSession, defXkbSystem, defXkbUSystem, defXkbXCompose, defXkbUXCompose, defXkbXml, defXkbRemoveXml, defXkbFunctions,
     defKeylayoutUser, defKeylayoutSystem ∷ B.ByteString
 defPklFile = $(embedFile "files/pkl/pkl.exe")
 defXkbSession   = $(embedFile "files/xkb/run-session.sh")
@@ -253,6 +256,7 @@ defXkbXCompose  = $(embedFile "files/xkb/install-xcompose.sh")
 defXkbUXCompose = $(embedFile "files/xkb/uninstall-xcompose.sh")
 defXkbXml       = $(embedFile "files/xkb/scripts/add-layout-to-xml.py")
 defXkbRemoveXml = $(embedFile "files/xkb/scripts/remove-layout-from-xml.py")
+defXkbFunctions = $(embedFile "files/xkb/scripts/functions.sh")
 defKeylayoutUser   = $(embedFile "files/keylayout/install-user.sh")
 defKeylayoutSystem = $(embedFile "files/keylayout/install-system.sh")
 
