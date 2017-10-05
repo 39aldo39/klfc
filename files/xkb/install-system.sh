@@ -54,9 +54,9 @@ fi
 
 if [ "$(id -u)" -eq 0 ]; then
   if [ "${klfc_child-false}" = false ] && [ -f "$xkb_dir_from/XCompose" ]; then
-    echo "Run install-xcompose.sh as user to install the XCompose file."
+    echo "Run scripts/install-xcompose.sh as user to install the XCompose file."
     echo "This is needed to make ligatures and custom dead keys work correctly."
   fi
 else
-  "$xkb_dir_from/install-xcompose.sh" "$layout"
+  "$xkb_dir_from/scripts/install-xcompose.sh" "$layout"
 fi

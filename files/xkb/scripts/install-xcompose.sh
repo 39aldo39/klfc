@@ -7,7 +7,7 @@ layout=${1:-$layout}
 xcompose_file=${XCOMPOSEFILE:-$HOME/.XCompose}
 include_klfc="include \"%H/.XCompose-klfc-$layout\""
 
-if ! [ -f "$dir/XCompose" ]; then
+if ! [ -f "$dir/../XCompose" ]; then
   "$dir/uninstall-xcompose.sh" "$layout"
   exit
 fi
@@ -20,4 +20,4 @@ if ! grep -qFx "$include_klfc" "$xcompose_file"; then
   echo "$include_klfc" >> "$xcompose_file"
 fi
 
-cp "$dir/XCompose" "$HOME/.XCompose-klfc-$layout"
+cp "$dir/../XCompose" "$HOME/.XCompose-klfc-$layout"

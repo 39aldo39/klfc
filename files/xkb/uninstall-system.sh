@@ -49,8 +49,8 @@ fi
 
 if [ "$(id -u)" -eq 0 ]; then
   if [ "${klfc_child-false}" = false ] && [ -f "$xkb_dir_from/XCompose" ]; then
-    echo "Run uninstall-xcompose.sh as user to uninstall the XCompose file."
+    echo "Run scripts/uninstall-xcompose.sh as user to uninstall the XCompose file."
   fi
 else
-  "$xkb_dir_from/uninstall-xcompose.sh" "$layout"
+  "$xkb_dir_from/scripts/uninstall-xcompose.sh" "$layout"
 fi

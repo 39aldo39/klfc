@@ -149,25 +149,25 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     sessionFile   ← liftIO $ B.readFile "xkb/run-session.sh" <|> pure defXkbSession
     systemFile    ← liftIO $ B.readFile "xkb/install-system.sh" <|> pure defXkbSystem
     usystemFile   ← liftIO $ B.readFile "xkb/uninstall-system.sh" <|> pure defXkbUSystem
-    xcomposeFile  ← liftIO $ B.readFile "xkb/install-xcompose.sh" <|> pure defXkbXCompose
-    uxcomposeFile ← liftIO $ B.readFile "xkb/uninstall-xcompose.sh" <|> pure defXkbUXCompose
+    xcomposeFile  ← liftIO $ B.readFile "xkb/scripts/install-xcompose.sh" <|> pure defXkbXCompose
+    uxcomposeFile ← liftIO $ B.readFile "xkb/scripts/uninstall-xcompose.sh" <|> pure defXkbUXCompose
     xmlFile       ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
     removeXmlFile ← liftIO $ B.readFile "xkb/scripts/remove-layout-from-xml.py" <|> pure defXkbRemoveXml
     functionsFile ← liftIO $ B.readFile "xkb/scripts/functions.sh" <|> pure defXkbFunctions
     liftIO $ B.writeFile (dir </> "run-session.sh") (replaceLayout sessionFile)
     liftIO $ B.writeFile (dir </> "install-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) systemFile)
     liftIO $ B.writeFile (dir </> "uninstall-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) usystemFile)
-    liftIO $ B.writeFile (dir </> "install-xcompose.sh") (replaceLayout xcomposeFile)
-    liftIO $ B.writeFile (dir </> "uninstall-xcompose.sh") (replaceLayout uxcomposeFile)
     liftIO $ createDirectoryIfMissing True (dir </> "scripts")
+    liftIO $ B.writeFile (dir </> "scripts/install-xcompose.sh") (replaceLayout xcomposeFile)
+    liftIO $ B.writeFile (dir </> "scripts/uninstall-xcompose.sh") (replaceLayout uxcomposeFile)
     liftIO $ B.writeFile (dir </> "scripts/add-layout-to-xml.py") xmlFile
     liftIO $ B.writeFile (dir </> "scripts/remove-layout-from-xml.py") removeXmlFile
     liftIO $ B.writeFile (dir </> "scripts/functions.sh") functionsFile
     liftIO $ makeExecutable (dir </> "run-session.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
     liftIO $ makeExecutable (dir </> "uninstall-system.sh")
-    liftIO $ makeExecutable (dir </> "install-xcompose.sh")
-    liftIO $ makeExecutable (dir </> "uninstall-xcompose.sh")
+    liftIO $ makeExecutable (dir </> "scripts/install-xcompose.sh")
+    liftIO $ makeExecutable (dir </> "scripts/uninstall-xcompose.sh")
     liftIO $ makeExecutable (dir </> "scripts/add-layout-to-xml.py")
     liftIO $ makeExecutable (dir </> "scripts/remove-layout-from-xml.py")
     liftIO $ makeExecutable (dir </> "scripts/functions.sh")
@@ -252,8 +252,8 @@ defPklFile = $(embedFile "files/pkl/pkl.exe")
 defXkbSession   = $(embedFile "files/xkb/run-session.sh")
 defXkbSystem    = $(embedFile "files/xkb/install-system.sh")
 defXkbUSystem   = $(embedFile "files/xkb/uninstall-system.sh")
-defXkbXCompose  = $(embedFile "files/xkb/install-xcompose.sh")
-defXkbUXCompose = $(embedFile "files/xkb/uninstall-xcompose.sh")
+defXkbXCompose  = $(embedFile "files/xkb/scripts/install-xcompose.sh")
+defXkbUXCompose = $(embedFile "files/xkb/scripts/uninstall-xcompose.sh")
 defXkbXml       = $(embedFile "files/xkb/scripts/add-layout-to-xml.py")
 defXkbRemoveXml = $(embedFile "files/xkb/scripts/remove-layout-from-xml.py")
 defXkbFunctions = $(embedFile "files/xkb/scripts/functions.sh")

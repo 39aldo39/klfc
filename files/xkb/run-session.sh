@@ -45,4 +45,4 @@ setxkbmap \
     -I"$xkb_dir" \
     - "$DISPLAY"
 
-"$xkb_dir/install-xcompose.sh" "$layout"
+"$xkb_dir/scripts/install-xcompose.sh" "$layout"
