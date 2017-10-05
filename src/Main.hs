@@ -43,7 +43,7 @@ import Layout.Mod (isEmptyMod, applyInverseMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
 import PklParse (parsePklLayout)
-import Stream (Stream(..), toFname, readStream, writeStream, writeFileStream)
+import Stream (Stream(..), toFname, readStream, writeStream, writeFileStream, writeFileStream')
 import Tmk (toTmkKeymap, printTmkKeymap)
 import Xkb (XkbConfig(..), printSymbols, printTypes, printKeycodes, printXCompose, getFileAndVariant, parseXkbLayoutVariant)
 
@@ -140,9 +140,9 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     when (null name) (fail "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
     writeFileStream (dir </> "symbols" </> name) =<< runReaderT (printSymbols layout) xkbConfig
-    writeFileStream (dir </> "types" </> name) =<< runReaderT (printTypes layout) xkbConfig
-    writeFileStream (dir </> "keycodes" </> name) =<< printKeycodes layout
-    writeFileStream (dir </> "XCompose") (printXCompose layout)
+    writeFileStream' (dir </> "types" </> name) =<< runReaderT (printTypes layout) xkbConfig
+    writeFileStream' (dir </> "keycodes" </> name) =<< printKeycodes layout
+    writeFileStream' (dir </> "XCompose") (printXCompose layout)
     let replaceLayout = replaceVar "layout" name
     let replaceDescription = replaceVar "description" description
     let replaceMods = replaceVar "mods" (intercalate " " mods)
