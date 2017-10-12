@@ -14,7 +14,7 @@ import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
 import Data.List.Unicode ((∖))
-import Util (show', (>$>), groupSortWith, tellMaybeT, versionStr)
+import Util (show', (>$>), groupSortWith, tellMaybeT, versionStr, concatMapM)
 import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Trans.Maybe (MaybeT(..))
@@ -27,13 +27,12 @@ import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, set, over, _1, _2)
 import Text.XML.Light
 
-import Layout.DeadKey (getModifiedChars)
-import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey)
+import Layout.DeadKey (getModifiedLetters)
+import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey, presetDeadKeyToDeadKey)
 import Layout.Layout
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.MacOS
-import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultKeys, defaultFullLayout, defaultMacKeys)
 
 data KeylayoutConfig = KeylayoutConfig
@@ -103,15 +102,18 @@ toKeylayout' layout =
         [ pure $ unode "layouts" layoutElement
         , pure $ toModifierMap shiftlevels
         , keyMapSetElementOutputToActions modifiedStrings <$> toKeyMapSet keys
-        , pure $ unode "actions" (map deadKeyToAction deadKeys ⧺ deadKeysToActions deadKeys)
+        , unode "actions" ∘ (map deadKeyToAction deadKeys ⧺) <$> deadKeysToActions deadKeys
         , pure $ unode "terminators" (mapMaybe deadKeyToTerminator deadKeys)
         ]
   where
     (keys, shiftlevels) = unifyShiftlevels (view _keys layout)
-    modifiedStrings = S.unions (map (S.map (:[]) ∘ getModifiedChars) deadKeys)
+    modifiedStrings = S.unions (map (S.map letterToString ∘ getModifiedLetters) deadKeys)
+    letterToString (Char c) = [c]
+    letterToString (Ligature _ s) = s
+    letterToString _ = ""
     deadKeys = nub (concatMap (mapMaybe letterToDeadKey ∘ view _letters) keys)
     deadKeysToActions =
-        concatMap chainedDeadKeyToActions >>>
+        concatMapM chainedDeadKeyToActions >$>
         groupSortWith fst >>>
         over (traverse ∘ _2 ∘ traverse) snd >>>
         map (\(s, elms) → (s, emptyAction s : elms)) >>>
@@ -199,16 +201,19 @@ deadKeyToAction (DeadKey name _ _) =
     unode "action" ([attr "id" name'], unode "when" [attr "state" "none", attr "next" name'])
   where name' = "dead:" ⊕ name
 
-chainedDeadKeyToActions ∷ DeadKey → [(String, Element)]
+chainedDeadKeyToActions ∷ Logger m ⇒ DeadKey → m [(String, Element)]
 chainedDeadKeyToActions (DeadKey name _ actionMap) =
-    concatMap (actionToActions name) actionMap
+    concatMapM (actionToActions name) actionMap
 
-actionToActions ∷ String → (Char, ActionResult) → [(String, Element)]
-actionToActions name (c, OutString s) =
+actionToActions ∷ Logger m ⇒ String → (Letter, ActionResult) → m [(String, Element)]
+actionToActions name (Char c, OutString s) = pure
     [([c], unode "when" [attr "state" ("dead:" ⊕ name), attr "output" s])]
-actionToActions name (c, Next (DeadKey cName _ actionMap)) =
-    ([c], unode "when" [attr "state" ("dead:" ⊕ name), attr "next" ("dead:" ⊕ cName)]) :
-    concatMap (actionToActions cName) actionMap
+actionToActions name (Char c, Next (DeadKey cName _ actionMap)) = do
+    next ← concatMapM (actionToActions cName) actionMap
+    pure $
+      ([c], unode "when" [attr "state" ("dead:" ⊕ name), attr "next" ("dead:" ⊕ cName)]) :
+      next
+actionToActions _ (l, _) = [] <$ tell [show' l ⊕ " as letter for a dead key is not supported in keylayout"]
 
 deadKeyToTerminator ∷ DeadKey → Maybe Element
 deadKeyToTerminator (DeadKey name (Just baseChar) _) = pure $

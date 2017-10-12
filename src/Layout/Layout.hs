@@ -66,7 +66,6 @@ import Lens.Micro.Platform (Lens', view, set, over, makeLenses, _2)
 import FileType (FileType)
 import Filter (runFilter)
 import JsonPretty (keyOrder', delimsFromList)
-import Layout.DeadKey (DeadKey)
 import Layout.Key
 import Layout.Mod (Mod(..), isEmptyMod, applyMod)
 import Layout.Modifier (Shiftstate, Shiftlevel, parseJSONShiftlevels)
@@ -338,7 +337,7 @@ layoutDelims = delimsFromList
     , ("shiftlevels", [" ", " "])
     , ("shiftstates", [" ", " "])
     , ("keys", ["\n", " ", " "])
-    , ("customDeadKeys", ["\n", "\n", "\n", " "])
+    , ("customDeadKeys", ["\n", "\n", "\n", " ", " ", " "])
     , ("mods", ["\n", "\n", "\n", " "])
     ]
 

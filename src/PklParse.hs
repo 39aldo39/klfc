@@ -184,14 +184,14 @@ deadkeySection = do
     resultToString (OutString s) = Just s
     resultToString _ = Nothing
 
-deadkeyValue ∷ Parser m ⇒ m (Char, ActionResult)
+deadkeyValue ∷ Parser m ⇒ m (Letter, ActionResult)
 deadkeyValue = do
     from ← readMaybe <$> many digitChar
     void $ spacing >> char '=' >> spacing
     to ← readMaybe <$> many digitChar
     void endLine
     maybe (fail "could not parse deadkey") pure $
-        (,) <$> (chr <$> from) <*> ((OutString ∘ (:[]) ∘ chr) <$> to)
+        (,) <$> (Char ∘ chr <$> from) <*> ((OutString ∘ (:[]) ∘ chr) <$> to)
 
 extendSection ∷ (Logger m, Parser m) ⇒ m PklParseLayout
 extendSection = many nameValue >>= traverse (uncurry field) <&> (\ks → (∅)

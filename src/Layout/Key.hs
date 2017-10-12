@@ -5,13 +5,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Layout.Key
-    ( Letter(..)
+    ( ActionResult
+    , ActionMap
+    , DeadKey
+    , Letter(..)
     , Key(..)
     , _pos
     , _shortcutPos
     , _shiftlevels
     , _letters
     , _capslock
+    , presetDeadKeyToDeadKey
     , letterToChar
     , letterToLigatureString
     , letterToDeadKey
@@ -58,11 +62,15 @@ import qualified Layout.Modifier as M
 import Layout.ModifierEffect (ModifierEffect(..), defaultModifierEffect)
 import Layout.Pos (Pos)
 import Layout.Action (Action)
-import Layout.DeadKey (DeadKey(DeadKey), __dkName)
-import PresetDeadKey (PresetDeadKey, presetDeadKeyToDeadKey)
+import Layout.DeadKey (DeadKey'(..), ActionResult'(..), ActionMap')
+import PresetDeadKey (PresetDeadKey, presetDeadKeyToDeadKey')
 import WithBar (WithBar(..))
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP
+
+type ActionResult = ActionResult' Letter
+type ActionMap = ActionMap' Letter
+type DeadKey = DeadKey' Letter
 
 data Letter
     = Char Char
@@ -73,7 +81,14 @@ data Letter
     | CustomDead (Maybe Int) DeadKey
     | Redirect [Modifier] Pos
     | LNothing
-    deriving (Eq, Show, Read)
+    deriving (Eq, Ord, Show, Read)
+
+presetDeadKeyToDeadKey ∷ PresetDeadKey → DeadKey
+presetDeadKeyToDeadKey = modifyDeadKey ∘ presetDeadKeyToDeadKey'
+  where
+    modifyDeadKey (DeadKey name baseChar actionMap) = DeadKey name baseChar (map modifyAction actionMap)
+    modifyAction (c, OutString s) = (Char c, OutString s)
+    modifyAction (c, Next dk) = (Char c, Next (modifyDeadKey dk))
 
 letterToDeadKey ∷ Letter → Maybe DeadKey
 letterToDeadKey (CustomDead _ dead) = Just dead

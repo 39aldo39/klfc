@@ -2,9 +2,11 @@
 
 module Layout.Types
     ( Action
-    , DeadKey(..)
+    , DeadKey'(..)
+    , ActionResult'(..)
+    , ActionResult
     , ActionMap
-    , ActionResult(..)
+    , DeadKey
     , Letter(..)
     , Key
     , _pos
@@ -40,8 +42,8 @@ module Layout.Types
     ) where
 
 import Layout.Action (Action)
-import Layout.DeadKey (DeadKey(..), ActionMap, ActionResult(..))
-import Layout.Key (Letter(..), Key, _pos, _shortcutPos, _shiftlevels, _letters, _capslock)
+import Layout.DeadKey (DeadKey'(..), ActionResult'(..))
+import Layout.Key (ActionResult, ActionMap, DeadKey, Letter(..), Key, _pos, _shortcutPos, _shiftlevels, _letters, _capslock)
 import Layout.Layout (Information(..), _fullName, _name, _copyright, _company, _localeId, _version, _description, Layout(..), _info, _singletonKeys, _mods, _variants, _keys, SingletonKey(..), _sPos, _sLetter, Variant(..))
 import Layout.Mod (Mod(..))
 import Layout.Modifier (Modifier, Shiftstate, Shiftlevel)

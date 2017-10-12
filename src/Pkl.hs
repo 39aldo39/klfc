@@ -14,14 +14,14 @@ import BasePrelude
 import Prelude.Unicode hiding ((∈), (∉))
 import Data.Monoid.Unicode ((⊕))
 import Data.Foldable.Unicode ((∈), (∉))
-import Util (toString, show', ifNonEmpty, (>$>), nubOn, filterOnSnd, filterOnSndM, tellMaybeT, versionStr, privateChars)
+import Util (toString, show', ifNonEmpty, (>$>), nubOn, filterOnSnd, filterOnSndM, sequenceTuple, tellMaybeT, versionStr, privateChars)
 import qualified WithPlus as WP (fromList, singleton)
 
 import Control.Monad.State (evalState)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriter, tell)
-import Lens.Micro.Platform (view, over, (<&>), _2)
+import Lens.Micro.Platform (view, over, (<&>))
 
 import Layout.Key (letterToDeadKey, setDeadNullChar, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
 import Layout.Layout (addDefaultKeysWith, getDefaultKeys, unifyShiftstates, getLetterByPosAndShiftstate)
@@ -216,14 +216,18 @@ toLayoutData' layout =
 deadToPkl ∷ Logger m ⇒ Int → DeadKey → m PklDeadKey
 deadToPkl i (DeadKey name _ actionMap) = PklDeadKey name i <$> charMap
   where
-    charMap = mapMaybe sequence <$> (traverse ∘ _2) outS actionMap
-    outS ∷ Logger m ⇒ ActionResult → m (Maybe (Either Char String))
-    outS (Next _) = Nothing <$ tell ["chained dead key in dk" ⊕ show i ⊕ " (" ⊕ name ⊕ ") is not supported in PKL"]
-    outS (OutString [x]) = pure (Just (Left x))
-    outS (OutString "") = pure (Just (Right "0"))
+    charMap = catMaybes <$> traverse (runMaybeT ∘ sequenceTuple ∘ (letterToChar *** outS)) actionMap
+    outS ∷ Logger m ⇒ ActionResult → MaybeT m (Either Char String)
+    outS (Next _) = tellMaybeT ["chained dead key in dk" ⊕ show i ⊕ " (" ⊕ name ⊕ ") is not supported in PKL"]
+    outS (OutString [x]) = pure (Left x)
+    outS (OutString "") = pure (Right "0")
     outS (OutString xs)
-      | all isDigit xs = Nothing <$ tell ["the output ‘" ⊕ xs ⊕ "’ is unsupported in dk" ⊕ show i ⊕ " (" ⊕ name ⊕ ") in PKL (all chars are digits)"]
-      | otherwise = pure (Just (Right xs))
+      | all isDigit xs = tellMaybeT ["the output ‘" ⊕ xs ⊕ "’ is unsupported in dk" ⊕ show i ⊕ " (" ⊕ name ⊕ ") in PKL (all chars are digits)"]
+      | otherwise = pure (Right xs)
+
+letterToChar ∷ Logger m ⇒ Letter → MaybeT m Char
+letterToChar (Char c) = pure c
+letterToChar l = tellMaybeT [show' l ⊕ " as letter for a dead key is not supported in PKL"]
 
 toPklData ∷ Logger m ⇒ Layout → Layout → m PklData
 toPklData shortcutLayout =

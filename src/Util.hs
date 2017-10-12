@@ -61,6 +61,12 @@ class HumanReadable α where
     hrParseJSON = withText tName (parseString ∘ T.unpack)
       where tName = typeName (Proxy ∷ Proxy α)
 
+instance HumanReadable Char where
+    typeName _ = "char"
+    toString c = [c]
+    parseString [c] = pure c
+    parseString _ = fail "not a single char"
+
 showAsList ∷ String → String → [String] → String
 showAsList _ _  []  = "nothing"
 showAsList t _  [x] = t ⊕ " " ⊕ x

@@ -19,12 +19,11 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (WriterT, runWriter, execWriterT, tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM)
+import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM, presetDeadKeyToDeadKey)
 import Layout.Layout (addDefaultKeys, unifyShiftstates)
 import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Windows
-import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultKeys)
 
 data KlcConfig = KlcConfig
@@ -248,10 +247,16 @@ deadKeyToKlcDeadKeys' (DeadKey name baseChar actionMap) = do
     c <$ tell [KlcDeadKey name c charMap]
 
 printAction ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
-            ⇒ String → (Char, ActionResult) → WriterT [KlcDeadKey] m (Maybe (Char, ResultChar))
-printAction name (c, result) = do
+            ⇒ String → (Letter, ActionResult) → WriterT [KlcDeadKey] m (Maybe (Char, ResultChar))
+printAction name (l, result) = do
     output ← printActionResult name result
-    pure $ (,) c <$> output
+    c ← lift $ letterToChar l
+    pure $ (,) <$> c <*> output
+  where
+
+letterToChar ∷ Logger m ⇒ Letter → m (Maybe Char)
+letterToChar (Char c) = pure (Just c)
+letterToChar l = Nothing <$ tell [show' l ⊕ " as letter for a dead key is not supported in KLC"]
 
 printActionResult ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
                   ⇒ String → ActionResult → WriterT [KlcDeadKey] m (Maybe ResultChar)

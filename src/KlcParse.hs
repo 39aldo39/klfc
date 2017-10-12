@@ -177,10 +177,10 @@ deadKey = do
     m ← many (isHex *> deadPair)
     pure (zip c [m])
 
-deadPair ∷ Parser m ⇒ m (Char, ActionResult)
+deadPair ∷ Parser m ⇒ m (Letter, ActionResult)
 deadPair = do
     [x, y] ← map (\s → maybe '\0' chr (readMaybe ('0':'x':s))) <$> readLine
-    pure (x, OutString [y])
+    pure (Char x, OutString [y])
 
 keyName ∷ Parser m ⇒ m [(String, String)]
 keyName = do

@@ -19,14 +19,13 @@ import qualified Data.Text.Lazy as L (pack)
 import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, over, _2, _head)
 
-import Layout.Key (getLetter, toLettersAndShiftstates)
+import Layout.Key (getLetter, toLettersAndShiftstates, presetDeadKeyToDeadKey)
 import Layout.Layout (getPosByLetterAndShiftstate)
 import Layout.Modifier (ExtendId, toExtendId, fromExtendId, isExtend)
 import qualified Layout.Modifier as M
 import qualified Layout.Pos as P
 import Layout.Types
 import Lookup.Windows
-import PresetDeadKey (presetDeadKeyToDeadKey)
 import PresetLayout (defaultFullLayout)
 import qualified WithPlus as WP
 
@@ -325,7 +324,8 @@ printLetter _ _ LNothing = pure []
 printLetter _ _ letter = [] <$ tell [show' letter ⊕ " is not supported in AHK"]
 
 printDeadKey ∷ Logger m ⇒ DeadKey → m AhkAction
-printDeadKey dead@(DeadKey name baseChar _) =
+printDeadKey dead@(DeadKey name baseChar _) = do
+    (pre, name') ← printDeadKey' dead
     pure $ "; " ⊕ name :
         "if (" ⊕ name' ⊕ " == \"\") {" :
         map ("  " ⊕) pre ⧺
@@ -334,23 +334,27 @@ printDeadKey dead@(DeadKey name baseChar _) =
         ]
   where
     baseString = maybe "" (:[]) baseChar
-    (pre, name') = printDeadKey' dead
 
-printDeadKey' ∷ DeadKey → ([String], String)
-printDeadKey' (DeadKey name _ actionMap) =
-    ( concatMap fst actions ⧺
-      [name' ⊕ " := Object()"] ⧺
-      map (name' ⊕) (map snd actions)
-    , name'
-    )
+printDeadKey' ∷ Logger m ⇒ DeadKey → m ([String], String)
+printDeadKey' (DeadKey name _ actionMap) = do
+    actions ← catMaybes <$> traverse printAction actionMap
+    pure $
+      ( concatMap fst actions ⧺
+        [name' ⊕ " := Object()"] ⧺
+        map (name' ⊕) (map snd actions)
+      , name'
+      )
   where
-    actions = map printAction actionMap
     name' = "DeadKeys[" ⊕ asString name ⊕ "]"
 
-printAction ∷ (Char, ActionResult) → ([String], String)
-printAction (c, OutString s) = ([], printf "[%s] := %s" (asString [c]) (asString s))
-printAction (c, Next dead) = (pre, "[" ⊕ asString [c] ⊕ "] := " ⊕ name)
-  where (pre, name) = printDeadKey' dead
+printAction ∷ Logger m ⇒ (Letter, ActionResult) → m (Maybe ([String], String))
+printAction (l, OutString s) = runMaybeT $ do
+    letterString ← asString <$> letterAsString l
+    pure $ ([], printf "[%s] := %s" letterString (asString s))
+printAction (l, Next dead) = runMaybeT $ do
+    letterString ← asString <$> letterAsString l
+    (pre, name) ← printDeadKey' dead
+    pure $ (pre, "[" ⊕ letterString ⊕ "] := " ⊕ name)
 
 asString ∷ String → String
 asString = printf "\"%s\"" ∘ concatMap escape
@@ -359,3 +363,6 @@ asString = printf "\"%s\"" ∘ concatMap escape
     escape '`' = "``"
     escape c = [c]
 
+letterAsString ∷ Logger m ⇒ Letter → MaybeT m String
+letterAsString (Char c) = pure [c]
+letterAsString l = tellMaybeT [show' l ⊕ " as letter for a dead key is not supported in AHK"]

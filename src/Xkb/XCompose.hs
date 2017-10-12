@@ -32,7 +32,7 @@ printLigatures ∷ Layout → [String]
 printLigatures = concatMap (mapMaybe printLigature ∘ view _letters) ∘ view _keys
 
 printLigature ∷ Letter → Maybe String
-printLigature (Ligature (Just c) xs) = Just (printCombination [c] xs)
+printLigature (Ligature (Just c) xs) = Just (printCombination [Char c] xs)
 printLigature _ = Nothing
 
 printCustomDeadKeys ∷ Layout → [String]
@@ -40,12 +40,12 @@ printCustomDeadKeys = concatMap (concatMap printCustomDeadKey ∘ view _letters)
 
 printCustomDeadKey ∷ Letter → [String]
 printCustomDeadKey (CustomDead _ (DeadKey name (Just c) actionMap)) =
-    [] : "# Dead key: " ⊕ name : printCombinations (map (over _1 (c :)) (actionMapToStringMap actionMap))
+    [] : "# Dead key: " ⊕ name : printCombinations (map (over _1 (Char c :)) (actionMapToStringMap actionMap))
 printCustomDeadKey _ = []
 
-printCombinations ∷ [([Char], String)] → [String]
+printCombinations ∷ [([Letter], String)] → [String]
 printCombinations = map (uncurry printCombination)
 
-printCombination ∷ [Char] → String → String
+printCombination ∷ [Letter] → String → String
 printCombination xs s = concatMap (\c → "<" ⊕ printKeysym c ⊕ "> ") xs ⊕ ": " ⊕ escape s
-  where printKeysym = fst ∘ runWriter ∘ printLetter ∘ Char
+  where printKeysym = fst ∘ runWriter ∘ printLetter

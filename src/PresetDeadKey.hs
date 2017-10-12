@@ -2,7 +2,7 @@
 
 module PresetDeadKey
     ( PresetDeadKey(..)
-    , presetDeadKeyToDeadKey
+    , presetDeadKeyToDeadKey'
     ) where
 
 import BasePrelude
@@ -88,7 +88,7 @@ instance HumanReadable PresetDeadKey where
     typeName _ = "preset dead key"
     stringList = presetDeadKeyAndString
 
-presetDeadKeys ∷ Map PresetDeadKey DeadKey
+presetDeadKeys ∷ Map PresetDeadKey (DeadKey' Char)
 presetDeadKeys = M.fromList
     [ (Grave, grave)
     , (Acute, acute)
@@ -123,11 +123,11 @@ presetDeadKeys = M.fromList
     , (Greek, greek)
     ]
 
-presetDeadKeyToDeadKey ∷ PresetDeadKey → DeadKey
-presetDeadKeyToDeadKey presetDeadKey = fromMaybe e (M.lookup presetDeadKey presetDeadKeys)
+presetDeadKeyToDeadKey' ∷ PresetDeadKey → DeadKey' Char
+presetDeadKeyToDeadKey' presetDeadKey = fromMaybe e (M.lookup presetDeadKey presetDeadKeys)
   where e = error ("unknown " ⊕ show' presetDeadKey)
 
-grave ∷ DeadKey
+grave ∷ DeadKey' Char
 grave = DeadKey "grave" (Just '`') ∘ fromMaybe (error "wrong preset dead key grave") $ stringMapToActionMap "grave"
     [ (" ", "`")
     , ("A", "À")
@@ -147,7 +147,7 @@ grave = DeadKey "grave" (Just '`') ∘ fromMaybe (error "wrong preset dead key g
     , ("Y", "Ỳ")
     , ("y", "ỳ")
     ]
-acute ∷ DeadKey
+acute ∷ DeadKey' Char
 acute = DeadKey "acute" (Just '´') ∘ fromMaybe (error "wrong preset dead key acute") $ stringMapToActionMap "acute"
     [ (" ", "'")
     , ("A", "Á")
@@ -189,7 +189,7 @@ acute = DeadKey "acute" (Just '´') ∘ fromMaybe (error "wrong preset dead key 
     , ("Z", "Ź")
     , ("z", "ź")
     ]
-circumflex ∷ DeadKey
+circumflex ∷ DeadKey' Char
 circumflex = DeadKey "circumflex" (Just '^') ∘ fromMaybe (error "wrong preset dead key circumflex") $ stringMapToActionMap "circumflex"
     [ (" ", "^")
     , ("A", "Â")
@@ -219,7 +219,7 @@ circumflex = DeadKey "circumflex" (Just '^') ∘ fromMaybe (error "wrong preset 
     , ("Z", "Ẑ")
     , ("z", "ẑ")
     ]
-tilde ∷ DeadKey
+tilde ∷ DeadKey' Char
 tilde = DeadKey "tilde" (Just '~') ∘ fromMaybe (error "wrong preset dead key tilde") $ stringMapToActionMap "tilde"
     [ ("A", "Ã")
     , ("a", "ã")
@@ -242,7 +242,7 @@ tilde = DeadKey "tilde" (Just '~') ∘ fromMaybe (error "wrong preset dead key t
     , ("Y", "Ỹ")
     , ("y", "ỹ")
     ]
-macron ∷ DeadKey
+macron ∷ DeadKey' Char
 macron = DeadKey "macron" (Just '¯') ∘ fromMaybe (error "wrong preset dead key macron") $ stringMapToActionMap "macron"
     [ ("A", "Ā")
     , ("a", "ā")
@@ -261,7 +261,7 @@ macron = DeadKey "macron" (Just '¯') ∘ fromMaybe (error "wrong preset dead ke
     , ("Æ", "Ǣ")
     , ("æ", "ǣ")
     ]
-breve ∷ DeadKey
+breve ∷ DeadKey' Char
 breve = DeadKey "breve" (Just '˘') ∘ fromMaybe (error "wrong preset dead key breve") $ stringMapToActionMap "breve"
     [ ("A", "Ă")
     , ("a", "ă")
@@ -276,7 +276,7 @@ breve = DeadKey "breve" (Just '˘') ∘ fromMaybe (error "wrong preset dead key 
     , ("U", "Ŭ")
     , ("u", "ŭ")
     ]
-abovedot ∷ DeadKey
+abovedot ∷ DeadKey' Char
 abovedot = DeadKey "abovedot" (Just '˙') ∘ fromMaybe (error "wrong preset dead key abovedot") $ stringMapToActionMap "abovedot"
     [ ("A", "Ȧ")
     , ("a", "ȧ")
@@ -319,7 +319,7 @@ abovedot = DeadKey "abovedot" (Just '˙') ∘ fromMaybe (error "wrong preset dea
     , ("Z", "Ż")
     , ("z", "ż")
     ]
-diaeresis ∷ DeadKey
+diaeresis ∷ DeadKey' Char
 diaeresis = DeadKey "diaeresis" (Just '¨') ∘ fromMaybe (error "wrong preset dead key diaeresis") $ stringMapToActionMap "diaeresis"
     [ (" ", "\"")
     , ("A", "Ä")
@@ -342,7 +342,7 @@ diaeresis = DeadKey "diaeresis" (Just '¨') ∘ fromMaybe (error "wrong preset d
     , ("Y", "Ÿ")
     , ("y", "ÿ")
     ]
-abovering ∷ DeadKey
+abovering ∷ DeadKey' Char
 abovering = DeadKey "abovering" (Just '˚') ∘ fromMaybe (error "wrong preset dead key abovering") $ stringMapToActionMap "abovering"
     [ ("A", "Å")
     , ("a", "å")
@@ -353,14 +353,14 @@ abovering = DeadKey "abovering" (Just '˚') ∘ fromMaybe (error "wrong preset d
 --    , ("Y", "Y̊")
     , ("y", "ẙ")
     ]
-doubleacute ∷ DeadKey
+doubleacute ∷ DeadKey' Char
 doubleacute = DeadKey "doubleacute" (Just '˝') ∘ fromMaybe (error "wrong preset dead key doubleacute") $ stringMapToActionMap "doubleacute"
     [ ("O", "Ő")
     , ("o", "ő")
     , ("U", "Ű")
     , ("u", "ű")
     ]
-caron ∷ DeadKey
+caron ∷ DeadKey' Char
 caron = DeadKey "caron" (Just 'ˇ') ∘ fromMaybe (error "wrong preset dead key caron") $ stringMapToActionMap "caron"
     [ ("A", "Ǎ")
     , ("a", "ǎ")
@@ -401,7 +401,7 @@ caron = DeadKey "caron" (Just 'ˇ') ∘ fromMaybe (error "wrong preset dead key 
     , ("Ʒ", "Ǯ")
     , ("ʒ", "ǯ")
     ]
-cedilla ∷ DeadKey
+cedilla ∷ DeadKey' Char
 cedilla = DeadKey "cedilla" (Just '¸') ∘ fromMaybe (error "wrong preset dead key cedilla") $ stringMapToActionMap "cedilla"
     [ ("C", "Ç")
     , ("c", "ç")
@@ -428,7 +428,7 @@ cedilla = DeadKey "cedilla" (Just '¸') ∘ fromMaybe (error "wrong preset dead 
 --    , ("X", "X̧")
 --    , ("x", "x̧")
     ]
-ogonek ∷ DeadKey
+ogonek ∷ DeadKey' Char
 ogonek = DeadKey "ogonek" (Just '˛') ∘ fromMaybe (error "wrong preset dead key ogonek") $ stringMapToActionMap "ogonek"
     [ ("A", "Ą")
     , ("a", "ą")
@@ -445,7 +445,7 @@ ogonek = DeadKey "ogonek" (Just '˛') ∘ fromMaybe (error "wrong preset dead ke
     , ("U", "Ų")
     , ("u", "ų")
     ]
-iota ∷ DeadKey
+iota ∷ DeadKey' Char
 iota = DeadKey "iota" (Just 'ͺ') ∘ fromMaybe (error "wrong preset dead key iota") $ stringMapToActionMap "iota"
     [ ("Α", "ᾼ")
     , ("Ἀ", "ᾈ")
@@ -511,7 +511,7 @@ iota = DeadKey "iota" (Just 'ͺ') ∘ fromMaybe (error "wrong preset dead key io
     , ("ώ", "ῴ")
     , ("ῶ", "ῷ")
     ]
-belowdot ∷ DeadKey
+belowdot ∷ DeadKey' Char
 belowdot = DeadKey "belowdot" (Just '\x803') ∘ fromMaybe (error "wrong preset dead key belowdot") $ stringMapToActionMap "belowdot"
     [ ("A", "Ạ")
     , ("a", "ạ")
@@ -554,7 +554,7 @@ belowdot = DeadKey "belowdot" (Just '\x803') ∘ fromMaybe (error "wrong preset 
     , ("Z", "Ẓ")
     , ("z", "ẓ")
     ]
-hook ∷ DeadKey
+hook ∷ DeadKey' Char
 hook = DeadKey "hook" (Just '\x309') ∘ fromMaybe (error "wrong preset dead key hook") $ stringMapToActionMap "hook"
     [ ("A", "Ả")
     , ("a", "ả")
@@ -581,14 +581,14 @@ hook = DeadKey "hook" (Just '\x309') ∘ fromMaybe (error "wrong preset dead key
     , ("Y", "Ỷ")
     , ("y", "ỷ")
     ]
-horn ∷ DeadKey
+horn ∷ DeadKey' Char
 horn = DeadKey "horn" (Just '\x31B') ∘ fromMaybe (error "wrong preset dead key horn") $ stringMapToActionMap "horn"
     [ ("O", "Ơ")
     , ("o", "ơ")
     , ("U", "Ư")
     , ("u", "ư")
     ]
-stroke ∷ DeadKey
+stroke ∷ DeadKey' Char
 stroke = DeadKey "stroke" (Just '/') ∘ fromMaybe (error "wrong preset dead key stroke") $ stringMapToActionMap "stroke"
     [ ("O", "Ø")
     , ("o", "ø")
@@ -633,7 +633,7 @@ stroke = DeadKey "stroke" (Just '/') ∘ fromMaybe (error "wrong preset dead key
     , ("Y", "\x24E")
     , ("y", "\x24F")
     ]
-abovecomma ∷ DeadKey
+abovecomma ∷ DeadKey' Char
 abovecomma = DeadKey "abovecomma" (Just '᾿') ∘ fromMaybe (error "wrong preset dead key abovecomma") $ stringMapToActionMap "abovecomma"
     [ ("Α", "Ἀ")
     , ("Ά", "Ἄ")
@@ -709,7 +709,7 @@ abovecomma = DeadKey "abovecomma" (Just '᾿') ∘ fromMaybe (error "wrong prese
     , ("ῷ", "ᾦ")
     , ("ρ", "ῤ")
     ]
-abovereversedcomma ∷ DeadKey
+abovereversedcomma ∷ DeadKey' Char
 abovereversedcomma = DeadKey "abovereversedcomma" (Just '῾') ∘ fromMaybe (error "wrong preset dead key abovereversedcomma") $ stringMapToActionMap "abovereversedcomma"
     [ ("Α", "Ἁ")
     , ("Ά", "Ἅ")
@@ -785,7 +785,7 @@ abovereversedcomma = DeadKey "abovereversedcomma" (Just '῾') ∘ fromMaybe (er
     , ("ῷ", "ᾧ")
     , ("ρ", "ῥ")
     ]
-doublegrave ∷ DeadKey
+doublegrave ∷ DeadKey' Char
 doublegrave = DeadKey "doublegrave" (Just '˵') ∘ fromMaybe (error "wrong preset dead key doublegrave") $ stringMapToActionMap "doublegrave"
     [ ("A", "Ȁ")
     , ("a", "ȁ")
@@ -800,13 +800,13 @@ doublegrave = DeadKey "doublegrave" (Just '˵') ∘ fromMaybe (error "wrong pres
     , ("U", "Ȕ")
     , ("u", "ȕ")
     ]
-belowring ∷ DeadKey
+belowring ∷ DeadKey' Char
 belowring = DeadKey "belowring" (Just '˳') ∘ fromMaybe (error "wrong preset dead key belowring") $ stringMapToActionMap "belowring"
     [ ("A", "Ḁ")
     , ("a", "ḁ")
     , ("|", "⫰")
     ]
-belowmacron ∷ DeadKey
+belowmacron ∷ DeadKey' Char
 belowmacron = DeadKey "belowmacron" (Just 'ˍ') ∘ fromMaybe (error "wrong preset dead key belowmacron") $ stringMapToActionMap "belowmacron"
     [ ("B", "Ḇ")
     , ("b", "ḇ")
@@ -826,7 +826,7 @@ belowmacron = DeadKey "belowmacron" (Just 'ˍ') ∘ fromMaybe (error "wrong pres
     , ("Z", "Ẕ")
     , ("z", "ẕ")
     ]
-belowcircumflex ∷ DeadKey
+belowcircumflex ∷ DeadKey' Char
 belowcircumflex = DeadKey "belowcircumflex" (Just '\x032D') ∘ fromMaybe (error "wrong preset dead key belowcircumflex") $ stringMapToActionMap "belowcircumflex"
     [ ("D", "Ḓ")
     , ("d", "ḓ")
@@ -841,7 +841,7 @@ belowcircumflex = DeadKey "belowcircumflex" (Just '\x032D') ∘ fromMaybe (error
     , ("U", "Ṷ")
     , ("u", "ṷ")
     ]
-belowtilde ∷ DeadKey
+belowtilde ∷ DeadKey' Char
 belowtilde = DeadKey "belowtilde" (Just '\x0330') ∘ fromMaybe (error "wrong preset dead key belowtilde") $ stringMapToActionMap "belowtilde"
     [ ("E", "Ḛ")
     , ("e", "ḛ")
@@ -851,17 +851,17 @@ belowtilde = DeadKey "belowtilde" (Just '\x0330') ∘ fromMaybe (error "wrong pr
     , ("u", "ṵ")
     , ("+", "⨦")
     ]
-belowbreve ∷ DeadKey
+belowbreve ∷ DeadKey' Char
 belowbreve = DeadKey "belowbreve" (Just '\x032E') ∘ fromMaybe (error "wrong preset dead key belowbreve") $ stringMapToActionMap "belowbreve"
     [ ("H", "Ḫ")
     , ("h", "ḫ")
     ]
-belowdiaeresis ∷ DeadKey
+belowdiaeresis ∷ DeadKey' Char
 belowdiaeresis = DeadKey "belowdiaeresis" (Just '\x0324') ∘ fromMaybe (error "wrong preset dead key belowdiaeresis") $ stringMapToActionMap "belowdiaeresis"
     [ ("U", "Ṳ")
     , ("u", "ṳ")
     ]
-invertedbreve ∷ DeadKey
+invertedbreve ∷ DeadKey' Char
 invertedbreve = DeadKey "invertedbreve" (Just '\x0311') ∘ fromMaybe (error "wrong preset dead key invertedbreve") $ stringMapToActionMap "invertedbreve"
     [ ("A", "Ȃ")
     , ("a", "ȃ")
@@ -876,14 +876,14 @@ invertedbreve = DeadKey "invertedbreve" (Just '\x0311') ∘ fromMaybe (error "wr
     , ("U", "Ȗ")
     , ("u", "ȗ")
     ]
-belowcomma ∷ DeadKey
+belowcomma ∷ DeadKey' Char
 belowcomma = DeadKey "belowcomma" (Just ',') ∘ fromMaybe (error "wrong preset dead key belowcomma") $ stringMapToActionMap "belowcomma"
     [ ("S", "Ș")
     , ("s", "ș")
     , ("T", "Ț")
     , ("t", "ț")
     ]
-currency ∷ DeadKey
+currency ∷ DeadKey' Char
 currency = DeadKey "currency" (Just '¤') ∘ fromMaybe (error "wrong preset dead key currency") $ stringMapToActionMap "currency"
     [ ("A", "₳")
     , ("a", "؋")
@@ -932,7 +932,7 @@ currency = DeadKey "currency" (Just '¤') ∘ fromMaybe (error "wrong preset dea
     , ("Y", "円")
     , ("y", "¥")
     ]
-greek ∷ DeadKey
+greek ∷ DeadKey' Char
 greek = DeadKey "greek" Nothing ∘ fromMaybe (error "wrong preset dead key greek") $ stringMapToActionMap "greek"
     [ ("A", "Α")
     , ("a", "α")
