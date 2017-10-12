@@ -4,11 +4,11 @@
 
 module Layout.DeadKey
     ( DeadKey(..)
-    , StringMap
-    , ChainedDeadKey(..)
     , ActionMap
     , ActionResult(..)
-    , deadKeyToChainedDeadKey
+    , stringMapToActionMap
+    , actionMapToStringMap
+    , getModifiedChars
     ) where
 
 import BasePrelude
@@ -16,64 +16,56 @@ import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
 import Util (combineWithOnM, nubWithOnM)
 
-import Control.Monad.Writer (MonadWriter, tell)
 import Data.Aeson
+import Data.Set (Set)
+import qualified Data.Set as S
+import Lens.Micro.Platform (over, _1)
+import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail as Fail (fail)
 
 type StringMap = [(String, String)]
+data ActionResult = OutString String | Next DeadKey deriving (Eq, Show, Read)
+type ActionMap = [(Char, ActionResult)]
 data DeadKey = DeadKey
     { __dkName ∷ String
     , __baseChar ∷ Maybe Char
-    , __stringMap ∷ StringMap
+    , __actionMap ∷ ActionMap
     } deriving (Eq, Show, Read)
 
 instance ToJSON DeadKey where
-    toJSON (DeadKey name baseChar stringMap) =
-        object $ concat [["name" .= name], char, ["stringMap" .= stringMap]]
+    toJSON (DeadKey name baseChar actionMap) =
+        object $ concat [["name" .= name], char, ["stringMap" .= actionMapToStringMap actionMap]]
       where
         char =
           case baseChar of
             Nothing → []
             Just c  → ["baseChar" .= c]
 instance FromJSON DeadKey where
-    parseJSON = withObject "dead key" $ \o →
-        DeadKey
-          <$> o .:  "name"
-          <*> o .:? "baseChar"
-          <*> o .:  "stringMap"
+    parseJSON = withObject "dead key" $ \o → do
+        name      ← o .:  "name"
+        baseChar  ← o .:? "baseChar"
+        stringMap ← o .:  "stringMap"
+        actionMap ← stringMapToActionMap name stringMap
+        pure $ DeadKey name baseChar actionMap
 
-data ActionResult = OutString String | Next ChainedDeadKey deriving (Eq, Show, Read)
-type ActionMap = [(Char, ActionResult)]
-data ChainedDeadKey = ChainedDeadKey
-    { __cdkName ∷ String
-    , __cdkBaseChar ∷ Maybe Char
-    , __actionMap ∷ ActionMap
-    } deriving (Eq, Show, Read)
+actionMapToStringMap ∷ ActionMap → StringMap
+actionMapToStringMap = concatMap actionToString
+  where
+    actionToString (x, OutString s) = [([x], s)]
+    actionToString (x, Next (DeadKey _ _ actionMap)) = over (traverse ∘ _1) (x:) (actionMapToStringMap actionMap)
 
-deadKeyToChainedDeadKey ∷ MonadWriter [String] m
-                        ⇒ DeadKey → m ChainedDeadKey
-deadKeyToChainedDeadKey (DeadKey name baseChar stringMap) =
-    let name' = filter (≢ ':') name
-    in  ChainedDeadKey name' baseChar <$> stringMapToActionMap (name' ⊕ ":") stringMap
+combineDeadKey ∷ MonadFail m ⇒ DeadKey → DeadKey → m DeadKey
+combineDeadKey (DeadKey name baseChar1 actionMap1) (DeadKey _ baseChar2 actionMap2) =
+    DeadKey name (baseChar1 <|> baseChar2) <$> combineActionMap name actionMap1 actionMap2
 
-combineChainedDeadKey ∷ MonadWriter [String] m
-                      ⇒ ChainedDeadKey → ChainedDeadKey → m ChainedDeadKey
-combineChainedDeadKey (ChainedDeadKey name baseChar1 actionMap1) (ChainedDeadKey _ baseChar2 actionMap2) =
-    ChainedDeadKey name (baseChar1 <|> baseChar2) <$> combineActionMap name actionMap1 actionMap2
-
-combineActionMap ∷ MonadWriter [String] m
-                 ⇒ String → ActionMap → ActionMap → m ActionMap
+combineActionMap ∷ MonadFail m ⇒ String → ActionMap → ActionMap → m ActionMap
 combineActionMap name = combineWithOnM (foldlM (combineAction name)) fst
 
-combineAction ∷ MonadWriter [String] m
-              ⇒ String → (Char, ActionResult) → (Char, ActionResult) → m (Char, ActionResult)
-combineAction _ (c, Next next1) (_, Next next2) = (,) c ∘ Next <$> combineChainedDeadKey next1 next2
-combineAction name (c, Next next) (_, OutString s) = (c, Next next) <$ tell ["the output ‘" ⊕ s ⊕ "’ is ignored in a conflicting definition in dead key ‘" ⊕ name ⊕ [c] ⊕ "’"]
-combineAction name (c, OutString s) (_, Next next) = (c, Next next) <$ tell ["the output ‘" ⊕ s ⊕ "’ is ignored in a conflicting definition in dead key ‘" ⊕ name ⊕ [c] ⊕ "’"]
-combineAction name (c, OutString s1) (_, OutString s2) = (c, OutString s1) <$ tell
-  (bool ["the output ‘" ⊕ s2 ⊕ "’ is ignored in favor of ‘" ⊕ s1 ⊕ "’ in a conflicting definition in dead key ‘" ⊕ name ⊕ [c] ⊕ "’"] [] (s1 ≡ s2))
+combineAction ∷ MonadFail m ⇒ String → (Char, ActionResult) → (Char, ActionResult) → m (Char, ActionResult)
+combineAction _ (c, Next next1) (_, Next next2) = (,) c ∘ Next <$> combineDeadKey next1 next2
+combineAction name (c, _) _ = Fail.fail ("conflicting definition in dead key ‘" ⊕ name ⊕ [c] ⊕ "’")
 
-stringMapToActionMap ∷ MonadWriter [String] m
-                     ⇒ String → StringMap → m ActionMap
+stringMapToActionMap ∷ MonadFail m ⇒ String → StringMap → m ActionMap
 stringMapToActionMap name =
     concatMap (stringToActionMap name) >>>
     nubWithOnM (foldlM (combineAction name)) fst
@@ -81,7 +73,13 @@ stringMapToActionMap name =
 stringToActionMap ∷ String → (String, String) → ActionMap
 stringToActionMap _ ("", _) = []
 stringToActionMap _ ([x], outString) = [(x, OutString outString)]
-stringToActionMap name (x:xs, outString) = [(x, Next cdk)]
+stringToActionMap name (x:xs, outString) = [(x, Next dk)]
   where
-    cdk = ChainedDeadKey name' Nothing (stringToActionMap name' (xs, outString))
+    dk = DeadKey name' Nothing (stringToActionMap name' (xs, outString))
     name' = name ⊕ [x]
+
+getModifiedChars ∷ DeadKey → Set Char
+getModifiedChars = S.unions ∘ map getModifiedChars' ∘ __actionMap
+  where
+    getModifiedChars' (x, OutString _) = S.singleton x
+    getModifiedChars' (x, Next dk) = S.insert x (getModifiedChars dk)

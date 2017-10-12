@@ -177,18 +177,21 @@ parseLetter s' = maybe (LNothing <$ tell ["unknown letter ‘" ⊕ s' ⊕ "’"]
 deadkeySection ∷ Parser m ⇒ m DeadKey
 deadkeySection = do
     deadkeyMap ← many deadkeyValue
-    let name = maybe "" snd (listToMaybe deadkeyMap)
+    let name = fromMaybe "" (listToMaybe deadkeyMap >>= resultToString ∘ snd)
     let c = listToMaybe name
     pure (DeadKey name c deadkeyMap)
+  where
+    resultToString (OutString s) = Just s
+    resultToString _ = Nothing
 
-deadkeyValue ∷ Parser m ⇒ m (String, String)
+deadkeyValue ∷ Parser m ⇒ m (Char, ActionResult)
 deadkeyValue = do
     from ← readMaybe <$> many digitChar
     void $ spacing >> char '=' >> spacing
     to ← readMaybe <$> many digitChar
     void endLine
     maybe (fail "could not parse deadkey") pure $
-        (,) <$> fmap (pure ∘ chr) from <*> fmap (pure ∘ chr) to
+        (,) <$> (chr <$> from) <*> ((OutString ∘ (:[]) ∘ chr) <$> to)
 
 extendSection ∷ (Logger m, Parser m) ⇒ m PklParseLayout
 extendSection = many nameValue >>= traverse (uncurry field) <&> (\ks → (∅)

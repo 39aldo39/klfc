@@ -36,7 +36,7 @@ data KlcParseLayout = KlcParseLayout
     , __parseShiftstates ∷ [Shiftstate]
     , __parseKeys ∷ [Key]
     , __parseLigatures ∷ [(Pos, Int, String)]
-    , __parseDeadKeys ∷ [(Char, StringMap)]
+    , __parseDeadKeys ∷ [(Char, ActionMap)]
     }
 makeLenses ''KlcParseLayout
 instance Monoid KlcParseLayout where
@@ -53,13 +53,13 @@ layout = do
       setDeads deads >$>
       setLigatures ligs
 
-setDeads ∷ Logger m ⇒ [(Char, StringMap)] → Layout → m Layout
+setDeads ∷ Logger m ⇒ [(Char, ActionMap)] → Layout → m Layout
 setDeads = _keys ∘ traverse ∘ _letters ∘ traverse ∘ setDeadKey
 
-setDeadKey ∷ Logger m ⇒ [(Char, StringMap)] → Letter → m Letter
+setDeadKey ∷ Logger m ⇒ [(Char, ActionMap)] → Letter → m Letter
 setDeadKey deads dead@(CustomDead i d) =
   case find ((≡) (__baseChar d) ∘ Just ∘ fst) deads of
-    Just (_, m) → pure (CustomDead i d { __stringMap = m })
+    Just (_, m) → pure (CustomDead i d { __actionMap = m })
     Nothing → dead <$ tell ["dead key ‘" ⊕ c ⊕ "’ is not defined"]
   where
     c = maybe "unknown" (:[]) (__baseChar d)
@@ -169,7 +169,7 @@ ligature = runMaybeT $ do
     letterToChar (Char c) = Just c
     letterToChar _ = Nothing
 
-deadKey ∷ (Logger m, Parser m) ⇒ m [(Char, StringMap)]
+deadKey ∷ (Logger m, Parser m) ⇒ m [(Char, ActionMap)]
 deadKey = do
     ["DEADKEY", s] ← readLine
     let i = maybeToList (readMaybe ('0':'x':s))
@@ -177,10 +177,10 @@ deadKey = do
     m ← many (isHex *> deadPair)
     pure (zip c [m])
 
-deadPair ∷ Parser m ⇒ m (String, String)
+deadPair ∷ Parser m ⇒ m (Char, ActionResult)
 deadPair = do
     [x, y] ← map (\s → maybe '\0' chr (readMaybe ('0':'x':s))) <$> readLine
-    pure ([x], [y])
+    pure (x, OutString [y])
 
 keyName ∷ Parser m ⇒ m [(String, String)]
 keyName = do

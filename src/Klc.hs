@@ -19,7 +19,6 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (WriterT, runWriter, execWriterT, tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.DeadKey (deadKeyToChainedDeadKey)
 import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM)
 import Layout.Layout (addDefaultKeys, unifyShiftstates)
 import qualified Layout.Pos as P
@@ -235,15 +234,15 @@ toKlcDeadKeys ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
               ⇒ [Key] → m [KlcDeadKey]
 toKlcDeadKeys =
     concatMap (nub ∘ mapMaybe letterToDeadKey ∘ view _letters) >>>
-    concatMapM (chainedDeadKeyToKlcDeadKeys <=< deadKeyToChainedDeadKey)
+    concatMapM deadKeyToKlcDeadKeys
 
-chainedDeadKeyToKlcDeadKeys ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
-                            ⇒ ChainedDeadKey → m [KlcDeadKey]
-chainedDeadKeyToKlcDeadKeys = execWriterT ∘ chainedDeadKeyToKlcDeadKeys'
+deadKeyToKlcDeadKeys ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+                     ⇒ DeadKey → m [KlcDeadKey]
+deadKeyToKlcDeadKeys = execWriterT ∘ deadKeyToKlcDeadKeys'
 
-chainedDeadKeyToKlcDeadKeys' ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
-                             ⇒ ChainedDeadKey → WriterT [KlcDeadKey] m Char
-chainedDeadKeyToKlcDeadKeys' (ChainedDeadKey name baseChar actionMap) = do
+deadKeyToKlcDeadKeys' ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
+                      ⇒ DeadKey → WriterT [KlcDeadKey] m Char
+deadKeyToKlcDeadKeys' (DeadKey name baseChar actionMap) = do
     c ← maybe getPrivateChar pure baseChar
     charMap ← catMaybes <$> traverse (printAction name) actionMap
     c <$ tell [KlcDeadKey name c charMap]
@@ -264,7 +263,7 @@ printActionResult name (OutString xs) =
 printActionResult name (Next cdk) = do
     chainedDeads ← asks __chainedDeads
     case chainedDeads of
-      True → Just ∘ DeadChar (__cdkName cdk) <$> chainedDeadKeyToKlcDeadKeys' cdk
+      True → Just ∘ DeadChar (__dkName cdk) <$> deadKeyToKlcDeadKeys' cdk
       False → Nothing <$ (lift ∘ tell)
           [ "chained dead keys are not enabled by default in KLC. " ⧺
             "Use --klc-chained-deads to enable it. " ⧺

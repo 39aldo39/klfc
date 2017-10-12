@@ -19,7 +19,6 @@ import qualified Data.Text.Lazy as L (pack)
 import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, over, _2, _head)
 
-import Layout.DeadKey (deadKeyToChainedDeadKey)
 import Layout.Key (getLetter, toLettersAndShiftstates)
 import Layout.Layout (getPosByLetterAndShiftstate)
 import Layout.Modifier (ExtendId, toExtendId, fromExtendId, isExtend)
@@ -326,9 +325,7 @@ printLetter _ _ LNothing = pure []
 printLetter _ _ letter = [] <$ tell [show' letter ⊕ " is not supported in AHK"]
 
 printDeadKey ∷ Logger m ⇒ DeadKey → m AhkAction
-printDeadKey dead@(DeadKey name baseChar _) = do
-    chainedDead ← deadKeyToChainedDeadKey dead
-    let (pre, name') = printChainedDeadKey chainedDead
+printDeadKey dead@(DeadKey name baseChar _) =
     pure $ "; " ⊕ name :
         "if (" ⊕ name' ⊕ " == \"\") {" :
         map ("  " ⊕) pre ⧺
@@ -337,9 +334,10 @@ printDeadKey dead@(DeadKey name baseChar _) = do
         ]
   where
     baseString = maybe "" (:[]) baseChar
+    (pre, name') = printDeadKey' dead
 
-printChainedDeadKey ∷ ChainedDeadKey → ([String], String)
-printChainedDeadKey (ChainedDeadKey name _ actionMap) =
+printDeadKey' ∷ DeadKey → ([String], String)
+printDeadKey' (DeadKey name _ actionMap) =
     ( concatMap fst actions ⧺
       [name' ⊕ " := Object()"] ⧺
       map (name' ⊕) (map snd actions)
@@ -351,8 +349,8 @@ printChainedDeadKey (ChainedDeadKey name _ actionMap) =
 
 printAction ∷ (Char, ActionResult) → ([String], String)
 printAction (c, OutString s) = ([], printf "[%s] := %s" (asString [c]) (asString s))
-printAction (c, Next dead) = (fst printedDead, "[" ⊕ asString [c] ⊕ "] := " ⊕ snd printedDead)
-  where printedDead = printChainedDeadKey dead
+printAction (c, Next dead) = (pre, "[" ⊕ asString [c] ⊕ "] := " ⊕ name)
+  where (pre, name) = printDeadKey' dead
 
 asString ∷ String → String
 asString = printf "\"%s\"" ∘ concatMap escape
