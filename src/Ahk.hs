@@ -19,7 +19,7 @@ import qualified Data.Text.Lazy as L (pack)
 import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, over, _2, _head)
 
-import Layout.Key (getLetter, toLettersAndShiftstates, presetDeadKeyToDeadKey)
+import Layout.Key (getLetter, toLettersAndShiftstates, presetDeadKeyToDeadKey, addPresetDeadToDead)
 import Layout.Layout (getPosByLetterAndShiftstate)
 import Layout.Modifier (ExtendId, toExtendId, fromExtendId, isExtend)
 import qualified Layout.Modifier as M
@@ -32,7 +32,8 @@ import qualified WithPlus as WP
 prepareLayout ∷ Layout → Layout
 prepareLayout =
     over (_keys ∘ traverse ∘ _shiftlevels ∘ traverse ∘ traverse) altGrToLControlRAlt >>>
-    over (_keys ∘ traverse ∘ _letters ∘ traverse) letterAltGrToLControlRAlt
+    over (_keys ∘ traverse ∘ _letters ∘ traverse) letterAltGrToLControlRAlt >>>
+    over (_keys ∘ traverse ∘ _letters ∘ traverse) addPresetDeadToDead
   where
     letterAltGrToLControlRAlt (Modifiers pos modifiers)
       | M.AltGr ∈ modifiers = Modifiers pos (delete M.AltGr modifiers ⧺ [M.Control_L, M.Alt_R])
@@ -330,10 +331,12 @@ printDeadKey dead@(DeadKey name baseChar _) = do
         "if (" ⊕ name' ⊕ " == \"\") {" :
         map ("  " ⊕) pre ⧺
         [ "}"
-        , "DeadKey(" ⊕ asString baseString ⊕ ", " ⊕ name' ⊕ ")"
+        , "DeadKey(" ⊕ asString (baseString baseChar) ⊕ ", " ⊕ name' ⊕ ")"
         ]
   where
-    baseString = maybe "" (:[]) baseChar
+    baseString BaseNo = ""
+    baseString (BaseChar c) = [c]
+    baseString (BasePreset p) = baseString (__baseChar (presetDeadKeyToDeadKey p))
 
 printDeadKey' ∷ Logger m ⇒ DeadKey → m ([String], String)
 printDeadKey' (DeadKey name _ actionMap) = do

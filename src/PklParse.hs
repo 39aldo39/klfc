@@ -46,7 +46,7 @@ setDeadKey ∷ Logger m ⇒ [(Int, DeadKey)] → Letter → m Letter
 setDeadKey deads (CustomDead (Just i) _) =
   case find ((≡) i ∘ fst) deads of
     Just (_, d) → pure (CustomDead (Just i) d)
-    Nothing → CustomDead (Just i) (DeadKey "" Nothing []) <$ tell ["deadkey" ⊕ show i ⊕ " is not defined"]
+    Nothing → CustomDead (Just i) (DeadKey "" BaseNo []) <$ tell ["deadkey" ⊕ show i ⊕ " is not defined"]
 setDeadKey _ l = pure l
 
 data PklParseLayout = PklParseLayout
@@ -170,7 +170,7 @@ parseLetter s' = maybe (LNothing <$ tell ["unknown letter ‘" ⊕ s' ⊕ "’"]
     parseChars []  = Just LNothing
     parseChars [x] = Just (Char x)
     parseChars xs  = Just (Ligature Nothing xs)
-    parseDead ('d':'k':xs) = CustomDead ∘ Just <$> readMaybe xs <*> pure (DeadKey "" Nothing [])
+    parseDead ('d':'k':xs) = CustomDead ∘ Just <$> readMaybe xs <*> pure (DeadKey "" BaseNo [])
     parseDead _ = Nothing
     parseAction = fmap Action ∘ asum ∘ map (`lookupR` actionAndPklAction) ∘ ap [Simple] ∘ pure
 
@@ -178,7 +178,7 @@ deadkeySection ∷ Parser m ⇒ m DeadKey
 deadkeySection = do
     deadkeyMap ← many deadkeyValue
     let name = fromMaybe "" (listToMaybe deadkeyMap >>= resultToString ∘ snd)
-    let c = listToMaybe name
+    let c = maybe BaseNo BaseChar (listToMaybe name)
     pure (DeadKey name c deadkeyMap)
   where
     resultToString (OutString s) = Just s

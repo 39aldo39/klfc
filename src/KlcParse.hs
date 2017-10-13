@@ -23,7 +23,7 @@ import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1)
 import Text.Megaparsec hiding (Pos)
 import Text.Megaparsec.Char
 
-import Layout.Key (Key(..))
+import Layout.Key (Key(..), baseCharToChar)
 import Layout.Layout (Layout(..))
 import Layout.Types
 import Lookup.Windows
@@ -58,11 +58,11 @@ setDeads = _keys ∘ traverse ∘ _letters ∘ traverse ∘ setDeadKey
 
 setDeadKey ∷ Logger m ⇒ [(Char, ActionMap)] → Letter → m Letter
 setDeadKey deads dead@(CustomDead i d) =
-  case find ((≡) (__baseChar d) ∘ Just ∘ fst) deads of
+  case find ((≡) (__baseChar d) ∘ BaseChar ∘ fst) deads of
     Just (_, m) → pure (CustomDead i d { __actionMap = m })
     Nothing → dead <$ tell ["dead key ‘" ⊕ c ⊕ "’ is not defined"]
   where
-    c = maybe "unknown" (:[]) (__baseChar d)
+    c = maybe "unknown" (:[]) (baseCharToChar (__baseChar d))
 setDeadKey _ l = pure l
 
 setLigatures ∷ [(Pos, Int, String)] → Layout → Layout
@@ -145,7 +145,7 @@ parseLetter "%%" = pure LNothing
 parseLetter xs
     | last xs ≡ '@' =
         case chr <$> readMaybe ('0':'x':init xs) of
-            Just c → pure (CustomDead Nothing (DeadKey [c] (Just c) (∅)))
+            Just c → pure (CustomDead Nothing (DeadKey [c] (BaseChar c) (∅)))
             Nothing → LNothing <$ tell ["no number in dead key ‘" ⊕ xs ⊕ "’"]
     | otherwise =
         case chr <$> readMaybe ('0':'x':xs) of

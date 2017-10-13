@@ -23,7 +23,7 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriter, tell)
 import Lens.Micro.Platform (view, over, (<&>))
 
-import Layout.Key (letterToDeadKey, setDeadNullChar, filterKeyOnShiftstatesM, toIndexedCustomDeadKey)
+import Layout.Key (letterToDeadKey, setDeadNullChar, filterKeyOnShiftstatesM, toIndexedCustomDeadKey, addPresetDeadToDead)
 import Layout.Layout (addDefaultKeysWith, getDefaultKeys, unifyShiftstates, getLetterByPosAndShiftstate)
 import qualified Layout.Modifier as M
 import Layout.ModifierEffect (defaultModifierEffect)
@@ -41,7 +41,8 @@ prepareLayout =
     over _singletonKeys (filter (not ∘ isAltRToAltGr)) >>>
     over _keys
         (flip evalState 1 ∘ (traverse ∘ _letters ∘ traverse) toIndexedCustomDeadKey >>>
-        flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setDeadNullChar)
+        flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setDeadNullChar) >>>
+    over (_keys ∘ traverse ∘ _letters ∘ traverse) addPresetDeadToDead
   where
     getDefaultKeys' keys = getDefaultKeys keys ∘ filterNonExtend
     filterNonExtend = over _keys (filter (any (any supportedNonExtend) ∘ view _shiftlevels))

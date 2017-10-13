@@ -10,7 +10,7 @@ module Klc
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (HumanReadable(..), ifNonEmpty, concatMapM, tellMaybeT, privateChars, getPrivateChar, versionStr)
+import Util (HumanReadable(..), ifNonEmpty, concatMapM, tellMaybeT, privateChars, getPrivateChar, versionStr, (>$>))
 
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.State (MonadState, evalStateT)
@@ -19,7 +19,7 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (WriterT, runWriter, execWriterT, tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM, presetDeadKeyToDeadKey)
+import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM, presetDeadKeyToDeadKey, addPresetDeadToDead, baseCharToChar)
 import Layout.Layout (addDefaultKeys, unifyShiftstates)
 import qualified Layout.Pos as P
 import Layout.Types
@@ -39,7 +39,7 @@ prepareLayout =
         (over (traverse ∘ _shiftlevels ∘ traverse ∘ traverse) altGrToControlAlt >>>
         traverse (filterKeyOnShiftstatesM supportedShiftstate) >=>
         over (traverse ∘ _letters ∘ traverse) deadToCustomDead >>>
-        (traverse ∘ _letters ∘ traverse) setDeadNullChar)
+        (traverse ∘ _letters ∘ traverse) (setDeadNullChar >$> addPresetDeadToDead))
 
 emptySingletonKeys ∷ Logger m ⇒ [SingletonKey] → m [SingletonKey]
 emptySingletonKeys [] = pure []
@@ -207,8 +207,10 @@ printLetter (Char c)
     | otherwise = pure (printf "%04x" c)
 printLetter (Ligature _ _) = pure "%%"
 printLetter (Dead d) = printLetter (CustomDead Nothing (presetDeadKeyToDeadKey d))
-printLetter (CustomDead _ (DeadKey _ (Just c) _)) = (⧺"@") <$> printLetter (Char c)
-printLetter l@(CustomDead _ (DeadKey _ Nothing _ )) = "-1" <$ tell [show' l ⊕ " has no base character in KLC"]
+printLetter l@(CustomDead _ (DeadKey _ baseChar _)) =
+    case baseCharToChar baseChar of
+      Just c → (⧺"@") <$> printLetter (Char c)
+      Nothing → "-1" <$ tell [show' l ⊕ " has no base character in KLC"]
 printLetter LNothing = pure "-1"
 printLetter l = "-1" <$ tell [show' l ⊕ " is not supported in KLC"]
 
@@ -242,7 +244,7 @@ deadKeyToKlcDeadKeys = execWriterT ∘ deadKeyToKlcDeadKeys'
 deadKeyToKlcDeadKeys' ∷ (Logger m, MonadState [Char] m, MonadReader KlcConfig m)
                       ⇒ DeadKey → WriterT [KlcDeadKey] m Char
 deadKeyToKlcDeadKeys' (DeadKey name baseChar actionMap) = do
-    c ← maybe getPrivateChar pure baseChar
+    c ← maybe getPrivateChar pure (baseCharToChar baseChar)
     charMap ← catMaybes <$> traverse (printAction name) actionMap
     c <$ tell [KlcDeadKey name c charMap]
 

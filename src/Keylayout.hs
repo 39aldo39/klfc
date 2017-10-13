@@ -28,7 +28,7 @@ import Lens.Micro.Platform (view, set, over, _1, _2)
 import Text.XML.Light
 
 import Layout.DeadKey (getModifiedLetters)
-import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey, presetDeadKeyToDeadKey)
+import Layout.Key (filterKeyOnShiftstatesM, addCapslock, letterToDeadKey, presetDeadKeyToDeadKey, addPresetDeadToDead, baseCharToChar)
 import Layout.Layout
 import qualified Layout.Modifier as M
 import Layout.Types
@@ -47,7 +47,8 @@ prepareLayout KeylayoutConfig{__addShortcuts = addShortcuts} =
     addDefaultKeys defaultKeys >>>
     (_keys ∘ traverse)
         (filterKeyOnShiftstatesM supportedShiftstate >$>
-        addCapslock)
+        addCapslock >>>
+        over (_letters ∘ traverse) addPresetDeadToDead)
 
 supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedModifier ∘ toList
@@ -216,8 +217,9 @@ actionToActions name (Char c, Next (DeadKey cName _ actionMap)) = do
 actionToActions _ (l, _) = [] <$ tell [show' l ⊕ " as letter for a dead key is not supported in keylayout"]
 
 deadKeyToTerminator ∷ DeadKey → Maybe Element
-deadKeyToTerminator (DeadKey name (Just baseChar) _) = pure $
-    unode "when" [attr "state" ("dead:" ⊕ name), attr "output" [baseChar]]
+deadKeyToTerminator (DeadKey name baseChar _)
+  | Just c ← baseCharToChar baseChar
+  = Just (unode "when" [attr "state" ("dead:" ⊕ name), attr "output" [c]])
 deadKeyToTerminator _ = Nothing
 
 keyMapSetElementOutputToActions ∷ Set String → Element → Element

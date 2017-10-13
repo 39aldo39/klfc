@@ -1,4 +1,5 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Xkb.XCompose where
 
@@ -12,6 +13,7 @@ import Control.Monad.Writer (runWriter)
 import Lens.Micro.Platform (view, over, _1)
 
 import Layout.DeadKey (actionMapToStringMap)
+import Layout.Key (baseCharToLetter)
 import Layout.Types
 import Xkb.General (setNullChars)
 import Xkb.Symbols (printLetter)
@@ -39,8 +41,9 @@ printCustomDeadKeys ∷ Layout → [String]
 printCustomDeadKeys = concatMap (concatMap printCustomDeadKey ∘ view _letters) ∘ view _keys
 
 printCustomDeadKey ∷ Letter → [String]
-printCustomDeadKey (CustomDead _ (DeadKey name (Just c) actionMap)) =
-    [] : "# Dead key: " ⊕ name : printCombinations (map (over _1 (Char c :)) (actionMapToStringMap actionMap))
+printCustomDeadKey (CustomDead _ (DeadKey name baseChar actionMap))
+  | Just l ← baseCharToLetter baseChar
+  = [] : "# Dead key: " ⊕ name : printCombinations (map (over _1 (l :)) (actionMapToStringMap actionMap))
 printCustomDeadKey _ = []
 
 printCombinations ∷ [([Letter], String)] → [String]

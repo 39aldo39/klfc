@@ -5,7 +5,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Layout.Key
-    ( ActionResult
+    ( BaseChar
+    , ActionResult
     , ActionMap
     , DeadKey
     , Letter(..)
@@ -24,6 +25,9 @@ module Layout.Key
     , toIndexedCustomDeadKey
     , setNullChar
     , setDeadNullChar
+    , addPresetDeadToDead
+    , baseCharToChar
+    , baseCharToLetter
     , combineKeys
     , combineKeysWithoutOverwrite
     , nubKeys
@@ -47,6 +51,7 @@ import Util (HumanReadable(..), lensWithDefault, expectedKeys, (!?), (>$>), comb
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.State (MonadState, state)
+import Control.Monad.Writer (runWriter)
 import Data.Aeson
 import Data.Functor.Identity (runIdentity)
 import Data.List.NonEmpty (NonEmpty((:|)), nonEmpty)
@@ -62,15 +67,16 @@ import qualified Layout.Modifier as M
 import Layout.ModifierEffect (ModifierEffect(..), defaultModifierEffect)
 import Layout.Pos (Pos)
 import Layout.Action (Action)
-import Layout.DeadKey (DeadKey'(..), ActionResult'(..), ActionMap')
+import Layout.DeadKey (DeadKey'(..), BaseChar'(..), ActionResult'(..), ActionMap', combineDeadKey)
 import PresetDeadKey (PresetDeadKey, presetDeadKeyToDeadKey')
 import WithBar (WithBar(..))
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP
 
-type ActionResult = ActionResult' Letter
-type ActionMap = ActionMap' Letter
-type DeadKey = DeadKey' Letter
+type BaseChar = BaseChar' PresetDeadKey
+type ActionResult = ActionResult' Letter PresetDeadKey
+type ActionMap = ActionMap' Letter PresetDeadKey
+type DeadKey = DeadKey' Letter PresetDeadKey
 
 data Letter
     = Char Char
@@ -118,9 +124,24 @@ setNullChar (Ligature Nothing xs) =
 setNullChar l = setDeadNullChar l
 
 setDeadNullChar ∷ MonadState [Char] m ⇒ Letter → m Letter
-setDeadNullChar (CustomDead i (DeadKey name Nothing lMap)) =
-    CustomDead i ∘ flip (DeadKey name) lMap ∘ Just <$> getPrivateChar
+setDeadNullChar (CustomDead i (DeadKey name BaseNo lMap)) =
+    CustomDead i ∘ flip (DeadKey name) lMap ∘ BaseChar <$> getPrivateChar
 setDeadNullChar l = pure l
+
+addPresetDeadToDead ∷ Letter → Letter
+addPresetDeadToDead (CustomDead i dead@(DeadKey _ (BasePreset p) _)) =
+    CustomDead i (fst (runWriter (combineDeadKey dead (presetDeadKeyToDeadKey p))))
+addPresetDeadToDead l = l
+
+baseCharToChar ∷ BaseChar → Maybe Char
+baseCharToChar BaseNo = Nothing
+baseCharToChar (BaseChar c) = Just c
+baseCharToChar (BasePreset p) = baseCharToChar (__baseChar (presetDeadKeyToDeadKey p))
+
+baseCharToLetter ∷ BaseChar → Maybe Letter
+baseCharToLetter BaseNo = Nothing
+baseCharToLetter (BaseChar c) = Just (Char c)
+baseCharToLetter (BasePreset p) = Just (Dead p)
 
 letterToChar ∷ Letter → Maybe Char
 letterToChar (Char c)       = Just c
@@ -181,7 +202,7 @@ letterFromString s = maybe e pure ∘ asum ∘ fmap ($ s) $
         traverse parseString ∘ filter (not ∘ null) >$>
         Modifiers effect
     modifier = parseString >$> \m → Modifiers (defaultModifierEffect m) [m]
-    customDead xs = CustomDead Nothing (DeadKey xs Nothing [])
+    customDead xs = CustomDead Nothing (DeadKey xs BaseNo [])
     action = parseString >$> Action
     dead = parseString >$> Dead
     redirect =

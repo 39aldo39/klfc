@@ -22,6 +22,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as S
 import Lens.Micro.Platform (view, set, over, _1, _2, makeLenses)
 
+import Layout.Key (baseCharToLetter)
 import Layout.Layout (singletonKeyToKey, getLetterByPosAndShiftstate, getPosByEqAndShiftstate, variantToLayout)
 import qualified Layout.Modifier as M
 import Layout.Types
@@ -210,10 +211,10 @@ printLetter (Modifiers effect mods) = pure ∘ fromMaybe "VoidSymbol" ∘ listTo
 printLetter (Dead d) =
     maybe e pure (lookup d deadKeysAndLinuxDeadKeys)
     where e = "VoidSymbol" <$ tell [show' d ⊕ " is not supported in XKB"]
-printLetter (CustomDead _ (DeadKey _ (Just c) _)) =
-    printLetter (Char c)
-printLetter l@(CustomDead _ (DeadKey _ Nothing _)) =
-    "VoidSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
+printLetter l@(CustomDead _ (DeadKey _ baseChar _)) =
+    case baseCharToLetter baseChar of
+      Just l' → printLetter l'
+      Nothing → "VoidSymbol" <$ tell [show' l ⊕ " has no base character in XKB"]
 printLetter (Redirect mods pos) =
     printLetter (redirectToLetter mods pos)
 printLetter LNothing =
