@@ -19,7 +19,7 @@ data Action
     | Up | Left | Down | Right
 
     -- Miscellaneous
-    | Backspace | Tab | LeftTab | Enter | Compose | Menu
+    | Backspace | Tab | LeftTab | Enter | Menu
     | Undo | Redo | Cut | Copy | Paste | Save | CloseTab
 
     -- Media control

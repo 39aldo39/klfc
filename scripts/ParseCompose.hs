@@ -1,18 +1,24 @@
 #!/usr/bin/runhaskell
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Prelude.Unicode
+import Data.Monoid.Unicode ((⊕))
 import BasePrelude hiding (try)
 
 import Lookup.Linux (charAndString)
-import Util (escape)
 
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Aeson
+import qualified Data.Text.Lazy as L (Text)
 import qualified Data.Text.Lazy.IO as L (readFile)
+import Data.Void (Void)
 import Text.Megaparsec
-import Text.Megaparsec.Text.Lazy (Parser)
+import Text.Megaparsec.Char
+
+type Parser = Parsec Void L.Text
 
 main ∷ IO ()
 main =
@@ -37,8 +43,7 @@ composeLines ∷ Parser [(String, String)]
 composeLines = concat <$> many (composeLine <|> [] <$ manyTill anyChar eol)
 
 printLines ∷ [(String, String)] → IO ()
---printLines = unlines ∘ map (\(inS, outS) → "[ " ⧺ escape inS ⧺ ", " ⧺ escape outS ⧺ " ],")
-printLines = traverse_ (\x → BL.putStr (encode x) >> putStrLn ",")
+printLines = traverse_ (\(inS, outS) → BL8.putStrLn $ "    , (" ⊕ encode inS ⊕ ", " ⊕ encode outS ⊕ ")")
 
-parseFromFile ∷ Parser α → String → IO (Either (ParseError Char Dec) α)
+parseFromFile ∷ Parser α → String → IO (Either (ParseError Char Void) α)
 parseFromFile p fname = parse p "" <$> L.readFile fname

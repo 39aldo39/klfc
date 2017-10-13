@@ -66,7 +66,7 @@
         { "pos": "M", "letters": [ "Button_R" ] },
         { "pos": ",", "letters": [ "MouseLeft" ] },
         { "pos": ".", "letters": [ "MouseRight" ] },
-        { "pos": "/", "letters": [ "Compose" ] },
+        { "pos": "/", "letters": [ "compose" ] },
         { "pos": "Space", "letters": [ "Enter" ] }
     ]
 }
