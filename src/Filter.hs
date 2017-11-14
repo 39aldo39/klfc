@@ -1,7 +1,9 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Filter
-    ( Filter(..)
+    ( Filter
+    , runFilter
     ) where
 
 import BasePrelude
@@ -16,7 +18,10 @@ import Data.Aeson (FromJSON, parseJSON, withText)
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 
-newtype Filter α = Filter { runFilter ∷ α → Bool }
+newtype Filter α = Filter { runFilter' ∷ α → All } deriving (Monoid)
+
+runFilter ∷ Filter α → α → Bool
+runFilter = fmap getAll ∘ runFilter'
 
 parseFilter ∷ (Eq α, HumanReadable α, MonadFail m) ⇒ String → m (Filter α)
 parseFilter =
@@ -27,8 +32,8 @@ parseFilter =
   where
     toFilter kind =
       case map toLower kind of
-          "only" → pure ∘ Filter ∘ (∋)
-          "no"   → pure ∘ Filter ∘ (∌)
+          "only" → pure ∘ Filter ∘ fmap All ∘ (∋)
+          "no"   → pure ∘ Filter ∘ fmap All ∘ (∌)
           _ → const $ Fail.fail ("unknown filter kind ‘" ⊕ kind ⊕ "’")
 
 instance (Eq α, HumanReadable α) ⇒ FromJSON (Filter α) where

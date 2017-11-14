@@ -64,7 +64,7 @@ import Data.Text.Lazy.Builder (Builder)
 import Lens.Micro.Platform (Lens', view, set, over, makeLenses, _2)
 
 import FileType (FileType)
-import Filter (Filter(..))
+import Filter (runFilter)
 import JsonPretty (keyOrder', delimsFromList)
 import Layout.DeadKey (DeadKey)
 import Layout.Key
@@ -203,7 +203,7 @@ instance ToJSON SingletonKey where
 
 instance FromJSON (FileType → Maybe SingletonKey) where
     parseJSON (Object o) = do
-        filt ← o .:? "filter" .!= Filter (const True)
+        filt ← o .:? "filter" .!= (∅)
         sKey ← liftA2 SingletonKey (o .: "pos") (o .: "letter")
         pure (bool Nothing (Just sKey) ∘ runFilter filt)
     parseJSON v = pure ∘ Just ∘ uncurry SingletonKey <$> parseJSON v
@@ -268,7 +268,7 @@ toJSON' =
 instance FromJSON (FileType → Layout) where
     parseJSON = withObject "layout" $ \o → do
         expectedKeys ("filter" : infoKeys ⧺ layoutKeys) o
-        filt ← o .:? "filter" .!= Filter (const True)
+        filt ← o .:? "filter" .!= (∅)
         info ← parseJSON (Object o)
         allSingletonKeysFilt ← sequence <$> o .:? "singletonKeys" .!= []
         let singletonKeysFilt = nubSingletonKeys ∘ catMaybes <$> allSingletonKeysFilt

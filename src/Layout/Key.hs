@@ -52,7 +52,7 @@ import qualified Data.Set as S
 import Lens.Micro.Platform (Lens', makeLenses, view, set, over, _2)
 
 import FileType (FileType)
-import Filter (Filter(..))
+import Filter (runFilter)
 import Layout.Modifier (Modifier, Shiftstate, Shiftlevel, activatedBy, parseJSONShiftlevels)
 import qualified Layout.Modifier as M
 import Layout.ModifierEffect (ModifierEffect(..), defaultModifierEffect)
@@ -218,7 +218,7 @@ instance ToJSON Key where
 instance FromJSON (FileType → Maybe Key) where
     parseJSON = withObject "key" $ \o → do
         expectedKeys ["filter","pos","shortcutPos","shiftlevels","shiftstates","letters","capslock"] o
-        filt         ← o .:? "filter"  .!= Filter (const True)
+        filt         ← o .:? "filter"  .!= (∅)
         pos          ← o .:  "pos"
         shortcutPos  ← o .:? "shortcutPos"
         shiftlevels' ← fromMaybe (pure []) (parseJSONShiftlevels o)
