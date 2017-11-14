@@ -70,7 +70,7 @@ SC010::VK51SC010 ; QWERTY Q: Q
 SC011::VK57SC011 ; QWERTY W: W
 SC012::VK46SC012 ; QWERTY E: F
 SC013::VK50SC013 ; QWERTY R: P
-SC014::VK47SC014 ; QWERTY T: G
+SC014::VK42SC014 ; QWERTY T: B
 SC015::VK4aSC015 ; QWERTY Y: J
 SC016::VK4cSC016 ; QWERTY U: L
 SC017::VK55SC017 ; QWERTY I: U
@@ -95,8 +95,8 @@ Return
 Send {Blind}{VK54SC021 Up}
 SendUps(ModsSC021)
 Return
-SC022::VK44SC022 ; QWERTY G: D
-SC023::VK48SC023 ; QWERTY H: H
+SC022::VK47SC022 ; QWERTY G: G
+SC023::VK4bSC023 ; QWERTY H: K
 SC024::VK4eSC024 ; QWERTY J: N
 SC025::VK45SC025 ; QWERTY K: E
 SC026::VK49SC026 ; QWERTY L: I
@@ -105,10 +105,10 @@ SC028::VKdeSC028 ; QWERTY ': '
 SC02c::VK5aSC02c ; QWERTY Z: Z
 SC02d::VK58SC02d ; QWERTY X: X
 SC02e::VK43SC02e ; QWERTY C: C
-SC02f::VK56SC02f ; QWERTY V: V
-SC030::VK42SC030 ; QWERTY B: B
-SC031::VK4bSC031 ; QWERTY N: K
-SC032::VK4dSC032 ; QWERTY M: M
+SC02f::VK44SC02f ; QWERTY V: D
+SC030::VK56SC030 ; QWERTY B: V
+SC031::VK4dSC031 ; QWERTY N: M
+SC032::VK48SC032 ; QWERTY M: H
 SC033::VKbcSC033 ; QWERTY ,: ,
 SC034::VKbeSC034 ; QWERTY .: .
 SC035::VKbfSC035 ; QWERTY /: /
@@ -415,56 +415,60 @@ Return
 #if not Extend
 SC014::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0067} ; g
+  Send {Blind}{U+0062} ; b
 } else {
-  Send {Blind}{U+0047} ; G
+  Send {Blind}{U+0042} ; B
 }
 Return
 +SC014::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0047} ; G
+  Send {Blind}{U+0042} ; B
 } else {
-  Send {Blind}{U+0067} ; g
+  Send {Blind}{U+0062} ; b
 }
 Return
 >!<^SC014::
 if not GetKeyState("CapsLock", "T") {
-  ; ogonek
-  if (DeadKeys["ogonek"] == "") {
-    DeadKeys["ogonek"] := Object()
-    DeadKeys["ogonek"]["A"] := "Ą"
-    DeadKeys["ogonek"]["a"] := "ą"
-    DeadKeys["ogonek"]["E"] := "Ę"
-    DeadKeys["ogonek"]["e"] := "ę"
-    DeadKeys["ogonek"]["I"] := "Į"
-    DeadKeys["ogonek"]["i"] := "į"
-    DeadKeys["ogonek"]["O"] := "Ǫ"
-    DeadKeys["ogonek"]["o"] := "ǫ"
-    DeadKeys["ogonek"]["U"] := "Ų"
-    DeadKeys["ogonek"]["u"] := "ų"
+  ; breve
+  if (DeadKeys["breve"] == "") {
+    DeadKeys["breve"] := Object()
+    DeadKeys["breve"]["A"] := "Ă"
+    DeadKeys["breve"]["a"] := "ă"
+    DeadKeys["breve"]["E"] := "Ĕ"
+    DeadKeys["breve"]["e"] := "ĕ"
+    DeadKeys["breve"]["G"] := "Ğ"
+    DeadKeys["breve"]["g"] := "ğ"
+    DeadKeys["breve"]["I"] := "Ĭ"
+    DeadKeys["breve"]["i"] := "ĭ"
+    DeadKeys["breve"]["O"] := "Ŏ"
+    DeadKeys["breve"]["o"] := "ŏ"
+    DeadKeys["breve"]["U"] := "Ŭ"
+    DeadKeys["breve"]["u"] := "ŭ"
   }
-  DeadKey("˛", DeadKeys["ogonek"])
+  DeadKey("˘", DeadKeys["breve"])
 } else {
 }
 Return
 +>!<^SC014::
 if not GetKeyState("CapsLock", "T") {
 } else {
-  ; ogonek
-  if (DeadKeys["ogonek"] == "") {
-    DeadKeys["ogonek"] := Object()
-    DeadKeys["ogonek"]["A"] := "Ą"
-    DeadKeys["ogonek"]["a"] := "ą"
-    DeadKeys["ogonek"]["E"] := "Ę"
-    DeadKeys["ogonek"]["e"] := "ę"
-    DeadKeys["ogonek"]["I"] := "Į"
-    DeadKeys["ogonek"]["i"] := "į"
-    DeadKeys["ogonek"]["O"] := "Ǫ"
-    DeadKeys["ogonek"]["o"] := "ǫ"
-    DeadKeys["ogonek"]["U"] := "Ų"
-    DeadKeys["ogonek"]["u"] := "ų"
+  ; breve
+  if (DeadKeys["breve"] == "") {
+    DeadKeys["breve"] := Object()
+    DeadKeys["breve"]["A"] := "Ă"
+    DeadKeys["breve"]["a"] := "ă"
+    DeadKeys["breve"]["E"] := "Ĕ"
+    DeadKeys["breve"]["e"] := "ĕ"
+    DeadKeys["breve"]["G"] := "Ğ"
+    DeadKeys["breve"]["g"] := "ğ"
+    DeadKeys["breve"]["I"] := "Ĭ"
+    DeadKeys["breve"]["i"] := "ĭ"
+    DeadKeys["breve"]["O"] := "Ŏ"
+    DeadKeys["breve"]["o"] := "ŏ"
+    DeadKeys["breve"]["U"] := "Ŭ"
+    DeadKeys["breve"]["u"] := "ŭ"
   }
-  DeadKey("˛", DeadKeys["ogonek"])
+  DeadKey("˘", DeadKeys["breve"])
 }
 Return
 #if Extend
@@ -965,76 +969,56 @@ Return
 #if not Extend
 SC022::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0064} ; d
+  Send {Blind}{U+0067} ; g
 } else {
-  Send {Blind}{U+0044} ; D
+  Send {Blind}{U+0047} ; G
 }
 Return
 +SC022::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0044} ; D
+  Send {Blind}{U+0047} ; G
 } else {
-  Send {Blind}{U+0064} ; d
+  Send {Blind}{U+0067} ; g
 }
 Return
 >!<^SC022::
 if not GetKeyState("CapsLock", "T") {
-  ; diaeresis
-  if (DeadKeys["diaeresis"] == "") {
-    DeadKeys["diaeresis"] := Object()
-    DeadKeys["diaeresis"][" "] := """"
-    DeadKeys["diaeresis"]["A"] := "Ä"
-    DeadKeys["diaeresis"]["a"] := "ä"
-    DeadKeys["diaeresis"]["E"] := "Ë"
-    DeadKeys["diaeresis"]["e"] := "ë"
-    DeadKeys["diaeresis"]["H"] := "Ḧ"
-    DeadKeys["diaeresis"]["h"] := "ḧ"
-    DeadKeys["diaeresis"]["I"] := "Ï"
-    DeadKeys["diaeresis"]["i"] := "ï"
-    DeadKeys["diaeresis"]["O"] := "Ö"
-    DeadKeys["diaeresis"]["o"] := "ö"
-    DeadKeys["diaeresis"]["t"] := "ẗ"
-    DeadKeys["diaeresis"]["U"] := "Ü"
-    DeadKeys["diaeresis"]["u"] := "ü"
-    DeadKeys["diaeresis"]["W"] := "Ẅ"
-    DeadKeys["diaeresis"]["w"] := "ẅ"
-    DeadKeys["diaeresis"]["X"] := "Ẍ"
-    DeadKeys["diaeresis"]["x"] := "ẍ"
-    DeadKeys["diaeresis"]["Y"] := "Ÿ"
-    DeadKeys["diaeresis"]["y"] := "ÿ"
+  ; ogonek
+  if (DeadKeys["ogonek"] == "") {
+    DeadKeys["ogonek"] := Object()
+    DeadKeys["ogonek"]["A"] := "Ą"
+    DeadKeys["ogonek"]["a"] := "ą"
+    DeadKeys["ogonek"]["E"] := "Ę"
+    DeadKeys["ogonek"]["e"] := "ę"
+    DeadKeys["ogonek"]["I"] := "Į"
+    DeadKeys["ogonek"]["i"] := "į"
+    DeadKeys["ogonek"]["O"] := "Ǫ"
+    DeadKeys["ogonek"]["o"] := "ǫ"
+    DeadKeys["ogonek"]["U"] := "Ų"
+    DeadKeys["ogonek"]["u"] := "ų"
   }
-  DeadKey("¨", DeadKeys["diaeresis"])
+  DeadKey("˛", DeadKeys["ogonek"])
 } else {
 }
 Return
 +>!<^SC022::
 if not GetKeyState("CapsLock", "T") {
 } else {
-  ; diaeresis
-  if (DeadKeys["diaeresis"] == "") {
-    DeadKeys["diaeresis"] := Object()
-    DeadKeys["diaeresis"][" "] := """"
-    DeadKeys["diaeresis"]["A"] := "Ä"
-    DeadKeys["diaeresis"]["a"] := "ä"
-    DeadKeys["diaeresis"]["E"] := "Ë"
-    DeadKeys["diaeresis"]["e"] := "ë"
-    DeadKeys["diaeresis"]["H"] := "Ḧ"
-    DeadKeys["diaeresis"]["h"] := "ḧ"
-    DeadKeys["diaeresis"]["I"] := "Ï"
-    DeadKeys["diaeresis"]["i"] := "ï"
-    DeadKeys["diaeresis"]["O"] := "Ö"
-    DeadKeys["diaeresis"]["o"] := "ö"
-    DeadKeys["diaeresis"]["t"] := "ẗ"
-    DeadKeys["diaeresis"]["U"] := "Ü"
-    DeadKeys["diaeresis"]["u"] := "ü"
-    DeadKeys["diaeresis"]["W"] := "Ẅ"
-    DeadKeys["diaeresis"]["w"] := "ẅ"
-    DeadKeys["diaeresis"]["X"] := "Ẍ"
-    DeadKeys["diaeresis"]["x"] := "ẍ"
-    DeadKeys["diaeresis"]["Y"] := "Ÿ"
-    DeadKeys["diaeresis"]["y"] := "ÿ"
+  ; ogonek
+  if (DeadKeys["ogonek"] == "") {
+    DeadKeys["ogonek"] := Object()
+    DeadKeys["ogonek"]["A"] := "Ą"
+    DeadKeys["ogonek"]["a"] := "ą"
+    DeadKeys["ogonek"]["E"] := "Ę"
+    DeadKeys["ogonek"]["e"] := "ę"
+    DeadKeys["ogonek"]["I"] := "Į"
+    DeadKeys["ogonek"]["i"] := "į"
+    DeadKeys["ogonek"]["O"] := "Ǫ"
+    DeadKeys["ogonek"]["o"] := "ǫ"
+    DeadKeys["ogonek"]["U"] := "Ų"
+    DeadKeys["ogonek"]["u"] := "ų"
   }
-  DeadKey("¨", DeadKeys["diaeresis"])
+  DeadKey("˛", DeadKeys["ogonek"])
 }
 Return
 #if Extend
@@ -1044,106 +1028,48 @@ Return
 #if not Extend
 SC023::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0068} ; h
+  Send {Blind}{U+006b} ; k
 } else {
-  Send {Blind}{U+0048} ; H
+  Send {Blind}{U+004b} ; K
 }
 Return
 +SC023::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0048} ; H
+  Send {Blind}{U+004b} ; K
 } else {
-  Send {Blind}{U+0068} ; h
+  Send {Blind}{U+006b} ; k
 }
 Return
 >!<^SC023::
 if not GetKeyState("CapsLock", "T") {
-  ; caron
-  if (DeadKeys["caron"] == "") {
-    DeadKeys["caron"] := Object()
-    DeadKeys["caron"]["A"] := "Ǎ"
-    DeadKeys["caron"]["a"] := "ǎ"
-    DeadKeys["caron"]["C"] := "Č"
-    DeadKeys["caron"]["c"] := "č"
-    DeadKeys["caron"]["D"] := "Ď"
-    DeadKeys["caron"]["d"] := "ď"
-    DeadKeys["caron"]["E"] := "Ě"
-    DeadKeys["caron"]["e"] := "ě"
-    DeadKeys["caron"]["G"] := "Ǧ"
-    DeadKeys["caron"]["g"] := "ǧ"
-    DeadKeys["caron"]["H"] := "Ȟ"
-    DeadKeys["caron"]["h"] := "ȟ"
-    DeadKeys["caron"]["I"] := "Ǐ"
-    DeadKeys["caron"]["i"] := "ǐ"
-    DeadKeys["caron"]["j"] := "ǰ"
-    DeadKeys["caron"]["K"] := "Ǩ"
-    DeadKeys["caron"]["k"] := "ǩ"
-    DeadKeys["caron"]["L"] := "Ľ"
-    DeadKeys["caron"]["l"] := "ľ"
-    DeadKeys["caron"]["N"] := "Ň"
-    DeadKeys["caron"]["n"] := "ň"
-    DeadKeys["caron"]["O"] := "Ǒ"
-    DeadKeys["caron"]["o"] := "ǒ"
-    DeadKeys["caron"]["R"] := "Ř"
-    DeadKeys["caron"]["r"] := "ř"
-    DeadKeys["caron"]["S"] := "Š"
-    DeadKeys["caron"]["s"] := "š"
-    DeadKeys["caron"]["T"] := "Ť"
-    DeadKeys["caron"]["t"] := "ť"
-    DeadKeys["caron"]["U"] := "Ǔ"
-    DeadKeys["caron"]["u"] := "ǔ"
-    DeadKeys["caron"]["Z"] := "Ž"
-    DeadKeys["caron"]["z"] := "ž"
-    DeadKeys["caron"]["Ʒ"] := "Ǯ"
-    DeadKeys["caron"]["ʒ"] := "ǯ"
+  ; abovering
+  if (DeadKeys["abovering"] == "") {
+    DeadKeys["abovering"] := Object()
+    DeadKeys["abovering"]["A"] := "Å"
+    DeadKeys["abovering"]["a"] := "å"
+    DeadKeys["abovering"]["U"] := "Ů"
+    DeadKeys["abovering"]["u"] := "ů"
+    DeadKeys["abovering"]["w"] := "ẘ"
+    DeadKeys["abovering"]["y"] := "ẙ"
   }
-  DeadKey("ˇ", DeadKeys["caron"])
+  DeadKey("˚", DeadKeys["abovering"])
 } else {
 }
 Return
 +>!<^SC023::
 if not GetKeyState("CapsLock", "T") {
 } else {
-  ; caron
-  if (DeadKeys["caron"] == "") {
-    DeadKeys["caron"] := Object()
-    DeadKeys["caron"]["A"] := "Ǎ"
-    DeadKeys["caron"]["a"] := "ǎ"
-    DeadKeys["caron"]["C"] := "Č"
-    DeadKeys["caron"]["c"] := "č"
-    DeadKeys["caron"]["D"] := "Ď"
-    DeadKeys["caron"]["d"] := "ď"
-    DeadKeys["caron"]["E"] := "Ě"
-    DeadKeys["caron"]["e"] := "ě"
-    DeadKeys["caron"]["G"] := "Ǧ"
-    DeadKeys["caron"]["g"] := "ǧ"
-    DeadKeys["caron"]["H"] := "Ȟ"
-    DeadKeys["caron"]["h"] := "ȟ"
-    DeadKeys["caron"]["I"] := "Ǐ"
-    DeadKeys["caron"]["i"] := "ǐ"
-    DeadKeys["caron"]["j"] := "ǰ"
-    DeadKeys["caron"]["K"] := "Ǩ"
-    DeadKeys["caron"]["k"] := "ǩ"
-    DeadKeys["caron"]["L"] := "Ľ"
-    DeadKeys["caron"]["l"] := "ľ"
-    DeadKeys["caron"]["N"] := "Ň"
-    DeadKeys["caron"]["n"] := "ň"
-    DeadKeys["caron"]["O"] := "Ǒ"
-    DeadKeys["caron"]["o"] := "ǒ"
-    DeadKeys["caron"]["R"] := "Ř"
-    DeadKeys["caron"]["r"] := "ř"
-    DeadKeys["caron"]["S"] := "Š"
-    DeadKeys["caron"]["s"] := "š"
-    DeadKeys["caron"]["T"] := "Ť"
-    DeadKeys["caron"]["t"] := "ť"
-    DeadKeys["caron"]["U"] := "Ǔ"
-    DeadKeys["caron"]["u"] := "ǔ"
-    DeadKeys["caron"]["Z"] := "Ž"
-    DeadKeys["caron"]["z"] := "ž"
-    DeadKeys["caron"]["Ʒ"] := "Ǯ"
-    DeadKeys["caron"]["ʒ"] := "ǯ"
+  ; abovering
+  if (DeadKeys["abovering"] == "") {
+    DeadKeys["abovering"] := Object()
+    DeadKeys["abovering"]["A"] := "Å"
+    DeadKeys["abovering"]["a"] := "å"
+    DeadKeys["abovering"]["U"] := "Ů"
+    DeadKeys["abovering"]["u"] := "ů"
+    DeadKeys["abovering"]["w"] := "ẘ"
+    DeadKeys["abovering"]["y"] := "ẙ"
   }
-  DeadKey("ˇ", DeadKeys["caron"])
+  DeadKey("˚", DeadKeys["abovering"])
 }
 Return
 #if Extend
@@ -1453,30 +1379,76 @@ Return
 #if not Extend
 SC02f::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0076} ; v
+  Send {Blind}{U+0064} ; d
 } else {
-  Send {Blind}{U+0056} ; V
+  Send {Blind}{U+0044} ; D
 }
 Return
 +SC02f::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0056} ; V
+  Send {Blind}{U+0044} ; D
 } else {
-  Send {Blind}{U+0076} ; v
+  Send {Blind}{U+0064} ; d
 }
 Return
 >!<^SC02f::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0153} ; œ
+  ; diaeresis
+  if (DeadKeys["diaeresis"] == "") {
+    DeadKeys["diaeresis"] := Object()
+    DeadKeys["diaeresis"][" "] := """"
+    DeadKeys["diaeresis"]["A"] := "Ä"
+    DeadKeys["diaeresis"]["a"] := "ä"
+    DeadKeys["diaeresis"]["E"] := "Ë"
+    DeadKeys["diaeresis"]["e"] := "ë"
+    DeadKeys["diaeresis"]["H"] := "Ḧ"
+    DeadKeys["diaeresis"]["h"] := "ḧ"
+    DeadKeys["diaeresis"]["I"] := "Ï"
+    DeadKeys["diaeresis"]["i"] := "ï"
+    DeadKeys["diaeresis"]["O"] := "Ö"
+    DeadKeys["diaeresis"]["o"] := "ö"
+    DeadKeys["diaeresis"]["t"] := "ẗ"
+    DeadKeys["diaeresis"]["U"] := "Ü"
+    DeadKeys["diaeresis"]["u"] := "ü"
+    DeadKeys["diaeresis"]["W"] := "Ẅ"
+    DeadKeys["diaeresis"]["w"] := "ẅ"
+    DeadKeys["diaeresis"]["X"] := "Ẍ"
+    DeadKeys["diaeresis"]["x"] := "ẍ"
+    DeadKeys["diaeresis"]["Y"] := "Ÿ"
+    DeadKeys["diaeresis"]["y"] := "ÿ"
+  }
+  DeadKey("¨", DeadKeys["diaeresis"])
 } else {
-  Send {Blind}{U+0152} ; Œ
 }
 Return
 +>!<^SC02f::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0152} ; Œ
 } else {
-  Send {Blind}{U+0153} ; œ
+  ; diaeresis
+  if (DeadKeys["diaeresis"] == "") {
+    DeadKeys["diaeresis"] := Object()
+    DeadKeys["diaeresis"][" "] := """"
+    DeadKeys["diaeresis"]["A"] := "Ä"
+    DeadKeys["diaeresis"]["a"] := "ä"
+    DeadKeys["diaeresis"]["E"] := "Ë"
+    DeadKeys["diaeresis"]["e"] := "ë"
+    DeadKeys["diaeresis"]["H"] := "Ḧ"
+    DeadKeys["diaeresis"]["h"] := "ḧ"
+    DeadKeys["diaeresis"]["I"] := "Ï"
+    DeadKeys["diaeresis"]["i"] := "ï"
+    DeadKeys["diaeresis"]["O"] := "Ö"
+    DeadKeys["diaeresis"]["o"] := "ö"
+    DeadKeys["diaeresis"]["t"] := "ẗ"
+    DeadKeys["diaeresis"]["U"] := "Ü"
+    DeadKeys["diaeresis"]["u"] := "ü"
+    DeadKeys["diaeresis"]["W"] := "Ẅ"
+    DeadKeys["diaeresis"]["w"] := "ẅ"
+    DeadKeys["diaeresis"]["X"] := "Ẍ"
+    DeadKeys["diaeresis"]["x"] := "ẍ"
+    DeadKeys["diaeresis"]["Y"] := "Ÿ"
+    DeadKeys["diaeresis"]["y"] := "ÿ"
+  }
+  DeadKey("¨", DeadKeys["diaeresis"])
 }
 Return
 #if Extend
@@ -1486,60 +1458,30 @@ Return
 #if not Extend
 SC030::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0062} ; b
+  Send {Blind}{U+0076} ; v
 } else {
-  Send {Blind}{U+0042} ; B
+  Send {Blind}{U+0056} ; V
 }
 Return
 +SC030::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+0042} ; B
+  Send {Blind}{U+0056} ; V
 } else {
-  Send {Blind}{U+0062} ; b
+  Send {Blind}{U+0076} ; v
 }
 Return
 >!<^SC030::
 if not GetKeyState("CapsLock", "T") {
-  ; breve
-  if (DeadKeys["breve"] == "") {
-    DeadKeys["breve"] := Object()
-    DeadKeys["breve"]["A"] := "Ă"
-    DeadKeys["breve"]["a"] := "ă"
-    DeadKeys["breve"]["E"] := "Ĕ"
-    DeadKeys["breve"]["e"] := "ĕ"
-    DeadKeys["breve"]["G"] := "Ğ"
-    DeadKeys["breve"]["g"] := "ğ"
-    DeadKeys["breve"]["I"] := "Ĭ"
-    DeadKeys["breve"]["i"] := "ĭ"
-    DeadKeys["breve"]["O"] := "Ŏ"
-    DeadKeys["breve"]["o"] := "ŏ"
-    DeadKeys["breve"]["U"] := "Ŭ"
-    DeadKeys["breve"]["u"] := "ŭ"
-  }
-  DeadKey("˘", DeadKeys["breve"])
+  Send {Blind}{U+0153} ; œ
 } else {
+  Send {Blind}{U+0152} ; Œ
 }
 Return
 +>!<^SC030::
 if not GetKeyState("CapsLock", "T") {
+  Send {Blind}{U+0152} ; Œ
 } else {
-  ; breve
-  if (DeadKeys["breve"] == "") {
-    DeadKeys["breve"] := Object()
-    DeadKeys["breve"]["A"] := "Ă"
-    DeadKeys["breve"]["a"] := "ă"
-    DeadKeys["breve"]["E"] := "Ĕ"
-    DeadKeys["breve"]["e"] := "ĕ"
-    DeadKeys["breve"]["G"] := "Ğ"
-    DeadKeys["breve"]["g"] := "ğ"
-    DeadKeys["breve"]["I"] := "Ĭ"
-    DeadKeys["breve"]["i"] := "ĭ"
-    DeadKeys["breve"]["O"] := "Ŏ"
-    DeadKeys["breve"]["o"] := "ŏ"
-    DeadKeys["breve"]["U"] := "Ŭ"
-    DeadKeys["breve"]["u"] := "ŭ"
-  }
-  DeadKey("˘", DeadKeys["breve"])
+  Send {Blind}{U+0153} ; œ
 }
 Return
 #if Extend
@@ -1549,48 +1491,68 @@ Return
 #if not Extend
 SC031::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+006b} ; k
+  Send {Blind}{U+006d} ; m
 } else {
-  Send {Blind}{U+004b} ; K
+  Send {Blind}{U+004d} ; M
 }
 Return
 +SC031::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+004b} ; K
+  Send {Blind}{U+004d} ; M
 } else {
-  Send {Blind}{U+006b} ; k
+  Send {Blind}{U+006d} ; m
 }
 Return
 >!<^SC031::
 if not GetKeyState("CapsLock", "T") {
-  ; abovering
-  if (DeadKeys["abovering"] == "") {
-    DeadKeys["abovering"] := Object()
-    DeadKeys["abovering"]["A"] := "Å"
-    DeadKeys["abovering"]["a"] := "å"
-    DeadKeys["abovering"]["U"] := "Ů"
-    DeadKeys["abovering"]["u"] := "ů"
-    DeadKeys["abovering"]["w"] := "ẘ"
-    DeadKeys["abovering"]["y"] := "ẙ"
+  ; macron
+  if (DeadKeys["macron"] == "") {
+    DeadKeys["macron"] := Object()
+    DeadKeys["macron"]["A"] := "Ā"
+    DeadKeys["macron"]["a"] := "ā"
+    DeadKeys["macron"]["E"] := "Ē"
+    DeadKeys["macron"]["e"] := "ē"
+    DeadKeys["macron"]["G"] := "Ḡ"
+    DeadKeys["macron"]["g"] := "ḡ"
+    DeadKeys["macron"]["I"] := "Ī"
+    DeadKeys["macron"]["i"] := "ī"
+    DeadKeys["macron"]["O"] := "Ō"
+    DeadKeys["macron"]["o"] := "ō"
+    DeadKeys["macron"]["U"] := "Ū"
+    DeadKeys["macron"]["u"] := "ū"
+    DeadKeys["macron"]["Y"] := "Ȳ"
+    DeadKeys["macron"]["y"] := "ȳ"
+    DeadKeys["macron"]["Æ"] := "Ǣ"
+    DeadKeys["macron"]["æ"] := "ǣ"
   }
-  DeadKey("˚", DeadKeys["abovering"])
+  DeadKey("¯", DeadKeys["macron"])
 } else {
 }
 Return
 +>!<^SC031::
 if not GetKeyState("CapsLock", "T") {
 } else {
-  ; abovering
-  if (DeadKeys["abovering"] == "") {
-    DeadKeys["abovering"] := Object()
-    DeadKeys["abovering"]["A"] := "Å"
-    DeadKeys["abovering"]["a"] := "å"
-    DeadKeys["abovering"]["U"] := "Ů"
-    DeadKeys["abovering"]["u"] := "ů"
-    DeadKeys["abovering"]["w"] := "ẘ"
-    DeadKeys["abovering"]["y"] := "ẙ"
+  ; macron
+  if (DeadKeys["macron"] == "") {
+    DeadKeys["macron"] := Object()
+    DeadKeys["macron"]["A"] := "Ā"
+    DeadKeys["macron"]["a"] := "ā"
+    DeadKeys["macron"]["E"] := "Ē"
+    DeadKeys["macron"]["e"] := "ē"
+    DeadKeys["macron"]["G"] := "Ḡ"
+    DeadKeys["macron"]["g"] := "ḡ"
+    DeadKeys["macron"]["I"] := "Ī"
+    DeadKeys["macron"]["i"] := "ī"
+    DeadKeys["macron"]["O"] := "Ō"
+    DeadKeys["macron"]["o"] := "ō"
+    DeadKeys["macron"]["U"] := "Ū"
+    DeadKeys["macron"]["u"] := "ū"
+    DeadKeys["macron"]["Y"] := "Ȳ"
+    DeadKeys["macron"]["y"] := "ȳ"
+    DeadKeys["macron"]["Æ"] := "Ǣ"
+    DeadKeys["macron"]["æ"] := "ǣ"
   }
-  DeadKey("˚", DeadKeys["abovering"])
+  DeadKey("¯", DeadKeys["macron"])
 }
 Return
 #if Extend
@@ -1600,68 +1562,106 @@ Return
 #if not Extend
 SC032::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+006d} ; m
+  Send {Blind}{U+0068} ; h
 } else {
-  Send {Blind}{U+004d} ; M
+  Send {Blind}{U+0048} ; H
 }
 Return
 +SC032::
 if not GetKeyState("CapsLock", "T") {
-  Send {Blind}{U+004d} ; M
+  Send {Blind}{U+0048} ; H
 } else {
-  Send {Blind}{U+006d} ; m
+  Send {Blind}{U+0068} ; h
 }
 Return
 >!<^SC032::
 if not GetKeyState("CapsLock", "T") {
-  ; macron
-  if (DeadKeys["macron"] == "") {
-    DeadKeys["macron"] := Object()
-    DeadKeys["macron"]["A"] := "Ā"
-    DeadKeys["macron"]["a"] := "ā"
-    DeadKeys["macron"]["E"] := "Ē"
-    DeadKeys["macron"]["e"] := "ē"
-    DeadKeys["macron"]["G"] := "Ḡ"
-    DeadKeys["macron"]["g"] := "ḡ"
-    DeadKeys["macron"]["I"] := "Ī"
-    DeadKeys["macron"]["i"] := "ī"
-    DeadKeys["macron"]["O"] := "Ō"
-    DeadKeys["macron"]["o"] := "ō"
-    DeadKeys["macron"]["U"] := "Ū"
-    DeadKeys["macron"]["u"] := "ū"
-    DeadKeys["macron"]["Y"] := "Ȳ"
-    DeadKeys["macron"]["y"] := "ȳ"
-    DeadKeys["macron"]["Æ"] := "Ǣ"
-    DeadKeys["macron"]["æ"] := "ǣ"
+  ; caron
+  if (DeadKeys["caron"] == "") {
+    DeadKeys["caron"] := Object()
+    DeadKeys["caron"]["A"] := "Ǎ"
+    DeadKeys["caron"]["a"] := "ǎ"
+    DeadKeys["caron"]["C"] := "Č"
+    DeadKeys["caron"]["c"] := "č"
+    DeadKeys["caron"]["D"] := "Ď"
+    DeadKeys["caron"]["d"] := "ď"
+    DeadKeys["caron"]["E"] := "Ě"
+    DeadKeys["caron"]["e"] := "ě"
+    DeadKeys["caron"]["G"] := "Ǧ"
+    DeadKeys["caron"]["g"] := "ǧ"
+    DeadKeys["caron"]["H"] := "Ȟ"
+    DeadKeys["caron"]["h"] := "ȟ"
+    DeadKeys["caron"]["I"] := "Ǐ"
+    DeadKeys["caron"]["i"] := "ǐ"
+    DeadKeys["caron"]["j"] := "ǰ"
+    DeadKeys["caron"]["K"] := "Ǩ"
+    DeadKeys["caron"]["k"] := "ǩ"
+    DeadKeys["caron"]["L"] := "Ľ"
+    DeadKeys["caron"]["l"] := "ľ"
+    DeadKeys["caron"]["N"] := "Ň"
+    DeadKeys["caron"]["n"] := "ň"
+    DeadKeys["caron"]["O"] := "Ǒ"
+    DeadKeys["caron"]["o"] := "ǒ"
+    DeadKeys["caron"]["R"] := "Ř"
+    DeadKeys["caron"]["r"] := "ř"
+    DeadKeys["caron"]["S"] := "Š"
+    DeadKeys["caron"]["s"] := "š"
+    DeadKeys["caron"]["T"] := "Ť"
+    DeadKeys["caron"]["t"] := "ť"
+    DeadKeys["caron"]["U"] := "Ǔ"
+    DeadKeys["caron"]["u"] := "ǔ"
+    DeadKeys["caron"]["Z"] := "Ž"
+    DeadKeys["caron"]["z"] := "ž"
+    DeadKeys["caron"]["Ʒ"] := "Ǯ"
+    DeadKeys["caron"]["ʒ"] := "ǯ"
   }
-  DeadKey("¯", DeadKeys["macron"])
+  DeadKey("ˇ", DeadKeys["caron"])
 } else {
 }
 Return
 +>!<^SC032::
 if not GetKeyState("CapsLock", "T") {
 } else {
-  ; macron
-  if (DeadKeys["macron"] == "") {
-    DeadKeys["macron"] := Object()
-    DeadKeys["macron"]["A"] := "Ā"
-    DeadKeys["macron"]["a"] := "ā"
-    DeadKeys["macron"]["E"] := "Ē"
-    DeadKeys["macron"]["e"] := "ē"
-    DeadKeys["macron"]["G"] := "Ḡ"
-    DeadKeys["macron"]["g"] := "ḡ"
-    DeadKeys["macron"]["I"] := "Ī"
-    DeadKeys["macron"]["i"] := "ī"
-    DeadKeys["macron"]["O"] := "Ō"
-    DeadKeys["macron"]["o"] := "ō"
-    DeadKeys["macron"]["U"] := "Ū"
-    DeadKeys["macron"]["u"] := "ū"
-    DeadKeys["macron"]["Y"] := "Ȳ"
-    DeadKeys["macron"]["y"] := "ȳ"
-    DeadKeys["macron"]["Æ"] := "Ǣ"
-    DeadKeys["macron"]["æ"] := "ǣ"
+  ; caron
+  if (DeadKeys["caron"] == "") {
+    DeadKeys["caron"] := Object()
+    DeadKeys["caron"]["A"] := "Ǎ"
+    DeadKeys["caron"]["a"] := "ǎ"
+    DeadKeys["caron"]["C"] := "Č"
+    DeadKeys["caron"]["c"] := "č"
+    DeadKeys["caron"]["D"] := "Ď"
+    DeadKeys["caron"]["d"] := "ď"
+    DeadKeys["caron"]["E"] := "Ě"
+    DeadKeys["caron"]["e"] := "ě"
+    DeadKeys["caron"]["G"] := "Ǧ"
+    DeadKeys["caron"]["g"] := "ǧ"
+    DeadKeys["caron"]["H"] := "Ȟ"
+    DeadKeys["caron"]["h"] := "ȟ"
+    DeadKeys["caron"]["I"] := "Ǐ"
+    DeadKeys["caron"]["i"] := "ǐ"
+    DeadKeys["caron"]["j"] := "ǰ"
+    DeadKeys["caron"]["K"] := "Ǩ"
+    DeadKeys["caron"]["k"] := "ǩ"
+    DeadKeys["caron"]["L"] := "Ľ"
+    DeadKeys["caron"]["l"] := "ľ"
+    DeadKeys["caron"]["N"] := "Ň"
+    DeadKeys["caron"]["n"] := "ň"
+    DeadKeys["caron"]["O"] := "Ǒ"
+    DeadKeys["caron"]["o"] := "ǒ"
+    DeadKeys["caron"]["R"] := "Ř"
+    DeadKeys["caron"]["r"] := "ř"
+    DeadKeys["caron"]["S"] := "Š"
+    DeadKeys["caron"]["s"] := "š"
+    DeadKeys["caron"]["T"] := "Ť"
+    DeadKeys["caron"]["t"] := "ť"
+    DeadKeys["caron"]["U"] := "Ǔ"
+    DeadKeys["caron"]["u"] := "ǔ"
+    DeadKeys["caron"]["Z"] := "Ž"
+    DeadKeys["caron"]["z"] := "ž"
+    DeadKeys["caron"]["Ʒ"] := "Ǯ"
+    DeadKeys["caron"]["ʒ"] := "ǯ"
   }
-  DeadKey("¯", DeadKeys["macron"])
+  DeadKey("ˇ", DeadKeys["caron"])
 }
 Return
 #if Extend

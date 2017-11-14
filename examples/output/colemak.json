@@ -59,7 +59,7 @@
                 { "pos": "M", "letters": [ "m", "M", "macron", "", "Button_R" ] },
                 { "pos": ",", "letters": [ ",", "<", "cedilla", "", "MouseLeft" ] },
                 { "pos": ".", "letters": [ ".", ">", "abovedot", "", "MouseRight" ] },
-                { "pos": "/", "letters": [ "/", "?", "¿", "", "Compose" ] }
+                { "pos": "/", "letters": [ "/", "?", "¿", "", "compose" ] }
             ]
         },
         {
@@ -107,6 +107,21 @@
                 [ "~", "≈" ],
                 [ "%", "‰" ],
                 [ "|", "¦" ]
+            ]
+        }
+    ],
+    "variants": [
+        {
+            "name": "mod-dh",
+            "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr" ],
+            "keys": [
+                { "pos": "V", "letters": [ "d", "D", "diaeresis", "" ] },
+                { "pos": "B", "letters": [ "v", "V", "œ", "Œ" ] },
+                { "pos": "G", "letters": [ "g", "G", "ogonek", "" ] },
+                { "pos": "T", "letters": [ "b", "B", "breve", "" ] },
+                { "pos": "H", "letters": [ "k", "K", "abovering", "" ] },
+                { "pos": "N", "letters": [ "m", "M", "macron", "" ] },
+                { "pos": "M", "letters": [ "h", "H", "caron", "" ] }
             ]
         }
     ]

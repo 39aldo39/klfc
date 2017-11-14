@@ -31,3 +31,4 @@ The supported predefined dead keys are:
 * `belowcomma`
 * `currency`
 * `greek`
+* `compose`

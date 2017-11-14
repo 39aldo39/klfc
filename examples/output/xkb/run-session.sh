@@ -4,15 +4,17 @@ set -eu
 xkb_dir=$(dirname "$0")
 layout="colemak"
 mod=""
+variant="basic"
 warning_level=0
 
 OPTIND=1
 
-while getopts "i:l:m:w:" opt; do
+while getopts "i:l:m:v:w:" opt; do
   case "$opt" in
     i) xkb_dir="$OPTARG";;
     l) layout="$OPTARG";;
     m) mod="$OPTARG";;
+    v) variant="$OPTARG";;
     w) warning_level="$OPTARG";;
     *) exit 1;;
   esac
@@ -36,7 +38,7 @@ fi
 
 setxkbmap \
     -I "$xkb_dir" \
-    -layout "$layout" \
+    -layout "$layout($variant)" \
     -keycodes "$keycodes" \
     -types "$types" \
     -print \

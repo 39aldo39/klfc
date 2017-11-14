@@ -37,7 +37,6 @@ The supported actions are:
 * `Tab`
 * `LeftTab`
 * `Enter`
-* `Compose`
 * `Menu`
 * `Undo`
 * `Redo`
