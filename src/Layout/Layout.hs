@@ -5,6 +5,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Layout.Layout
     ( Information(..)
@@ -19,16 +21,20 @@ module Layout.Layout
     , _info
     , _singletonKeys
     , _mods
+    , _variants
     , _keys
     , SingletonKey(..)
     , _sPos
     , _sLetter
+    , Variant(..)
+    , isEmptyVariant
     , isEmptyLayout
     , addSingletonKeysAsKeys
     , singletonKeyToKey
     , layoutOrd
     , layoutDelims
     , applyModLayout
+    , applyVariantLayout
     , getDefaultKeys
     , addDefaultKeysWith
     , addDefaultKeys
@@ -37,11 +43,13 @@ module Layout.Layout
     , unifyShiftlevels
     , getLetterByPosAndShiftstate
     , getPosByLetterAndShiftstate
+    , getPosByEqAndShiftstate
     ) where
 
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
+import Data.List.Unicode ((∖))
 import Util (parseString, lensWithDefault', expectedKeys, combineOn, nubWithOn, groupWith', mconcatMapM)
 
 import Control.Monad.Writer (Writer, runWriter, tell)
@@ -103,33 +111,56 @@ data SingletonKey = SingletonKey
     , __sLetter ∷ Letter
     } deriving (Eq, Show, Read)
 makeLenses ''SingletonKey
+
+newtype Variant = Variant { variantToLayout ∷ Layout } deriving (Show, Read)
+
 data Layout = Layout
     { __info ∷ Information
     , __singletonKeys ∷ [SingletonKey]
     , __mods ∷ [Mod]
+    , __variants ∷ [Variant]
     , __keys ∷ [Key]
     } deriving (Show, Read)
 makeLenses ''Layout
 
+deriving instance Monoid Variant
+deriving instance ToJSON Variant
+instance FromJSON (FileType → Variant) where
+    parseJSON = withObject "variant" $ \o → do
+        expectedKeys ("filter" : "name" : layoutKeys ∖ ["mods", "variants"]) o
+        _ ← o .: "name" ∷ Parser String -- Ensure a name
+        fmap Variant <$> parseJSON (Object o)
+
 layoutKeys ∷ [T.Text]
-layoutKeys = ["singletonKeys","qwertyShortcuts","mods","keysWithShiftlevels","shiftlevels","keysWithShiftstates","shiftstates","keys","customDeadKeys"]
+layoutKeys = ["singletonKeys","qwertyShortcuts","mods","variants","keysWithShiftlevels","shiftlevels","keysWithShiftstates","shiftstates","keys","customDeadKeys"]
 
 isEmptyLayout ∷ Layout → Bool
-isEmptyLayout (Layout info [] [] []) = isEmptyInformation info
+isEmptyLayout (Layout info [] [] [] []) = isEmptyInformation info
 isEmptyLayout _ = False
 
+isEmptyVariant ∷ Variant → Bool
+isEmptyVariant (Variant layout) = isEmptyLayout layout
+
 instance Monoid Layout where
-    mempty = Layout (∅) (∅) (∅) []
-    mappend (Layout a1 b1 c1 keys1)
-            (Layout a2 b2 c2 keys2) =
+    mempty = Layout (∅) (∅) (∅) (∅) []
+    mappend (Layout a1 b1 c1 d1 keys1)
+            (Layout a2 b2 c2 d2 keys2) =
         Layout (a1 ⊕ a2) (b1 `combineSingletonKeys` b2)
-               (c1 ⊕ c2) (keys1 `combineKeys` keys2)
+               (c1 ⊕ c2) (d1 `combineVariants` d2) (keys1 `combineKeys` keys2)
 
 nubSingletonKeys ∷ [SingletonKey] → [SingletonKey]
 nubSingletonKeys = nubWithOn (\k ks → NE.last (k :| ks)) (view _sPos)
 
 combineSingletonKeys ∷ [SingletonKey] → [SingletonKey] → [SingletonKey]
 combineSingletonKeys = combineOn (\k ks → NE.last(k :| ks)) (view _sPos)
+
+combineVariants ∷ [Variant] → [Variant] → [Variant]
+combineVariants = combineOn (\v vs → setName v (mconcat (v:vs))) (view (_info ∘ _name) ∘ variantToLayout)
+  where
+    setName (Variant l) =
+        variantToLayout >>>
+        set (_info ∘ _name) (view (_info ∘ _name) l) >>>
+        Variant
 
 addSingletonKeysAsKeys ∷ Layout → Layout
 addSingletonKeysAsKeys layout = set _singletonKeys [] $
@@ -178,15 +209,16 @@ instance FromJSON (FileType → Maybe SingletonKey) where
     parseJSON v = pure ∘ Just ∘ uncurry SingletonKey <$> parseJSON v
 
 instance ToJSON Layout where
-    toJSON (Layout info singletonKeys mods keys) =
+    toJSON (Layout info singletonKeys mods variants keys) =
         let hmInfo = fromValue (∅) $ toJSON info
             hmKeys = fromValue (∅) $ toJSON' keys
             customDeadKeys = concatMap (mapMaybe letterToCustomDeadKey ∘ view _letters) keys
             hmSingletonKeys  = HM.fromList [ "singletonKeys"  .= singletonKeys  | not (null singletonKeys) ]
             hmMods           = HM.fromList [ "mods"           .= mods           | not (null mods) ]
+            hmVariants       = HM.fromList [ "variants"       .= variants       | not (null variants) ]
             hmCustomDeadKeys = HM.fromList [ "customDeadKeys" .= customDeadKeys | not (null customDeadKeys) ]
         in
-        Object (HM.unions [hmInfo, hmKeys, hmSingletonKeys, hmMods, hmCustomDeadKeys])
+        Object (HM.unions [hmInfo, hmKeys, hmSingletonKeys, hmMods, hmVariants, hmCustomDeadKeys])
       where
         fromValue _ (Object hm) = hm
         fromValue x _           = x
@@ -241,6 +273,7 @@ instance FromJSON (FileType → Layout) where
         allSingletonKeysFilt ← sequence <$> o .:? "singletonKeys" .!= []
         let singletonKeysFilt = nubSingletonKeys ∘ catMaybes <$> allSingletonKeysFilt
         mods ← o .:? "mods" .!= []
+        variants ← sequence <$> o .:? "variants" .!= []
         customDeadKeys  ← o .:? "customDeadKeys"  .!= []
         qwertyShortcuts ← o .:? "qwertyShortcuts" .!= False
         keysFilt ← (fmap ∘ fmap)
@@ -248,7 +281,7 @@ instance FromJSON (FileType → Layout) where
              either error id ∘ setCustomDeads customDeadKeys >>>
              bool id (map (liftA2 (set _shortcutPos) (view _pos) id)) qwertyShortcuts
             ) (parseJSON' o)
-        let layoutFilt = Layout info <$> singletonKeysFilt <*> pure mods <*> keysFilt
+        let layoutFilt = Layout info <$> singletonKeysFilt <*> pure mods <*> variants <*> keysFilt
         pure (bool (∅) ∘ layoutFilt <*> runFilter filt)
 
 parseJSON' ∷ Object → Parser (FileType → [Key])
@@ -318,6 +351,15 @@ applyModLayout layoutMod@(Mod nameM _) =
     over (_keys ∘ traverse ∘ _pos) (applyMod layoutMod) ∘
     over (_keys ∘ traverse ∘ _shortcutPos) id -- make the (perhaps) guessed shortcut position explicit
 
+applyVariantLayout ∷ Variant → Layout → Layout
+applyVariantLayout variant | isEmptyVariant variant = id
+applyVariantLayout (Variant layout) = (⊕ layoutV)
+  where
+    layoutV = ($ layout) $
+        set (_info ∘ _fullName) (" (" ⊕ name ⊕ ")") >>>
+        set (_info ∘ _name) ('_':name)
+    name = view (_info ∘ _name) layout
+
 getLetterByPosAndShiftstate ∷ Pos → Shiftstate → Layout → Maybe Letter
 getLetterByPosAndShiftstate pos state = listToMaybe ∘ liftA2 (⧺)
     (map toLetter ∘ filter ((≡ pos) ∘ view _pos) ∘ view _keys)
@@ -326,8 +368,11 @@ getLetterByPosAndShiftstate pos state = listToMaybe ∘ liftA2 (⧺)
     toLetter = flip getLetter state
 
 getPosByLetterAndShiftstate ∷ Letter → Shiftstate → Layout → [Pos]
-getPosByLetterAndShiftstate letter state = liftA2 (⧺)
-    (map (view _pos) ∘ filter ((≡ letter) ∘ toLetter) ∘ view _keys)
-    (map (view _sPos) ∘ filter ((≡ letter) ∘ view _sLetter) ∘ view _singletonKeys)
+getPosByLetterAndShiftstate letter = getPosByEqAndShiftstate (≡ letter)
+
+getPosByEqAndShiftstate ∷ (Letter → Bool) → Shiftstate → Layout → [Pos]
+getPosByEqAndShiftstate eq state = liftA2 (⧺)
+    (map (view _pos) ∘ filter (eq ∘ toLetter) ∘ view _keys)
+    (map (view _sPos) ∘ filter (eq ∘ view _sLetter) ∘ view _singletonKeys)
   where
     toLetter = flip getLetter state

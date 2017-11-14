@@ -10,6 +10,7 @@ The JSON file denotes (a part of) a keyboard layout. The file has the following 
 * Keys (`keys`).
 * Singleton keys (`singletonKeys`).
 * Custom dead keys (`customDeadKeys`).
+* Variants (`variants`).
 * Mods (`mods`).
 
 It is possible to split a layout definition into multiple files.
@@ -117,6 +118,16 @@ If no base character is applicable, the attribute can be omitted and a Unicode c
 The `stringMap` is a list of tuples, where the first component denotes the string which will be transformed by the dead key and the second component denotes the resulting string.
 Since JSON does not support tuples, a list of length 2 is used.
 For example, to put an `´` on an `e`, use the 'tuple' `[ "e", "é" ]`.
+
+Variants
+--------
+
+The `variants` attribute takes a list of so-called variants.
+A 'variant' is a small change in the layout.
+For example, a variant can modify a few letters or add some.
+Each variant is basically a layout, which will be combined with the base layout.
+The only difference is that a variant does not have miscellaneous information, except for the `name` attribute.
+Furthermore, it cannot contain nested variants or mods.
 
 Mods
 ----

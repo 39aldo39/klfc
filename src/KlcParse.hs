@@ -49,7 +49,7 @@ layout = do
     KlcParseLayout info states keys ligs deads ← klcLayout
     ($ keys) $
       map (set _shiftlevels (map (WithBar ∘ (:| [])) states)) >>>
-      Layout info (∅) (∅) >>>
+      Layout info (∅) (∅) (∅) >>>
       setDeads deads >$>
       setLigatures ligs
 

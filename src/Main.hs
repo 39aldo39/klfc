@@ -38,7 +38,7 @@ import JsonPretty (Config(..), encodePretty')
 import Keylayout (KeylayoutConfig(..), printKeylayout, toKeylayout)
 import Klc (KlcConfig(..), printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
-import Layout.Layout (isEmptyLayout, layoutOrd, layoutDelims, applyModLayout, removeEmptyLetters, unifyShiftstates)
+import Layout.Layout (variantToLayout, isEmptyLayout, isEmptyVariant, layoutOrd, layoutDelims, applyModLayout, applyVariantLayout, removeEmptyLetters, unifyShiftstates)
 import Layout.Mod (isEmptyMod, applyInverseMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
@@ -182,11 +182,14 @@ output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let layoutFile modName l
           | isCompact = dir </> ("layout" ⊕ modName) <.> "ini"
           | otherwise = dir </> "layouts" </> view (_info ∘ _name) l </> "layout" <.> "ini"
-    forM_ ((∅) : view _mods layout) $ \layoutMod@(Mod nameM _) → do
-        let nameM' = bool ('_':nameM) "" (isEmptyMod layoutMod)
-        let layout' = applyModLayout layoutMod layout
-        writeFileStream (dir </> ("pkl" ⊕ nameM') <.> "ini") =<< printedPklData layout'
-        writeFileStream (layoutFile nameM' layout') =<< printedLayoutData layout'
+    forM_ ((∅) : view _variants layout) $ \variant → do
+        let nameV = bool ('_':view (_info ∘ _name) (variantToLayout variant)) "" (isEmptyVariant variant)
+        forM_ ((∅) : view _mods layout) $ \layoutMod@(Mod nameM _) → do
+            let nameM' = bool ('_':nameM) "" (isEmptyMod layoutMod)
+            let layout' = applyModLayout layoutMod ∘ applyVariantLayout variant $ layout
+            let name' = nameV ⊕ nameM'
+            writeFileStream (dir </> ("pkl" ⊕ name') <.> "ini") =<< printedPklData layout'
+            writeFileStream (layoutFile name' layout') =<< printedLayoutData layout'
     pklFile ← liftIO $ B.readFile "pkl/pkl.exe" <|> pure defPklFile
     liftIO $ B.writeFile (dir </> "pkl.exe") pklFile
 output (Output Klc Standard) extraOptions = ($ Klc) >>>
@@ -197,9 +200,10 @@ output (Output Klc (File dir)) extraOptions = ($ Klc) >>> \layout → do
     when (null name) (fail "the layout has an empty name when exported to KLC")
     let klcConfig = KlcConfig (KlcChainedDeads ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "klc"
-    forM_ ((∅) : view _mods layout) $ \layoutMod → do
-        let layout' = applyModLayout layoutMod layout
-        writeFileStream (fname layout') ∘ printKlcData =<< runReaderT (toKlcData layout') klcConfig
+    forM_ ((∅) : view _variants layout) $ \variant → do
+        forM_ ((∅) : view _mods layout) $ \layoutMod → do
+            let layout' = applyModLayout layoutMod ∘ applyVariantLayout variant $ layout
+            writeFileStream (fname layout') ∘ printKlcData =<< runReaderT (toKlcData layout') klcConfig
 output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>>
     toKeylayout (KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)) >=>
     writeStream Standard ∘ printKeylayout
@@ -208,9 +212,10 @@ output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout �
     when (null name) (fail "the layout has an empty name when exported to keylayout")
     let keylayoutConfig = KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "keylayout"
-    forM_ ((∅) : view _mods layout) $ \layoutMod → do
-        let layout' = applyModLayout layoutMod layout
-        writeFileStream (fname layout') ∘ printKeylayout =<< toKeylayout keylayoutConfig layout'
+    forM_ ((∅) : view _variants layout) $ \variant → do
+        forM_ ((∅) : view _mods layout) $ \layoutMod → do
+            let layout' = applyModLayout layoutMod ∘ applyVariantLayout variant $ layout
+            writeFileStream (fname layout') ∘ printKeylayout =<< toKeylayout keylayoutConfig layout'
     let replaceLayout = replaceVar "layout" name
     userFile   ← liftIO $ B.readFile "keylayout/install-user.sh"   <|> pure defKeylayoutUser
     systemFile ← liftIO $ B.readFile "keylayout/install-system.sh" <|> pure defKeylayoutSystem
@@ -222,17 +227,22 @@ output (Output Tmk Standard) _ = const (fail "TMK as output must be written to a
 output (Output Tmk (File dir)) _ = ($ Tmk) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (error "the layout has an empty name when exported to TMK")
-    writeStream (File $ dir </> "unimap.c") ∘ printTmkKeymap =<< toTmkKeymap layout
+    let fname l = dir </> ("unimap_" ⊕ view (_info ∘ _name) l) <.> "c"
+    forM_ ((∅) : view _variants layout) $ \variant → do
+        forM_ ((∅) : view _mods layout) $ \layoutMod → do
+            let layout' = applyModLayout layoutMod ∘ applyVariantLayout variant $ layout
+            writeFileStream (fname layout') ∘ printTmkKeymap =<< toTmkKeymap layout'
 output (Output Ahk Standard) _ = ($ Ahk) >>>
     writeStream Standard ∘ printAhk <=< toAhk id
 output (Output Ahk (File dir)) _ = ($ Ahk) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (fail "the layout has an empty name when exported to AHK")
     let fname l = dir </> view (_info ∘ _name) l <.> "ahk"
-    forM_ ((∅) : view _mods layout) $ \layoutMod → do
-        let layout' = applyModLayout layoutMod layout
-        let getOrigPos = applyInverseMod layoutMod
-        writeFileStream (fname layout') ∘ printAhk =<< toAhk getOrigPos layout'
+    forM_ ((∅) : view _variants layout) $ \variant → do
+        forM_ ((∅) : view _mods layout) $ \layoutMod → do
+            let layout' = applyModLayout layoutMod ∘ applyVariantLayout variant $ layout
+            let getOrigPos = applyInverseMod layoutMod
+            writeFileStream (fname layout') ∘ printAhk =<< toAhk getOrigPos layout'
 
 replaceVar ∷ B.ByteString → String → B.ByteString → B.ByteString
 replaceVar var val = B8.unlines ∘ replace before after ∘ B8.lines

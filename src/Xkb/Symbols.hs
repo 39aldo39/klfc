@@ -1,6 +1,7 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Xkb.Symbols where
 
@@ -8,7 +9,7 @@ import BasePrelude
 import Prelude.Unicode
 import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (show', lookup', groupSortWith, concatMapM, tellMaybeT, versionStr, (>$>))
+import Util (show', lookup', groupSortWith, concatMapM, tellMaybeT, versionStr)
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP (fromList)
 
@@ -19,9 +20,9 @@ import Control.Monad.Writer (tell, runWriter)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Set as S
-import Lens.Micro.Platform (view, over, _1, _2, makeLenses)
+import Lens.Micro.Platform (view, set, over, _1, _2, makeLenses)
 
-import Layout.Layout (singletonKeyToKey, getPosByLetterAndShiftstate, getLetterByPosAndShiftstate)
+import Layout.Layout (singletonKeyToKey, getLetterByPosAndShiftstate, getPosByEqAndShiftstate, variantToLayout)
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux
@@ -42,18 +43,19 @@ data XkbGroup = XkbGroup
     , __actions ∷ [XkbAction]
     , __virtualMods ∷ [VirtualMod]
     }
+makeLenses ''XkbGroup
 data XkbKey = XkbKey
     { __xkbPos ∷ String
-    , __xkbSymbols ∷ Map Group XkbGroup
+    , __xkbGroups ∷ Map Group XkbGroup
     }
 makeLenses ''XkbKey
 
 printSymbolsHelp ∷ [Symbol] → String
 printSymbolsHelp [] = "[]"
-printSymbolsHelp xs = ("[ "⊕) ∘ (⊕" ]") ∘ intercalate ", " ∘ map (printf "%12s") $ xs
+printSymbolsHelp xs = ("[ "⊕) ∘ (⊕" ]") ∘ intercalate ", " ∘ map (printf "%12s") ∘ dropWhileEnd (≡ "NoSymbol") $ xs
 
 printActions ∷ [XkbAction] → String
-printActions = ("[ " ⊕) ∘ (⊕ " ]") ∘ intercalate ", " ∘ dropWhileEnd (≡"NoAction()")
+printActions = ("[ " ⊕) ∘ (⊕ " ]") ∘ intercalate ", " ∘ dropWhileEnd (≡ "NoAction()")
 
 printGroup ∷ Group → XkbGroup → State Group [String]
 printGroup groupNr (XkbGroup _ _ symbols actions vmods) =
@@ -80,14 +82,24 @@ printXkbKey (XkbKey pos syms) = lines $
     "key " ⊕ pos ⊕ " { " ⊕ intercalate (",\n" ⊕ replicate 13 ' ') syms' ⊕ " };"
     where syms' = evalState (printGroups (Map.toAscList syms)) 1
 
-printXkbKeys ∷ [XkbKey] → [String]
-printXkbKeys = flip (evalState ∘ stateXkbKeys) (∅)
+printXkbKeys ∷ [XkbKey] → [XkbKey] → [String]
+printXkbKeys baseKeys = flip (evalState ∘ stateXkbKeys baseKeys) (∅)
 
-stateXkbKeys ∷ [XkbKey] → State (Map Group String) [String]
-stateXkbKeys = concatMapM $
+stateXkbKeys ∷ [XkbKey] → [XkbKey] → State (Map Group String) [String]
+stateXkbKeys baseKeys = concatMapM $
+    liftA2 adaptKeyToBaseKey getBaseKey id >>>
     liftA2 (⧺)
-        <$> concatMapM (uncurry stateXkbKey) ∘ Map.toAscList ∘ __xkbSymbols
+        <$> concatMapM (uncurry stateXkbKey) ∘ Map.toAscList ∘ __xkbGroups
         <*> pure ∘ printXkbKey
+  where
+    getBaseKey key = listToMaybe (filter (((≡) `on` __xkbPos) key) baseKeys)
+    adaptKeyToBaseKey baseKey = over _xkbGroups (Map.mapWithKey (modifyXkbGroup baseKey))
+    modifyXkbGroup baseKey groupNr
+      | Just baseXkbGroup ← baseKey >>= Map.lookup groupNr ∘ __xkbGroups
+      = set _rightGuess <$> ((≡) `on` __xkbGroupTypeName) baseXkbGroup <*> id >>>
+        over _symbols (zipWith (\baseSymbol symbol → bool symbol "NoSymbol"   (baseSymbol ≡ symbol)) (__symbols baseXkbGroup ⧺ repeat "NoSymbol")) >>>
+        over _actions (zipWith (\baseAction action → bool action "NoAction()" (baseAction ≡ action)) (__actions baseXkbGroup ⧺ repeat "NoAction()"))
+      | otherwise = id
 
 stateXkbKey ∷ Group → XkbGroup → State (Map Group String) [String]
 stateXkbKey groupNr (XkbGroup typeName rightGuess _ _ _) = do
@@ -99,31 +111,39 @@ stateXkbKey groupNr (XkbGroup typeName rightGuess _ _ _) = do
 
 type ExtraKey = String
 data XkbData = XkbData
-    { __xkbKeys ∷ [XkbKey]
+    { __xkbLayoutName ∷ String
+    , __xkbName ∷ String
+    , __xkbKeys ∷ [XkbKey]
     , __xkbExtraKeys ∷ [ExtraKey]
     }
 instance Monoid XkbData where
-    mempty = XkbData [] []
-    XkbData xs xs' `mappend` XkbData ys ys' =
-        XkbData (xs `addXkbKeys` ys) (xs' ⧺ ys')
+    mempty = XkbData [] [] [] []
+    XkbData name xs xs' xs'' `mappend` XkbData _ ys ys' ys'' =
+        XkbData name (xs ⧺ ys) (xs' `addXkbKeys` ys') (xs'' ⧺ ys'')
 
 addXkbKeys ∷ [XkbKey] → [XkbKey] → [XkbKey]
 addXkbKeys []           keys2 = keys2
 addXkbKeys (key1:keys1) keys2 = key1' : addXkbKeys keys1 keys2'
   where
     (samePos, keys2') = partition (on (≡) __xkbPos key1) keys2
-    key1' = over _xkbSymbols (⊕ extraXkbSymbols) key1
-    extraXkbSymbols = mconcat (map __xkbSymbols samePos)
+    key1' = over _xkbGroups (⊕ extraXkbSymbols) key1
+    extraXkbSymbols = mconcat (map __xkbGroups samePos)
 
-printXkbData ∷ XkbData → String
-printXkbData (XkbData keys extraKeys) = unlines $
+printXkbDatas ∷ XkbData → [XkbData] → String
+printXkbDatas xkbData variantXkbDatas = unlines $
     [ "// Generated by KLFC " ⊕ versionStr
     , "// https://github.com/39aldo39/klfc"
-    , ""
-    , "default partial"
-    , "xkb_symbols \"basic\" {"
+    ] ⧺ printXkbData (∅) xkbData
+    ⧺ concatMap (printXkbData xkbData) variantXkbDatas
+
+printXkbData ∷ XkbData → XkbData → [String]
+printXkbData (XkbData _ _ baseKeys _) (XkbData layoutName name keys extraKeys) =
+    [ "" ] ⧺
+    [ "default" | name ≡ "basic" ] ⧺
+    [ "xkb_symbols " ⊕ show name ⊕ " {"
     ] ⧺ map (replicate 4 ' ' ⊕)
-    ( printXkbKeys keys ⧺
+    ( [ "include " ⊕ show (layoutName ⊕ "(basic)") | name ≢ "basic" ] ⧺
+      printXkbKeys baseKeys keys ⧺
       extraKeys
     ) ⧺
     [ "};"
@@ -133,28 +153,39 @@ type RedirectAllXkb = Bool
 type RedirectIfExtend = Bool
 
 printSymbols ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m String
-printSymbols =
-    prepareLayout >=>
-    printLayout 1 >$>
-    printXkbData
+printSymbols = prepareLayout >=> \layout → do
+    let layoutName = view (_info ∘ _name) layout
+    xkbData ← printLayout layoutName 1 (∅) (Variant (set (_info ∘ _name) "basic" layout))
+    variantXkbDatas ← traverse (printLayout layoutName 1 layout) (view _variants layout)
+    pure (printXkbDatas xkbData variantXkbDatas)
 
-printLayouts ∷ (Logger m, MonadReader XkbConfig m) ⇒ [Layout] → m XkbData
-printLayouts = fmap mconcat ∘ zipWithM printLayout [1..]
+printLayout ∷ (Logger m, MonadReader XkbConfig m) ⇒ String → Group → Layout → Variant → m XkbData
+printLayout layoutName groupNr baseLayout variant =
+    printLayout' layoutName groupNr fullLayout variantLayout'
+  where
+    variantLayout = variantToLayout variant
+    fullLayout = baseLayout ⊕ variantLayout
+    variantLayout' = ($ fullLayout) $
+            over _keys (filter ((∈ posses) ∘ view _pos)) >>>
+            over _singletonKeys (filter ((∈ sPosses) ∘ view _sPos)) >>>
+            set (_info ∘ _name) (view (_info ∘ _name) variantLayout)
+    posses = map (view _pos) (view _keys variantLayout)
+    sPosses = map (view _sPos) (view _singletonKeys variantLayout)
 
-printLayout ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → m XkbData
-printLayout groupNr layout =
-    XkbData
-        <$> (catMaybes <$> traverse (printKey groupNr layout) keys)
+printLayout' ∷ (Logger m, MonadReader XkbConfig m) ⇒ String → Group → Layout → Layout → m XkbData
+printLayout' layoutName groupNr fullLayout variantLayout =
+    XkbData layoutName (view (_info ∘ _name) variantLayout)
+        <$> (catMaybes <$> traverse (printKey groupNr fullLayout) keys)
         <*> pure extraKeys
   where
-    keys = view _keys layout ⧺ map singletonKeyToKey singletonKeys
-    (singletonKeys, extraKeys) = printExtraKeys layout
+    keys = view _keys variantLayout ⧺ map singletonKeyToKey singletonKeys
+    (singletonKeys, extraKeys) = printExtraKeys variantLayout
 
 printKey ∷ (Logger m, MonadReader XkbConfig m) ⇒ Group → Layout → Key → m (Maybe XkbKey)
-printKey groupNr layout key = runMaybeT $ do
+printKey groupNr fullLayout key = runMaybeT $ do
     p ← maybe unsupportedPos pure (lookup pos posAndKeycode)
     ls ← traverse printLetter letters
-    actions ← zipWithM (printAction layout pos) levels letters
+    actions ← zipWithM (printAction fullLayout pos) levels letters
     let vmods = nub (concatMap printVirtualMods letters)
     let xkbGroup = XkbGroup (keytypeName key) (isRightGuess key) ls actions vmods
     pure $ XkbKey p (Map.singleton groupNr xkbGroup)
@@ -189,19 +220,25 @@ printLetter LNothing =
     pure "VoidSymbol"
 
 printAction ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → Pos → Shiftlevel → Letter → m String
-printAction layout pos level letter = printAction' letter layout pos level letter
+printAction fullLayout pos level letter = printAction' letter fullLayout pos level letter
 
 printAction' ∷ (Logger m, MonadReader XkbConfig m) ⇒ Letter → Layout → Pos → Shiftlevel → Letter → m String
-printAction' errorL layout pos level (Action a) = fromMaybe e $
-    printAction' errorL layout pos level <$> lookup a actionAndRedirect <|>
+printAction' errorL fullLayout pos level (Action a) = fromMaybe e $
+    printAction' errorL fullLayout pos level <$> lookup a actionAndRedirect <|>
     printLinuxAction <$> lookup a actionAndLinuxAction
   where
     e = "NoAction()" <$ tell [show' a ⊕ " is not supported in XKB"]
-printAction' errorL layout pos level (Redirect rMods rPos) = do
+printAction' errorL fullLayout pos level (Redirect rMods rPos) = do
     extraClearedMods ← bool [M.Extend] [] <$> asks __redirectClearsExtend
     let addMods   = rMods ∖ modsIntersection
     let clearMods = modsUnion ∖ (rMods ⧺ extraClearedMods)
     let emptyMods = null addMods ∧ null clearMods
+
+    let rShiftstate = WP.fromList (rMods ⧺ extraClearedMods)
+    let sameSymbol = (≡ symbol) ∘ fst ∘ runWriter ∘ printLetter
+    let sameSymbolPos p = maybe True sameSymbol (getLetterByPosAndShiftstate p rShiftstate fullLayout)
+    let lPosses = getPosByEqAndShiftstate sameSymbol rShiftstate fullLayout
+    let qPosses = filter sameSymbolPos (getPosByEqAndShiftstate sameSymbol rShiftstate defaultLayout)
 
     let linuxActionAt p = XkbRedirect symbol p addMods clearMods
     let printWithAt e = maybe e (printLinuxAction ∘ linuxActionAt) ∘ listToMaybe
@@ -215,12 +252,8 @@ printAction' errorL layout pos level (Redirect rMods rPos) = do
   where
     modsUnion = toList ∘ S.unions ∘ map getSet ∘ toList $ level
     modsIntersection = foldl1 intersect (fmap toList level)
-    rShiftstate = WP.fromList rMods
     letter = redirectToLetter rMods rPos
     symbol = fst ∘ runWriter $ printLetter letter
-    lPosses = getPosByLetterAndShiftstate letter rShiftstate layout
-    qPosses = filter sameSymbol (getPosByLetterAndShiftstate letter rShiftstate defaultLayout)
-    sameSymbol p = maybe True ((≡ symbol) ∘ fst ∘ runWriter ∘ printLetter) (getLetterByPosAndShiftstate p rShiftstate layout)
     noOrigRedPos = "NoAction()" <$ tell [show' errorL ⊕ " on " ⊕ show' pos ⊕ " could not redirect to the original position in XKB"]
     noRedPos = "NoAction()" <$ tell [show' errorL ⊕ " on " ⊕ show' pos ⊕ " could not find a redirect position in XKB"]
 printAction' _ _ _ _ l@(Modifiers effect mods) =

@@ -59,5 +59,21 @@
         { "pos": ",", "letters": [ ",", "<" ] },
         { "pos": ".", "letters": [ ".", ">" ] },
         { "pos": "/", "letters": [ "/", "?" ] }
+    ],
+    "variants": [
+        {
+            "name": "mod-dh",
+            "shiftlevels": [ "None", "Shift" ],
+            "keys": [
+                { "pos": "V", "letters": [ "d", "D" ] },
+                { "pos": "B", "letters": [ "v", "V" ] },
+                { "pos": "G", "letters": [ "g", "G" ] },
+                { "pos": "T", "letters": [ "b", "B" ] },
+
+                { "pos": "H", "letters": [ "k", "K" ] },
+                { "pos": "N", "letters": [ "m", "M" ] },
+                { "pos": "M", "letters": [ "h", "H" ] }
+            ]
+        }
     ]
 }

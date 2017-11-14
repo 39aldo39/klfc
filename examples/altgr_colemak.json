@@ -56,6 +56,22 @@
         { "pos": "/", "letters": [ "¿", "" ] },
         { "pos": "space", "letters": [ " ", " " ] }
     ],
+    "variants": [
+        {
+            "name": "mod-dh",
+            "shiftlevels": [ "AltGr", "Shift+AltGr" ],
+            "keys": [
+                { "pos": "V", "letters": [ "diaeresis", "" ] },
+                { "pos": "B", "letters": [ "œ", "Œ" ] },
+                { "pos": "G", "letters": [ "ogonek", "" ] },
+                { "pos": "T", "letters": [ "breve", "" ] },
+
+                { "pos": "H", "letters": [ "abovering", "" ] },
+                { "pos": "N", "letters": [ "macron", "" ] },
+                { "pos": "M", "letters": [ "caron", "" ] }
+            ]
+        }
+    ],
     "customDeadKeys": [
         {
             "name": "special",

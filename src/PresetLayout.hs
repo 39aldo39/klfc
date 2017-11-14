@@ -20,10 +20,10 @@ import qualified Layout.Pos as P
 import Layout.Types
 
 defaultLayout ∷ Layout
-defaultLayout = Layout (∅) (∅) (∅) defaultKeys
+defaultLayout = Layout (∅) (∅) (∅) (∅) defaultKeys
 
 defaultFullLayout ∷ Layout
-defaultFullLayout = Layout (∅) (∅) (∅) (qwertyKeys ⧺ defaultFullKeys)
+defaultFullLayout = Layout (∅) (∅) (∅) (∅) (qwertyKeys ⧺ defaultFullKeys)
 
 defaultKeys ∷ [Key]
 defaultKeys = map (filterKeyOnShiftstates null) defaultFullKeys

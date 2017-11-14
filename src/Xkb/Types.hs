@@ -5,9 +5,9 @@ module Xkb.Types where
 
 import BasePrelude
 import Prelude.Unicode
-import Data.Monoid.Unicode ((⊕))
+import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
-import Util (toString, subsets, versionStr, (>$>))
+import Util (toString, subsets, versionStr, (>$>), concatMapM)
 import WithPlus (WithPlus(..))
 
 import Control.Monad.Reader (MonadReader)
@@ -59,7 +59,7 @@ keytypeName' key =
 
 printTypes ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m (Maybe String)
 printTypes = runMaybeT <<< prepareLayout >=> \layout → do
-    types ← getTypes layout
+    types ← nub <$> concatMapM (getTypes ∘ (layout ⊕) ∘ variantToLayout) ((∅) : view _variants layout)
     guard (not (null types))
     let virtualMods = S.unions (map __typeMods types)
     pure ∘ unlines $

@@ -1,5 +1,4 @@
 {-# LANGUAGE UnicodeSyntax, NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Xkb.General where
@@ -12,7 +11,7 @@ import Util (show', (>$>), privateChars)
 import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Reader (MonadReader, asks)
-import Control.Monad.State (evalState)
+import Control.Monad.State (MonadState, evalState)
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view, over)
 
@@ -32,11 +31,18 @@ data XkbConfig = XkbConfig
 prepareLayout ∷ (Logger m, MonadReader XkbConfig m) ⇒ Layout → m Layout
 prepareLayout layout = do
     addShortcuts ← asks __addShortcuts
-    _keys
-        ( traverse (filterKeyOnShiftstatesM supportedShiftstate) >$>
-          bool id (map addShortcutLetters) addShortcuts >>>
-          flip evalState privateChars ∘ (traverse ∘ _letters ∘ traverse) setNullChar
-        ) (addDefaultKeys defaultKeys layout)
+    ($ layout) $
+        addDefaultKeys defaultKeys >>>
+         _keys
+            ( traverse (filterKeyOnShiftstatesM supportedShiftstate) >$>
+              bool id (map addShortcutLetters) addShortcuts
+            ) >$>
+        flip evalState privateChars ∘ setNullChars
+
+setNullChars ∷ MonadState [Char] m ⇒ Layout → m Layout
+setNullChars =
+    (_keys ∘ traverse ∘ _letters ∘ traverse) setNullChar >=>
+    (_variants ∘ traverse) (fmap Variant ∘ setNullChars ∘ variantToLayout)
 
 supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedTypeModifier ∘ toList

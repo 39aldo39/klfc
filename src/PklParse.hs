@@ -36,7 +36,7 @@ layout = do
     PklParseLayout info states keys specialKeys deads ← pklLayout
     ($ keys) $
       map (set _shiftlevels (map (WithBar ∘ (:| [])) states)) >>>
-      Layout info specialKeys (∅) >>>
+      Layout info specialKeys (∅) (∅) >>>
       setDeads deads
 
 setDeads ∷ Logger m ⇒ [(Int, DeadKey)] → Layout → m Layout
