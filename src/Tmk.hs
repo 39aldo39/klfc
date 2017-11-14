@@ -30,7 +30,7 @@ import Layout.Layout
 import Layout.Modifier (toBaseModifier, getEqualModifiers)
 import Layout.ModifierEffect (defaultModifierEffect)
 import Layout.Types
-import Lookup.Linux (actionAndRedirect)
+import Lookup.Linux (actionAndRedirect, charAndString)
 import Lookup.Tmk
 import PresetLayout (defaultKeys, defaultFullLayout)
 
@@ -285,7 +285,10 @@ letterToTmkLetter' _ _ LNothing = pure (TmkAction "NO")
 letterToTmkLetter' errorL _ (Ligature _ s) =
     maybe e pure (TmkMacro mId <$> macro s <*> pure [])
   where
-    mId = map (\x → bool '_' x (isAscii x ∧ isAlphaNum x)) s
+    mId = "LIG_" ⊕ concatMap charToString s
+    charToString c
+      | isAscii c ∧ isAlphaNum c = [c]
+      | otherwise = "_" ⊕ fromMaybe (printf "U%04X" c) (lookup c charAndString) ⊕ "_"
     macro =
         traverse (getPosAndShiftlevel ∘ Char) >=>
         groupWith' snd >>>
