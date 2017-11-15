@@ -131,7 +131,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Tmk (dir </> "tmk")
     output' Ahk (dir </> "ahk")
 output (Output Json stream) _ = ($ Json) >>>
-    writeStream stream ∘ encodePretty' (Config 4 layoutOrd layoutDelims)
+    writeStream stream ∘ encodePretty' (Config 2 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let name = replaceWith (not ∘ isAlphaNum) '_' $ view (_info ∘ _name) layout
