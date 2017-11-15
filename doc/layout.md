@@ -90,13 +90,13 @@ Singleton keys
 The `singletonKeys` attribute takes a list of tuples of a position and a letter, which will assign the letter to the position.
 This can be used for keys which always do the same, independent from the modifiers.
 The singleton key `[ "POS", "LETTER" ]` is roughly equivalent to the key
-
-    {
-        "pos": "POS",
-        "letters": [ "LETTER" ],
-        "shiftlevels": [ "None" ]
-    }
-
+```json
+{
+  "pos": "POS",
+  "letters": [ "LETTER" ],
+  "shiftlevels": [ "None" ]
+}
+```
 But singleton keys are more useful, since the output formats handle them better than normal keys.
 
 If multiple singleton keys are defined on the same position, only the last one is used.
@@ -114,7 +114,9 @@ The `customDeadKeys` attribute takes a list of custom dead keys.
 Each custom dead key is an object with a `name`, `baseChar` and `stringMap` attribute.
 The `name` is a string with the name of the dead key.
 The `baseChar` is a character (string of length one) which is the character of the dead key on his own.
-If no base character is applicable, the attribute can be omitted and a Unicode character from the private use area is used.
+This character has no real effect in XKB.
+For XKB, or if no base character is applicable, the attribute can be omitted and a Unicode character from the private use area is used.
+It is also possible to extend an existing dead key by using its name as `baseChar`.
 The `stringMap` is a list of tuples, where the first component denotes the string which will be transformed by the dead key and the second component denotes the resulting string.
 Since JSON does not support tuples, a list of length 2 is used.
 For example, to put an `´` on an `e`, use the 'tuple' `[ "e", "é" ]`.
@@ -140,40 +142,41 @@ The `name` is a string with the name of the mod.
 The `permutation` is the permutation which the mod makes and is either an object with the original positions as keys and the new positions as values, or a list of permutation cycles (as described [here](https://en.wikipedia.org/wiki/Permutation#Cycle_notation)).
 
 For example, the 'Wide' mod can be represented as
-
-    {
-        "name": "Wide",
-        "permutation": [
-            [ "Y", "U", "I", "O", "P", "[" ],
-            [ "H", "J", "K", "L", ";", "'" ],
-            [ "N", "M", ",", ".", "/", "]" ],
-            [ "]", "'", "\\" ]
-        ]
-    }
-
+```json
+{
+  "name": "Wide",
+  "permutation": [
+    [ "Y", "U", "I", "O", "P", "[" ],
+    [ "H", "J", "K", "L", ";", "'" ],
+    [ "N", "M", ",", ".", "/", "]" ],
+    [ "]", "'", "\\" ]
+  ]
+}
+```
 or
-
-    {
-        "name": "Wide",
-        "permutation": {
-            "Y": "U",
-            "U": "I",
-            "I": "O",
-            "O": "P",
-            "P": "[",
-            "[": "Y",
-            "H": "J",
-            "J": "K",
-            "K", "L",
-            "L", ";",
-            ";", "'",
-            "'", "\\",
-            "\\", "N",
-            "N", "M",
-            "M", ",",
-            ",", ".",
-            ".", "/",
-            "/", "]",
-            "]", "H"
-        }
-    }
+```json
+{
+  "name": "Wide",
+  "permutation": {
+    "Y": "U",
+    "U": "I",
+    "I": "O",
+    "O": "P",
+    "P": "[",
+    "[": "Y",
+    "H": "J",
+    "J": "K",
+    "K": "L",
+    "L": ";",
+    ";": "'",
+    "'": "\\",
+    "\\": "N",
+    "N": "M",
+    "M": ",",
+    ",": ".",
+    ".": "/",
+    "/": "]",
+    "]": "H"
+  }
+}
+```

@@ -14,29 +14,29 @@ A key has the following attributes:
 If multiple files contain keys with the same positions, the separate keys will be merged.
 The letters will be combined and the last explicit definitions are used.
 For example, if file 1 contains the key
-
-    {
-        "pos": "S",
-        "letters": [ "s", "S", "ß" ],
-        "shiftlevels": [ "None", "Shift", "AltGr" ]
-    }
-
+```json
+{
+  "pos": "S",
+  "letters": [ "s", "S", "ß" ],
+  "shiftlevels": [ "None", "Shift", "AltGr" ]
+}
+```
 and file 2 the key
-
-    {
-        "pos": "S",
-        "letters": [ "σ", "Σ" ],
-        "shiftlevels": [ "AltGr", "Shift+AltGr" ]
-    }
-
+```json
+{
+  "pos": "S",
+  "letters": [ "σ", "Σ" ],
+  "shiftlevels": [ "AltGr", "Shift+AltGr" ]
+}
+```
 the resulting key is
-
-    {
-        "pos": "S",
-        "letters": [ "s", "S", "σ", "Σ" ],
-        "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr" ]
-    }
-
+```json
+{
+  "pos": "S",
+  "letters": [ "s", "S", "σ", "Σ" ],
+  "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr" ]
+}
+```
 The same applies if the keys are defined in the same file, which can be useful when the `filter` attribute is used on at least one of the keys.
 
 Position
