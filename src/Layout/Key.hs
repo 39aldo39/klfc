@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Layout.Key
     ( BaseChar
@@ -110,6 +111,9 @@ setCustomDeadKey deads (CustomDead i (DeadKey name _ _)) =
   case find ((≡) name ∘ __dkName) deads of
     Just d → Right (CustomDead i d)
     Nothing → Left ("the custom dead key ‘" ⊕ name ⊕ "’ is not defined")
+setCustomDeadKey deads (Dead presetDead)
+  | Just d ← find ((≡) (toString presetDead) ∘ __dkName) deads
+  = Right (CustomDead Nothing d)
 setCustomDeadKey _ l = Right l
 
 toIndexedCustomDeadKey ∷ MonadState Int m ⇒ Letter → m Letter

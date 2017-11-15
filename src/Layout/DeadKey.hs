@@ -52,8 +52,8 @@ instance (ToJSON l, HumanReadable p) ⇒ ToJSON (DeadKey' l p) where
             BasePreset p → ["baseChar" .= toString p]
 instance (Eq l, HumanReadable l, FromJSON l, Show l, HumanReadable p) ⇒ FromJSON (DeadKey' l p) where
     parseJSON = withObject "dead key" $ \o → do
-        name      ← o .:  "name"
         baseChar  ← o .:? "baseChar" >>= readBaseChar
+        name      ← getName o baseChar
         stringMap ← over (traverse ∘ _1) letterListToList <$> o .: "stringMap"
         let (actionMap, warnings) = runWriter (stringMapToActionMap name stringMap)
         traverse_ Fail.fail warnings
@@ -65,6 +65,8 @@ instance (Eq l, HumanReadable l, FromJSON l, Show l, HumanReadable p) ⇒ FromJS
           case parseString xs of
             Nothing → Fail.fail ("‘" ⊕ xs ⊕ "’" ⊕ "is not a single character, nor a known predefined dead key")
             Just d  → pure (BasePreset d)
+        getName o (BasePreset p) = o .:? "name" .!= toString p
+        getName o _ = o .: "name"
 
 data LetterList l = LetterList [l]
 
