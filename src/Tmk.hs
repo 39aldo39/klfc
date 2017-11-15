@@ -282,31 +282,8 @@ letterToTmkLetter state letter = letterToTmkLetter' letter state letter
 
 letterToTmkLetter' ∷ Logger m ⇒ Letter → Shiftstate → Letter → m TmkLetter
 letterToTmkLetter' _ _ LNothing = pure (TmkAction "NO")
-letterToTmkLetter' errorL _ (Ligature _ s) =
-    maybe e pure (TmkMacro mId <$> macro s <*> pure [])
-  where
-    mId = "LIG_" ⊕ concatMap charToString s
-    charToString c
-      | isAscii c ∧ isAlphaNum c = [c]
-      | otherwise = "_" ⊕ fromMaybe (printf "U%04X" c) (lookup c charAndString) ⊕ "_"
-    macro =
-        traverse (getPosAndShiftlevel ∘ Char) >=>
-        groupWith' snd >>>
-        (traverse ∘ _1) (traverse (flip lookup modifierAndKeycode) ∘ toList ∘ NE.head ∘ getNonEmpty) >=>
-        (traverse ∘ _2 ∘ traverse) (flip lookup posAndTmkAction ∘ fst) >$>
-        concatMap (uncurry modsAndCodesToMacro) >>>
-        (["SM()", "CM()"] ⧺) ∘ (⧺ ["RM()"])
-    getPosAndShiftlevel letter =
-        view _keys defaultFullLayout &
-        concatMap (\key → map ((,) (view _pos key)) (getValidShiftlevels letter key)) &
-        listToMaybe
-    getValidShiftlevels letter key =
-        filterOnFst (≡ letter) (view _letters key `zip` view _shiftlevels key)
-    modsAndCodesToMacro modifiers keycodes =
-        map (\m → "D(" ⊕ m ⊕ ")") modifiers ⧺
-        map (\c → "T(" ⊕ c ⊕ ")") keycodes ⧺
-        map (\m → "U(" ⊕ m ⊕ ")") modifiers
-    e = TmkAction "NO" <$ tell [show' errorL ⊕ " is not supported in TMK"]
+letterToTmkLetter' _ _ (Ligature _ s)
+  | Just tmkLetter ← tmkLetterByMacro (map Char s) = pure tmkLetter
 letterToTmkLetter' errorL state (Action a)
   | Just action ← lookup a actionAndTmkAction = pure (TmkAction action)
   | Just letter ← lookup a actionAndRedirect = letterToTmkLetter' errorL state letter
@@ -331,8 +308,36 @@ letterToTmkLetter' _ state letter
   where
     posses = getPosByLetterAndShiftstate letter state defaultFullLayout
     posToAction = flip lookup posAndTmkAction
+letterToTmkLetter' _ _ letter
+  | Just tmkLetter ← tmkLetterByMacro [letter] = pure tmkLetter
 letterToTmkLetter' errorL state _ =
     TmkAction "NO" <$ tell [show' errorL ⊕ " is not supported on " ⊕ show' state ⊕ " in TMK"]
+
+tmkLetterByMacro ∷ [Letter] → Maybe TmkLetter
+tmkLetterByMacro letters = TmkMacro mId <$> macro letters <*> pure []
+  where
+    mId = "LIG_" ⊕ concatMap letterToString letters
+    letterToString (Char c)
+      | isAscii c ∧ isAlphaNum c = [c]
+      | otherwise = "_" ⊕ fromMaybe (printf "U%04X" c) (lookup c charAndString) ⊕ "_"
+    letterToString letter = "_" ⊕ toString letter ⊕ "_"
+    macro =
+        traverse getPosAndShiftlevel >=>
+        groupWith' snd >>>
+        (traverse ∘ _1) (traverse (flip lookup modifierAndKeycode) ∘ toList ∘ NE.head ∘ getNonEmpty) >=>
+        (traverse ∘ _2 ∘ traverse) (flip lookup posAndTmkAction ∘ fst) >$>
+        concatMap (uncurry modsAndCodesToMacro) >>>
+        (["SM()", "CM()"] ⧺) ∘ (⧺ ["RM()"])
+    getPosAndShiftlevel letter =
+        view _keys defaultFullLayout &
+        concatMap (\key → map ((,) (view _pos key)) (getValidShiftlevels letter key)) &
+        listToMaybe
+    getValidShiftlevels letter key =
+        filterOnFst (≡ letter) (view _letters key `zip` view _shiftlevels key)
+    modsAndCodesToMacro modifiers keycodes =
+        map (\m → "D(" ⊕ m ⊕ ")") modifiers ⧺
+        map (\c → "T(" ⊕ c ⊕ ")") keycodes ⧺
+        map (\m → "U(" ⊕ m ⊕ ")") modifiers
 
 groupLayers ∷ [TmkLayer] → (Int → Int, [(Map Pos TmkLetter, Shiftlevel)])
 groupLayers layers = (flip layerStateAfterGrouping &&& layers') groupedLayers
