@@ -1,128 +1,128 @@
 {
-    "fullName": "Colemak",
-    "name": "colemak",
-    "copyright": "Public Domain",
-    "company": "2006-01-01 Shai Coleman",
-    "localeId": "00000409",
-    "version": "1.0",
-    "singletonKeys": [
-        [ "CapsLock", "Extend" ],
-        [ "Alt_R", "AltGr" ]
-    ],
-    "keysWithShiftlevels": [
-        {
-            "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
-            "keys": [
-                { "pos": "~", "letters": [ "`", "~", "tilde", "", "MouseEnable" ] },
-                { "pos": "1", "letters": [ "1", "!", "¡", "¹", "F1" ] },
-                { "pos": "2", "letters": [ "2", "@", "º", "²", "F2" ] },
-                { "pos": "3", "letters": [ "3", "#", "ª", "³", "F3" ] },
-                { "pos": "4", "letters": [ "4", "$", "¢", "£", "F4" ] },
-                { "pos": "5", "letters": [ "5", "%", "€", "¥", "F5" ] },
-                { "pos": "6", "letters": [ "6", "^", "ħ", "Ħ", "F6" ] },
-                { "pos": "7", "letters": [ "7", "&", "ð", "Ð", "F7" ] },
-                { "pos": "8", "letters": [ "8", "*", "þ", "Þ", "F8" ] },
-                { "pos": "9", "letters": [ "9", "(", "‘", "“", "F9" ] },
-                { "pos": "0", "letters": [ "0", ")", "’", "”", "F10" ] },
-                { "pos": "-", "letters": [ "-", "_", "–", "—", "F11" ] },
-                { "pos": "+", "letters": [ "=", "+", "×", "÷", "F12" ] },
-                { "pos": "Q", "letters": [ "q", "Q", "ä", "Ä", "Esc" ] },
-                { "pos": "W", "letters": [ "w", "W", "å", "Å", "WheelUp", "WheelRight" ] },
-                { "pos": "E", "letters": [ "f", "F", "ã", "Ã", "Browser_Back" ] },
-                { "pos": "R", "letters": [ "p", "P", "ø", "Ø", "Browser_Forward" ] },
-                { "pos": "T", "letters": [ "g", "G", "ogonek", "", "MouseUp" ] },
-                { "pos": "Y", "letters": [ "j", "J", "đ", "Đ", "PageUp" ] },
-                { "pos": "U", "letters": [ "l", "L", "ł", "Ł", "Home" ] },
-                { "pos": "I", "letters": [ "u", "U", "ú", "Ú", "Up" ] },
-                { "pos": "O", "letters": [ "y", "Y", "ü", "Ü", "End" ] },
-                { "pos": "P", "letters": [ ";", ":", "ö", "Ö", "Delete" ] },
-                { "pos": "[", "letters": [ "[", "{", "«", "‹", "Esc" ] },
-                { "pos": "]", "letters": [ "]", "}", "»", "›", "Insert" ] },
-                { "pos": "\\", "letters": [ "\\", "|", "cdk:special", "", "Browser_Favorites", "MyComputer" ] },
-                { "pos": "A", "letters": [ "a", "A", "á", "Á", "Alt" ] },
-                { "pos": "S", "letters": [ "r", "R", "grave", "", "WheelDown", "WheelLeft" ] },
-                { "pos": "D", "letters": [ "s", "S", "ß", "", "Shift" ] },
-                { "pos": "F", "letters": [ "t", "T", "acute", "doubleacute", "Control" ] },
-                { "pos": "G", "letters": [ "d", "D", "diaeresis", "", "MouseDown" ] },
-                { "pos": "H", "letters": [ "h", "H", "caron", "", "PageDown" ] },
-                { "pos": "J", "letters": [ "n", "N", "ñ", "Ñ", "Left" ] },
-                { "pos": "K", "letters": [ "e", "E", "é", "É", "Down" ] },
-                { "pos": "L", "letters": [ "i", "I", "í", "Í", "Right" ] },
-                { "pos": ";", "letters": [ "o", "O", "ó", "Ó", "Backspace" ] },
-                { "pos": "'", "letters": [ "'", "\"", "õ", "Õ", "Menu" ] },
-                { "pos": "Z", "letters": [ "z", "Z", "æ", "Æ", "Undo" ] },
-                { "pos": "X", "letters": [ "x", "X", "circumflex", "", "Cut" ] },
-                { "pos": "C", "letters": [ "c", "C", "ç", "Ç", "Copy" ] },
-                { "pos": "V", "letters": [ "v", "V", "œ", "Œ", "Paste" ] },
-                { "pos": "B", "letters": [ "b", "B", "breve", "", "Button_L" ] },
-                { "pos": "N", "letters": [ "k", "K", "abovering", "", "Button_M" ] },
-                { "pos": "M", "letters": [ "m", "M", "macron", "", "Button_R" ] },
-                { "pos": ",", "letters": [ ",", "<", "cedilla", "", "MouseLeft" ] },
-                { "pos": ".", "letters": [ ".", ">", "abovedot", "", "MouseRight" ] },
-                { "pos": "/", "letters": [ "/", "?", "¿", "", "compose" ] }
-            ]
-        },
-        {
-            "shiftlevels": [ "AltGr", "Shift+AltGr", "Extend" ],
-            "keys": [
-                { "pos": "Space", "letters": [ " ", " ", "Enter" ] }
-            ]
-        },
-        {
-            "shiftlevels": [ "Extend", "Shift+Extend" ],
-            "keys": [
-                { "pos": "Escape", "letters": [ "CapsLock" ] },
-                { "pos": "F1", "letters": [ "PlayPause", "AudioPause" ] },
-                { "pos": "F2", "letters": [ "Previous", "AudioRewind" ] },
-                { "pos": "F3", "letters": [ "Next", "AudioForward" ] },
-                { "pos": "F4", "letters": [ "Stop", "Eject" ] },
-                { "pos": "F5", "letters": [ "Mute", "Browser_Refresh" ] },
-                { "pos": "F6", "letters": [ "VolumeDown", "BrightnessDown" ] },
-                { "pos": "F7", "letters": [ "VolumeUp", "BrightnessUp" ] },
-                { "pos": "F8", "letters": [ "MediaPlayer", "Sleep" ] },
-                { "pos": "F9", "letters": [ "Browser", "WWW" ] },
-                { "pos": "F10", "letters": [ "Search", "Mail" ] },
-                { "pos": "F11", "letters": [ "Explorer", "Launch1" ] },
-                { "pos": "F12", "letters": [ "Calculator", "Launch2" ] }
-            ]
-        }
-    ],
-    "customDeadKeys": [
-        {
-            "name": "special",
-            "stringMap": [
-                [ "c", "©" ],
-                [ "r", "®" ],
-                [ "t", "™" ],
-                [ "d", "°" ],
-                [ "m", "µ" ],
-                [ "n", "№" ],
-                [ "p", "¶" ],
-                [ "s", "§" ],
-                [ ".", "…" ],
-                [ "+", "±" ],
-                [ "=", "≠" ],
-                [ "<", "≤" ],
-                [ ">", "≥" ],
-                [ "~", "≈" ],
-                [ "%", "‰" ],
-                [ "|", "¦" ]
-            ]
-        }
-    ],
-    "variants": [
-        {
-            "name": "mod-dh",
-            "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr" ],
-            "keys": [
-                { "pos": "V", "letters": [ "d", "D", "diaeresis", "" ] },
-                { "pos": "B", "letters": [ "v", "V", "œ", "Œ" ] },
-                { "pos": "G", "letters": [ "g", "G", "ogonek", "" ] },
-                { "pos": "T", "letters": [ "b", "B", "breve", "" ] },
-                { "pos": "H", "letters": [ "k", "K", "abovering", "" ] },
-                { "pos": "N", "letters": [ "m", "M", "macron", "" ] },
-                { "pos": "M", "letters": [ "h", "H", "caron", "" ] }
-            ]
-        }
-    ]
+  "fullName": "Colemak",
+  "name": "colemak",
+  "copyright": "Public Domain",
+  "company": "2006-01-01 Shai Coleman",
+  "localeId": "00000409",
+  "version": "1.0",
+  "singletonKeys": [
+    [ "CapsLock", "Extend" ],
+    [ "Alt_R", "AltGr" ]
+  ],
+  "keysWithShiftlevels": [
+    {
+      "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr", "Extend", "Shift+Extend" ],
+      "keys": [
+        { "pos": "~", "letters": [ "`", "~", "tilde", "", "MouseEnable" ] },
+        { "pos": "1", "letters": [ "1", "!", "¡", "¹", "F1" ] },
+        { "pos": "2", "letters": [ "2", "@", "º", "²", "F2" ] },
+        { "pos": "3", "letters": [ "3", "#", "ª", "³", "F3" ] },
+        { "pos": "4", "letters": [ "4", "$", "¢", "£", "F4" ] },
+        { "pos": "5", "letters": [ "5", "%", "€", "¥", "F5" ] },
+        { "pos": "6", "letters": [ "6", "^", "ħ", "Ħ", "F6" ] },
+        { "pos": "7", "letters": [ "7", "&", "ð", "Ð", "F7" ] },
+        { "pos": "8", "letters": [ "8", "*", "þ", "Þ", "F8" ] },
+        { "pos": "9", "letters": [ "9", "(", "‘", "“", "F9" ] },
+        { "pos": "0", "letters": [ "0", ")", "’", "”", "F10" ] },
+        { "pos": "-", "letters": [ "-", "_", "–", "—", "F11" ] },
+        { "pos": "+", "letters": [ "=", "+", "×", "÷", "F12" ] },
+        { "pos": "Q", "letters": [ "q", "Q", "ä", "Ä", "Esc" ] },
+        { "pos": "W", "letters": [ "w", "W", "å", "Å", "WheelUp", "WheelRight" ] },
+        { "pos": "E", "letters": [ "f", "F", "ã", "Ã", "Browser_Back" ] },
+        { "pos": "R", "letters": [ "p", "P", "ø", "Ø", "Browser_Forward" ] },
+        { "pos": "T", "letters": [ "g", "G", "ogonek", "", "MouseUp" ] },
+        { "pos": "Y", "letters": [ "j", "J", "đ", "Đ", "PageUp" ] },
+        { "pos": "U", "letters": [ "l", "L", "ł", "Ł", "Home" ] },
+        { "pos": "I", "letters": [ "u", "U", "ú", "Ú", "Up" ] },
+        { "pos": "O", "letters": [ "y", "Y", "ü", "Ü", "End" ] },
+        { "pos": "P", "letters": [ ";", ":", "ö", "Ö", "Delete" ] },
+        { "pos": "[", "letters": [ "[", "{", "«", "‹", "Esc" ] },
+        { "pos": "]", "letters": [ "]", "}", "»", "›", "Insert" ] },
+        { "pos": "\\", "letters": [ "\\", "|", "cdk:special", "", "Browser_Favorites", "MyComputer" ] },
+        { "pos": "A", "letters": [ "a", "A", "á", "Á", "Alt" ] },
+        { "pos": "S", "letters": [ "r", "R", "grave", "", "WheelDown", "WheelLeft" ] },
+        { "pos": "D", "letters": [ "s", "S", "ß", "", "Shift" ] },
+        { "pos": "F", "letters": [ "t", "T", "acute", "doubleacute", "Control" ] },
+        { "pos": "G", "letters": [ "d", "D", "diaeresis", "", "MouseDown" ] },
+        { "pos": "H", "letters": [ "h", "H", "caron", "", "PageDown" ] },
+        { "pos": "J", "letters": [ "n", "N", "ñ", "Ñ", "Left" ] },
+        { "pos": "K", "letters": [ "e", "E", "é", "É", "Down" ] },
+        { "pos": "L", "letters": [ "i", "I", "í", "Í", "Right" ] },
+        { "pos": ";", "letters": [ "o", "O", "ó", "Ó", "Backspace" ] },
+        { "pos": "'", "letters": [ "'", "\"", "õ", "Õ", "Menu" ] },
+        { "pos": "Z", "letters": [ "z", "Z", "æ", "Æ", "Undo" ] },
+        { "pos": "X", "letters": [ "x", "X", "circumflex", "", "Cut" ] },
+        { "pos": "C", "letters": [ "c", "C", "ç", "Ç", "Copy" ] },
+        { "pos": "V", "letters": [ "v", "V", "œ", "Œ", "Paste" ] },
+        { "pos": "B", "letters": [ "b", "B", "breve", "", "Button_L" ] },
+        { "pos": "N", "letters": [ "k", "K", "abovering", "", "Button_M" ] },
+        { "pos": "M", "letters": [ "m", "M", "macron", "", "Button_R" ] },
+        { "pos": ",", "letters": [ ",", "<", "cedilla", "", "MouseLeft" ] },
+        { "pos": ".", "letters": [ ".", ">", "abovedot", "", "MouseRight" ] },
+        { "pos": "/", "letters": [ "/", "?", "¿", "", "compose" ] }
+      ]
+    },
+    {
+      "shiftlevels": [ "AltGr", "Shift+AltGr", "Extend" ],
+      "keys": [
+        { "pos": "Space", "letters": [ " ", " ", "Enter" ] }
+      ]
+    },
+    {
+      "shiftlevels": [ "Extend", "Shift+Extend" ],
+      "keys": [
+        { "pos": "Escape", "letters": [ "CapsLock" ] },
+        { "pos": "F1", "letters": [ "PlayPause", "AudioPause" ] },
+        { "pos": "F2", "letters": [ "Previous", "AudioRewind" ] },
+        { "pos": "F3", "letters": [ "Next", "AudioForward" ] },
+        { "pos": "F4", "letters": [ "Stop", "Eject" ] },
+        { "pos": "F5", "letters": [ "Mute", "Browser_Refresh" ] },
+        { "pos": "F6", "letters": [ "VolumeDown", "BrightnessDown" ] },
+        { "pos": "F7", "letters": [ "VolumeUp", "BrightnessUp" ] },
+        { "pos": "F8", "letters": [ "MediaPlayer", "Sleep" ] },
+        { "pos": "F9", "letters": [ "Browser", "WWW" ] },
+        { "pos": "F10", "letters": [ "Search", "Mail" ] },
+        { "pos": "F11", "letters": [ "Explorer", "Launch1" ] },
+        { "pos": "F12", "letters": [ "Calculator", "Launch2" ] }
+      ]
+    }
+  ],
+  "customDeadKeys": [
+    {
+      "name": "special",
+      "stringMap": [
+        [ "c", "©" ],
+        [ "r", "®" ],
+        [ "t", "™" ],
+        [ "d", "°" ],
+        [ "m", "µ" ],
+        [ "n", "№" ],
+        [ "p", "¶" ],
+        [ "s", "§" ],
+        [ ".", "…" ],
+        [ "+", "±" ],
+        [ "=", "≠" ],
+        [ "<", "≤" ],
+        [ ">", "≥" ],
+        [ "~", "≈" ],
+        [ "%", "‰" ],
+        [ "|", "¦" ]
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "name": "mod-dh",
+      "shiftlevels": [ "None", "Shift", "AltGr", "Shift+AltGr" ],
+      "keys": [
+        { "pos": "V", "letters": [ "d", "D", "diaeresis", "" ] },
+        { "pos": "B", "letters": [ "v", "V", "œ", "Œ" ] },
+        { "pos": "G", "letters": [ "g", "G", "ogonek", "" ] },
+        { "pos": "T", "letters": [ "b", "B", "breve", "" ] },
+        { "pos": "H", "letters": [ "k", "K", "abovering", "" ] },
+        { "pos": "N", "letters": [ "m", "M", "macron", "" ] },
+        { "pos": "M", "letters": [ "h", "H", "caron", "" ] }
+      ]
+    }
+  ]
 }
