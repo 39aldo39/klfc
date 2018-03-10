@@ -45,6 +45,9 @@ setxkbmap \
 | xkbcomp \
     -w "$warning_level" \
     -I"$xkb_dir" \
-    - "$DISPLAY"
+    -o /tmp/temp.xkb \
+    - -xkb
+xkbcomp /tmp/temp.xkb -w "$warning_level" -o "$DISPLAY"
+rm /tmp/temp.xkb
 
 "$xkb_dir/scripts/install-xcompose.sh" "$layout"
