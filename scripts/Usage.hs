@@ -1,4 +1,4 @@
-#!/usr/bin/runhaskell
+#!/usr/bin/env runhaskell
 {-# LANGUAGE UnicodeSyntax #-}
 import Prelude.Unicode
 import Data.Bool (bool)
