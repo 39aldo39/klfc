@@ -90,12 +90,14 @@ isEmptyInformation ∷ Information → Bool
 isEmptyInformation (Information Nothing Nothing Nothing Nothing Nothing Nothing Nothing) = True
 isEmptyInformation _ = False
 
-instance Monoid Information where
-    mempty = Information Nothing Nothing Nothing Nothing Nothing Nothing Nothing
-    mappend (Information a1 b1 c1 d1 f1 g1 h1)
+instance Semigroup Information where
+    (Information a1 b1 c1 d1 f1 g1 h1) <>
             (Information a2 b2 c2 d2 f2 g2 h2) =
         Information (a1 ⊕ a2) (b1 ⊕ b2) (c1 ⊕ c2) (d1 ⊕ d2)
                     (f1 ⊕ f2) (g1 ⊕ g2) (h1 ⊕ h2)
+
+instance Monoid Information where
+    mempty = Information Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 $(deriveJSON defaultOptions
     { fieldLabelModifier = \s →
@@ -122,6 +124,7 @@ data Layout = Layout
     } deriving (Show, Read)
 makeLenses ''Layout
 
+deriving instance Semigroup Variant
 deriving instance Monoid Variant
 deriving instance ToJSON Variant
 instance FromJSON (FileType → Variant) where
@@ -140,12 +143,15 @@ isEmptyLayout _ = False
 isEmptyVariant ∷ Variant → Bool
 isEmptyVariant (Variant layout) = isEmptyLayout layout
 
-instance Monoid Layout where
-    mempty = Layout (∅) (∅) (∅) (∅) []
-    mappend (Layout a1 b1 c1 d1 keys1)
+instance Semigroup Layout where
+    (Layout a1 b1 c1 d1 keys1) <>
             (Layout a2 b2 c2 d2 keys2) =
         Layout (a1 ⊕ a2) (b1 `combineSingletonKeys` b2)
                (c1 ⊕ c2) (d1 `combineVariants` d2) (keys1 `combineKeys` keys2)
+
+instance Monoid Layout where
+   mempty = Layout (∅) (∅) (∅) (∅) []
+
 
 nubSingletonKeys ∷ [SingletonKey] → [SingletonKey]
 nubSingletonKeys = nubWithOn (\k ks → NE.last (k :| ks)) (view _sPos)

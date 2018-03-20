@@ -61,6 +61,12 @@ instance (Show α, Ord α) ⇒ Show (Permutation α) where
 instance (Read α) ⇒ Read (Permutation α) where
     readsPrec z = fmap (over _1 fromCycles) ∘ readsPrec z
 
+instance Eq α ⇒ Semigroup (Permutation α) where
+    PAssocs xs1  <> PAssocs xs2  = PAssocs (xs1 `mappendAssocs` xs2)
+    PCycles xss1 <> PCycles xss2 = PCycles (xss1 ⧺ xss2)
+    p1@(PAssocs _) <> p2@(PCycles _) = p1 ⊕ PAssocs (assocs p2)
+    p1@(PCycles _) <> p2@(PAssocs _) = p1 ⊕ PCycles (toCycles p2)
+
 instance Eq α ⇒ Monoid (Permutation α) where
     mempty = PAssocs []
     PAssocs xs1  `mappend` PAssocs xs2  = PAssocs (xs1 `mappendAssocs` xs2)
