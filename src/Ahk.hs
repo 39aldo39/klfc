@@ -86,6 +86,7 @@ printAhk' (Ahk singletonKeys keys) = unlines $
     , "; https://github.com/39aldo39/klfc"
     , ""
     , "#MaxHotkeysPerInterval 200"
+    , "#MaxThreadsPerHotkey 10"
     , ""
     , "SendUps(ByRef modifiers) {"
     , "  for index, modifier in modifiers {"
@@ -108,22 +109,39 @@ printAhk' (Ahk singletonKeys keys) = unlines $
     , "  Send {Blind}%Result%"
     , "}"
     , ""
-    , "DeadKeys := Object()"
+    , "DeadKeys := ComObjCreate(\"Scripting.Dictionary\")"
     , ""
-    , "DeadKey(baseChar, table) {"
+    , "DeadKey(baseChar, table, name := \"\") {"
     , "  Global ActiveDeadKey"
     , "  if (ActiveDeadKey != \"\") {"
-    , "    NewActiveDeadKey := Object()"
-    , "    for key, value in table {"
-    , "      NewActiveDeadKey[key] := ActiveDeadKey[value]"
+    , "    NewActiveDeadKey := ComObjCreate(\"Scripting.Dictionary\")"
+    , "    for key in table {"
+    , "      value := table.item(key)"
+    , "      NewActiveDeadKey.item(key) := ActiveDeadKey.item(value)"
+    , "    }"
+    , "    result := ActiveDeadKey.item(name)"
+    , "    if (IsObject(result)) {"
+    , "      for key in result {"
+    , "        value := result.item(key)"
+    , "        NewActiveDeadKey.item(key) := value"
+    , "      }"
+    , "    } else if (result != \"\") {"
+    , "      ActiveDeadKey := \"\""
+    , "      SendAsUnicode(result)"
+    , "      Return"
     , "    }"
     , "    ActiveDeadKey := NewActiveDeadKey"
-    , "  } else {"
-    , "    ActiveDeadKey := table"
+    , "    Return"
     , "  }"
-    , "  Input key, L1, {Esc}"
-    , "  if (ErrorLevel != \"NewInput\") {"
-    , "    value := ActiveDeadKey[key]"
+    , "  ActiveDeadKey := table"
+    , "  Input key, L1, {Esc}{F1}{F2}{F3}{F4}{F5}{F6}{F7}{F8}{F9}{F10}{F11}{F12}{Left}{Right}{Up}{Down}{Home}{End}{PgUp}{PgDn}{Del}{Ins}{BS}{PrintScreen}{Pause}{AppsKey}"
+    , "  If InStr(ErrorLevel, \"EndKey:\") {"
+    , "    ActiveDeadKey := \"\""
+    , "    value := SubStr(ErrorLevel, 8)"
+    , "    Send {Blind}{%value%}"
+    , "    SendAsUnicode(baseChar)"
+    , "  } else if (ErrorLevel != \"NewInput\") {"
+    , "    value := ActiveDeadKey.item(key)"
     , "    ActiveDeadKey := \"\""
     , "    if (IsObject(value)) {"
     , "      DeadKey(baseChar, value)"
@@ -331,7 +349,7 @@ printDeadKey dead@(DeadKey name baseChar _) = do
         "if (" ⊕ name' ⊕ " == \"\") {" :
         map ("  " ⊕) pre ⧺
         [ "}"
-        , "DeadKey(" ⊕ asString (baseString baseChar) ⊕ ", " ⊕ name' ⊕ ")"
+        , "DeadKey(" ⊕ asString (baseString baseChar) ⊕ ", " ⊕ name' ⊕ ", " ⊕ asString (deadAsString dead) ⊕ ")"
         ]
   where
     baseString BaseNo = ""
@@ -343,21 +361,21 @@ printDeadKey' (DeadKey name _ actionMap) = do
     actions ← catMaybes <$> traverse printAction actionMap
     pure $
       ( concatMap fst actions ⧺
-        [name' ⊕ " := Object()"] ⧺
+        [name' ⊕ " := ComObjCreate(\"Scripting.Dictionary\")"] ⧺
         map (name' ⊕) (map snd actions)
       , name'
       )
   where
-    name' = "DeadKeys[" ⊕ asString name ⊕ "]"
+    name' = "DeadKeys.item(" ⊕ asString name ⊕ ")"
 
 printAction ∷ Logger m ⇒ (Letter, ActionResult) → m (Maybe ([String], String))
 printAction (l, OutString s) = runMaybeT $ do
     letterString ← asString <$> letterAsString l
-    pure $ ([], printf "[%s] := %s" letterString (asString s))
+    pure $ ([], printf ".item(%s) := %s" letterString (asString s))
 printAction (l, Next dead) = runMaybeT $ do
     letterString ← asString <$> letterAsString l
     (pre, name) ← printDeadKey' dead
-    pure $ (pre, "[" ⊕ letterString ⊕ "] := " ⊕ name)
+    pure $ (pre, ".item(" ⊕ letterString ⊕ ") := " ⊕ name)
 
 asString ∷ String → String
 asString = printf "\"%s\"" ∘ concatMap escape
@@ -366,6 +384,12 @@ asString = printf "\"%s\"" ∘ concatMap escape
     escape '`' = "``"
     escape c = [c]
 
+deadAsString ∷ DeadKey → String
+deadAsString (DeadKey [x] _ _) = "cdk:" ⊕ [x]
+deadAsString (DeadKey s _ _) = s
+
 letterAsString ∷ Logger m ⇒ Letter → MaybeT m String
 letterAsString (Char c) = pure [c]
+letterAsString (Dead dead) = pure (deadAsString (presetDeadKeyToDeadKey dead))
+letterAsString (CustomDead _ dead) = pure (deadAsString dead)
 letterAsString l = tellMaybeT [show' l ⊕ " as letter for a dead key is not supported in AHK"]

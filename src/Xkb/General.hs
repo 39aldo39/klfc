@@ -15,7 +15,7 @@ import Control.Monad.State (MonadState, evalState)
 import Control.Monad.Writer (tell)
 import Lens.Micro.Platform (view, over)
 
-import Layout.Key (setNullChar, filterKeyOnShiftstatesM)
+import Layout.Key (letterToDeadKey, setNullChar, setInternalDeadNullChar, filterKeyOnShiftstatesM)
 import Layout.Layout (getLetterByPosAndShiftstate, addDefaultKeys)
 import Lookup.Linux (modifierAndTypeModifier, modifierAndPressedModifier)
 import qualified Layout.Modifier as M
@@ -43,6 +43,19 @@ setNullChars ∷ MonadState [Char] m ⇒ Layout → m Layout
 setNullChars =
     (_keys ∘ traverse ∘ _letters ∘ traverse) setNullChar >=>
     (_variants ∘ traverse) (fmap Variant ∘ setNullChars ∘ variantToLayout)
+
+setInternalDeadNullChars ∷ Layout → Layout
+setInternalDeadNullChars layout = setInternalDeadNullChars' deads layout
+  where
+    deads = ($ layout) $
+        view _keys >=>
+        view _letters >=>
+        maybeToList ∘ letterToDeadKey
+
+setInternalDeadNullChars' ∷ [DeadKey] → Layout → Layout
+setInternalDeadNullChars' deads =
+    over (_keys ∘ traverse ∘ _letters ∘ traverse) (setInternalDeadNullChar deads) >>>
+    over (_variants ∘ traverse) (Variant ∘ setInternalDeadNullChars' deads ∘ variantToLayout)
 
 supportedShiftstate ∷ Logger m ⇒ Shiftstate → m Bool
 supportedShiftstate = fmap and ∘ traverse supportedTypeModifier ∘ toList

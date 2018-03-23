@@ -26,6 +26,7 @@ module Layout.Key
     , toIndexedCustomDeadKey
     , setNullChar
     , setDeadNullChar
+    , setInternalDeadNullChar
     , addPresetDeadToDead
     , baseCharToChar
     , baseCharToLetter
@@ -59,7 +60,7 @@ import Data.List.NonEmpty (NonEmpty((:|)), nonEmpty)
 import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
 import qualified Data.Set as S
-import Lens.Micro.Platform (Lens', makeLenses, view, set, over, _2)
+import Lens.Micro.Platform (Lens', makeLenses, view, set, over, _1, _2)
 
 import FileType (FileType)
 import Filter (runFilter)
@@ -131,6 +132,16 @@ setDeadNullChar ∷ MonadState [Char] m ⇒ Letter → m Letter
 setDeadNullChar (CustomDead i (DeadKey name BaseNo lMap)) =
     CustomDead i ∘ flip (DeadKey name) lMap ∘ BaseChar <$> getPrivateChar
 setDeadNullChar l = pure l
+
+setInternalDeadNullChar ∷ [DeadKey] → Letter → Letter
+setInternalDeadNullChar deads (CustomDead i dead) =
+    CustomDead i dead { __actionMap = actionMap }
+  where
+    actionMap = map (over _1 modifyLetter) (__actionMap dead)
+    modifyLetter letter = fromMaybe letter $ do
+        DeadKey name _ _ ← letterToDeadKey letter
+        CustomDead Nothing <$> find ((≡ name) ∘ __dkName) deads
+setInternalDeadNullChar _ l = l
 
 addPresetDeadToDead ∷ Letter → Letter
 addPresetDeadToDead (CustomDead i dead@(DeadKey _ (BasePreset p) _)) =
