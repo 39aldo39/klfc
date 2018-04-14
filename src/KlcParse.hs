@@ -20,7 +20,7 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Void (Void)
 import qualified Data.Text.Lazy as L (Text)
 import Lens.Micro.Platform (ASetter, view, set, over, makeLenses, ix, _1)
-import Text.Megaparsec hiding (Pos)
+import Text.Megaparsec hiding (Pos, many, some)
 import Text.Megaparsec.Char
 
 import Layout.Key (Key(..), baseCharToChar)

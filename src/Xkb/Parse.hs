@@ -19,7 +19,7 @@ import Data.Void (Void)
 import Lens.Micro.Platform (set, over, _2, _Left)
 import System.Directory (doesFileExist)
 import System.FilePath ((</>), splitFileName)
-import Text.Megaparsec hiding (Pos)
+import Text.Megaparsec hiding (Pos, many, some)
 import Text.Megaparsec.Char
 
 import Layout.Key (Key(Key))
