@@ -10,7 +10,7 @@ executable klfc
   hs-source-dirs:  src
   main-is:         Main.hs
   build-depends:   base,
-                   base-prelude,
+                   base-prelude >= 1.2.1,
                    text,
                    bytestring,
                    semigroups,

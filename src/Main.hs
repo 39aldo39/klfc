@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE CPP #-}
 
-import BasePrelude
+import BasePrelude hiding (option)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (show', replace, replaceWith, escape, filterOnIndex, versionStr, (>$>))

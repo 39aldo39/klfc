@@ -5,7 +5,7 @@ module PresetDeadKey
     , presetDeadKeyToDeadKey'
     ) where
 
-import BasePrelude
+import BasePrelude hiding (Compose)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
 import Util (HumanReadable(..))
