@@ -1,4 +1,4 @@
-#!/usr/bin/runhaskell -iscripts
+#!/usr/bin/env runhaskell -iscripts
 {-# LANGUAGE UnicodeSyntax #-}
 
 module PosToMd where
