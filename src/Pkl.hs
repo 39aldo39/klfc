@@ -10,7 +10,7 @@ module Pkl
     , toLayoutData
     ) where
 
-import BasePrelude
+import BasePrelude hiding ((<&>))
 import Prelude.Unicode hiding ((∈), (∉))
 import Data.Monoid.Unicode ((⊕))
 import Data.Foldable.Unicode ((∈), (∉))

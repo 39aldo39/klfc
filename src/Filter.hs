@@ -18,7 +18,7 @@ import Data.Aeson (FromJSON, parseJSON, withText)
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 
-newtype Filter α = Filter { runFilter' ∷ α → All } deriving (Monoid)
+newtype Filter α = Filter { runFilter' ∷ α → All } deriving (Semigroup, Monoid)
 
 runFilter ∷ Filter α → α → Bool
 runFilter = fmap getAll ∘ runFilter'

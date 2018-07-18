@@ -8,7 +8,7 @@ module KlcParse
     ( parseKlcLayout
     ) where
 
-import BasePrelude hiding (try)
+import BasePrelude hiding (try, many, some)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, (>$>), lookupR, tellMaybeT)
@@ -39,10 +39,13 @@ data KlcParseLayout = KlcParseLayout
     , __parseDeadKeys ∷ [(Char, ActionMap)]
     }
 makeLenses ''KlcParseLayout
+
+instance Semigroup KlcParseLayout where
+    KlcParseLayout a1 a2 a3 a4 a5 <> KlcParseLayout b1 b2 b3 b4 b5 =
+        KlcParseLayout (a1 ⊕ b1) (a2 ⊕ b2) (a3 ⊕ b3) (a4 ⊕ b4) (a5 ⊕ b5)
+
 instance Monoid KlcParseLayout where
     mempty = KlcParseLayout (∅) (∅) (∅) (∅) (∅)
-    KlcParseLayout a1 a2 a3 a4 a5 `mappend` KlcParseLayout b1 b2 b3 b4 b5 =
-        KlcParseLayout (a1 ⊕ b1) (a2 ⊕ b2) (a3 ⊕ b3) (a4 ⊕ b4) (a5 ⊕ b5)
 
 layout ∷ (Logger m, Parser m) ⇒ m Layout
 layout = do

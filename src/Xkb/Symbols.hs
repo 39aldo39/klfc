@@ -117,10 +117,12 @@ data XkbData = XkbData
     , __xkbKeys ∷ [XkbKey]
     , __xkbExtraKeys ∷ [ExtraKey]
     }
+instance Semigroup XkbData where
+    XkbData name xs xs' xs'' <> XkbData _ ys ys' ys'' =
+        XkbData name (xs ⧺ ys) (xs' `addXkbKeys` ys') (xs'' ⧺ ys'')
+
 instance Monoid XkbData where
     mempty = XkbData [] [] [] []
-    XkbData name xs xs' xs'' `mappend` XkbData _ ys ys' ys'' =
-        XkbData name (xs ⧺ ys) (xs' `addXkbKeys` ys') (xs'' ⧺ ys'')
 
 addXkbKeys ∷ [XkbKey] → [XkbKey] → [XkbKey]
 addXkbKeys []           keys2 = keys2

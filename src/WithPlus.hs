@@ -23,7 +23,7 @@ import qualified Data.Set as S (fromList, singleton)
 import qualified Data.Text as T (pack, unpack)
 
 newtype WithPlus α = WithPlus { getSet ∷ Set α }
-    deriving (Eq, Ord, Show, Read, Foldable, Monoid)
+    deriving (Eq, Ord, Show, Read, Foldable, Semigroup, Monoid)
 
 fromList ∷ Ord α ⇒ [α] → WithPlus α
 fromList = WithPlus ∘ S.fromList
