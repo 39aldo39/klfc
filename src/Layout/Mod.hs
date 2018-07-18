@@ -31,6 +31,7 @@ instance Semigroup Mod where
 
 instance Monoid Mod where
     mempty = Mod (∅) (∅)
+    mappend = (<>)
 
 instance ToJSON Mod
 instance FromJSON Mod

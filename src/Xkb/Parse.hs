@@ -6,7 +6,7 @@
 
 module Xkb.Parse where
 
-import BasePrelude hiding (many, some)
+import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR, whenNothing, (>$>))

@@ -69,10 +69,7 @@ instance Eq α ⇒ Semigroup (Permutation α) where
 
 instance Eq α ⇒ Monoid (Permutation α) where
     mempty = PAssocs []
-    PAssocs xs1  `mappend` PAssocs xs2  = PAssocs (xs1 `mappendAssocs` xs2)
-    PCycles xss1 `mappend` PCycles xss2 = PCycles (xss1 ⧺ xss2)
-    p1@(PAssocs _) `mappend` p2@(PCycles _) = p1 ⊕ PAssocs (assocs p2)
-    p1@(PCycles _) `mappend` p2@(PAssocs _) = p1 ⊕ PCycles (toCycles p2)
+    mappend = (<>)
 
 mappendAssocs ∷ Eq α ⇒ [(α, α)] → [(α, α)] → [(α, α)]
 xs1 `mappendAssocs` [] = xs1

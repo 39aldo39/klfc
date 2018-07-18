@@ -98,6 +98,7 @@ instance Semigroup Information where
 
 instance Monoid Information where
     mempty = Information Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+    mappend = (<>)
 
 $(deriveJSON defaultOptions
     { fieldLabelModifier = \s →
@@ -150,8 +151,8 @@ instance Semigroup Layout where
                (c1 ⊕ c2) (d1 `combineVariants` d2) (keys1 `combineKeys` keys2)
 
 instance Monoid Layout where
-   mempty = Layout (∅) (∅) (∅) (∅) []
-
+    mempty = Layout (∅) (∅) (∅) (∅) []
+    mappend = (<>)
 
 nubSingletonKeys ∷ [SingletonKey] → [SingletonKey]
 nubSingletonKeys = nubWithOn (\k ks → NE.last (k :| ks)) (view _sPos)

@@ -6,7 +6,7 @@ module PklParse
     ( parsePklLayout
     ) where
 
-import BasePrelude hiding (try, many, some, (<&>))
+import BasePrelude hiding (try)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR, stripSuffix, tellMaybeT)
@@ -63,6 +63,7 @@ instance Semigroup PklParseLayout where
 
 instance Monoid PklParseLayout where
     mempty = PklParseLayout (∅) (∅) (∅) (∅) (∅)
+    mappend = (<>)
 
 pklLayout ∷ (Logger m, Parser m) ⇒ m PklParseLayout
 pklLayout = mconcat <$> many ((sectionName >>= section) <* many nonSectionLine)

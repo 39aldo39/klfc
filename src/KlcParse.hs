@@ -8,7 +8,7 @@ module KlcParse
     ( parseKlcLayout
     ) where
 
-import BasePrelude hiding (try, many, some)
+import BasePrelude hiding (try)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, (>$>), lookupR, tellMaybeT)
@@ -46,6 +46,7 @@ instance Semigroup KlcParseLayout where
 
 instance Monoid KlcParseLayout where
     mempty = KlcParseLayout (∅) (∅) (∅) (∅) (∅)
+    mappend = (<>)
 
 layout ∷ (Logger m, Parser m) ⇒ m Layout
 layout = do

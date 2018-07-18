@@ -123,6 +123,7 @@ instance Semigroup XkbData where
 
 instance Monoid XkbData where
     mempty = XkbData [] [] [] []
+    mappend = (<>)
 
 addXkbKeys ∷ [XkbKey] → [XkbKey] → [XkbKey]
 addXkbKeys []           keys2 = keys2
