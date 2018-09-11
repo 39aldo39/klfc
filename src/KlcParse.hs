@@ -138,7 +138,7 @@ parseShortcutPos xs = maybe e pure (lookupR xs posAndVkString <|> parseString xs
   where e = tellMaybeT ["unknown position ‘" ⊕ xs ⊕ "’"]
 
 parseCapslock ∷ Logger m ⇒ String → MaybeT m Bool
-parseCapslock xs = maybe e (pure ∘ toEnum) (readMaybe xs)
+parseCapslock xs = maybe e (pure ∘ flip testBit 0) (readMaybe xs ∷ Maybe Int)
   where e = tellMaybeT ["‘" ⊕ xs ⊕ "’ is not a boolean value"]
 
 parseLetter ∷ Logger m ⇒ String → m Letter
