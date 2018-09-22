@@ -220,15 +220,14 @@ printShortcutPos' getOrigPos key = do
     fromPos ← printPos pos
     vk ← lookup' sPos posAndVkInt
     scancode ← printPos (getOrigPos pos)
-    pure $ case any isShiftModifier (view _letters key) of
-      False → [(fromPos, ["VK" ⊕ showHex vk scancode])]
-      True  →
+    let modifiersUp =
+          "SendUps(Mods" ⊕ fromPos ⊕ ")" <$
+          guard (any isShiftModifier (view _letters key))
+    pure $
         [ ("*" ⊕ fromPos,
-            [ "Send {Blind}{VK" ⊕ showHex vk scancode ⊕ " DownTemp}" ])
+            [ "Send {Blind}{VK" ⊕ showHex vk scancode ⊕ " DownR}" ])
         , ("*" ⊕ fromPos ⊕ " up",
-            [ "Send {Blind}{VK" ⊕ showHex vk scancode ⊕ " Up}"
-            , "SendUps(Mods" ⊕ fromPos ⊕ ")"
-            ])
+            [ "Send {Blind}{VK" ⊕ showHex vk scancode ⊕ " Up}" ] ⧺ modifiersUp)
         ]
   where
     isShiftModifier (Modifiers Shift modifiers) = not (null modifiers)
