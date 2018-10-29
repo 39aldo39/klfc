@@ -9,6 +9,46 @@ cabal-version:  >=1.2
 executable klfc
   hs-source-dirs:  src
   main-is:         Main.hs
+  other-modules: Ahk
+               , FileType
+               , Filter
+               , JsonComments
+               , JsonPretty
+               , Keylayout
+               , Klc
+               , KlcParse
+               , Layout.Action
+               , Layout.DeadKey
+               , Layout.Key
+               , Layout.Layout
+               , Layout.Mod
+               , Layout.Modifier
+               , Layout.ModifierEffect
+               , Layout.Pos
+               , Layout.Types
+               , Lookup.Linux
+               , Lookup.MacOS
+               , Lookup.Tmk
+               , Lookup.Windows
+               , Paths_keyboard_layout_files_creator
+               , Permutation
+               , Pkl
+               , PklParse
+               , PresetDeadKey
+               , PresetLayout
+               , Stream
+               , Tmk
+               , Util
+               , WithBar
+               , WithPlus
+               , Xkb
+               , Xkb.General
+               , Xkb.Keycodes
+               , Xkb.Parse
+               , Xkb.Symbols
+               , Xkb.Types
+               , Xkb.XCompose
+
   build-depends:   base,
                    base-prelude >= 1.2.1,
                    text,
@@ -23,7 +63,7 @@ executable klfc
                    microlens-platform,
                    base-unicode-symbols,
                    containers-unicode-symbols,
-                   megaparsec >= 6,
+                   megaparsec >= 6 && <7,
                    filepath,
                    directory,
                    optparse-applicative,
@@ -33,4 +73,4 @@ executable klfc
                    xml,
                    chunked-data,
                    process >= 1.2.0.0
-  ghc-options:     -Wall
+  ghc-options:     -Wall -Wcompat
