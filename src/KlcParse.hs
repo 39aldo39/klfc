@@ -48,7 +48,7 @@ instance Monoid KlcParseLayout where
     mempty = KlcParseLayout (∅) (∅) (∅) (∅) (∅)
     mappend = (<>)
 
-layout ∷ (Logger m, Parser m) ⇒ m Layout
+layout ∷ (Logger m, Parser m, MonadFail m) ⇒ m Layout
 layout = do
     KlcParseLayout info states keys ligs deads ← klcLayout
     ($ keys) $
@@ -78,7 +78,7 @@ setLigatures' xs key = foldr setLigature key ligs
     ligs = filter ((≡) (view _pos key) ∘ view _1) xs
     setLigature (_, i, s) = set (_letters ∘ ix i) (Ligature Nothing s)
 
-klcLayout ∷ (Logger m, Parser m) ⇒ m KlcParseLayout
+klcLayout ∷ (Logger m, Parser m, MonadFail m) ⇒ m KlcParseLayout
 klcLayout = many >$> mconcat $
         set' _parseInformation <$> try kbdField
     <|> set' _parseShiftstates <$> try shiftstates
@@ -99,17 +99,17 @@ klcLayout = many >$> mconcat $
     field "VERSION" = pure ∘ set' _version ∘ Just
     field f = const $ (∅) <$ tell ["unknown field ‘" ⊕ f ⊕ "’"]
 
-kbdField ∷ Parser m ⇒ m Information
+kbdField ∷ (Parser m, MonadFail m) ⇒ m Information
 kbdField = do
     ["KBD", l1, l2] ← readLine
     pure ∘ set _name l1 ∘ set _fullName l2 $ (∅)
 
-shiftstates ∷ Parser m ⇒ m [Shiftstate]
+shiftstates ∷ (Parser m, MonadFail m) ⇒ m [Shiftstate]
 shiftstates = do
     ["SHIFTSTATE"] ← readLine
     map shiftstateFromWinShiftstate <$> many (try shiftstate)
 
-shiftstate ∷ Parser m ⇒ m Int
+shiftstate ∷ (Parser m, MonadFail m) ⇒ m Int
 shiftstate = do
     [i] ← readLine
     maybe (fail $ "‘" ⊕ show i ⊕ "’ is not an integer") pure (readMaybe i)
@@ -156,7 +156,7 @@ parseLetter xs
           Just c → pure (Char c)
           Nothing → LNothing <$ tell ["unknown letter ‘" ⊕ xs ⊕ "’"]
 
-ligatures ∷ (Logger m, Parser m) ⇒ m [(Pos, Int, String)]
+ligatures ∷ (Logger m, Parser m, MonadFail m) ⇒ m [(Pos, Int, String)]
 ligatures = do
     ["LIGATURE"] ← readLine
     catMaybes <$> many (try ligature)
@@ -173,7 +173,7 @@ ligature = runMaybeT $ do
     letterToChar (Char c) = Just c
     letterToChar _ = Nothing
 
-deadKey ∷ (Logger m, Parser m) ⇒ m [(Char, ActionMap)]
+deadKey ∷ (Logger m, Parser m, MonadFail m) ⇒ m [(Char, ActionMap)]
 deadKey = do
     ["DEADKEY", s] ← readLine
     let i = maybeToList (readMaybe ('0':'x':s))
@@ -181,22 +181,22 @@ deadKey = do
     m ← many (isHex *> deadPair)
     pure (zip c [m])
 
-deadPair ∷ Parser m ⇒ m (Letter, ActionResult)
+deadPair ∷ (Parser m, MonadFail m) ⇒ m (Letter, ActionResult)
 deadPair = do
     [x, y] ← map (\s → maybe '\0' chr (readMaybe ('0':'x':s))) <$> readLine
     pure (Char x, OutString [y])
 
-keyName ∷ Parser m ⇒ m [(String, String)]
+keyName ∷ (Parser m, MonadFail m) ⇒ m [(String, String)]
 keyName = do
     ['K':'E':'Y':'N':'A':'M':'E':_] ← readLine
     many (try nameValue)
 
-endKbd ∷ Parser m ⇒ m ()
+endKbd ∷ (Parser m, MonadFail m) ⇒ m ()
 endKbd = do
     ["ENDKBD"] ← readLine
     pure ()
 
-nameValue ∷ Parser m ⇒ m (String, String)
+nameValue ∷ (Parser m, MonadFail m) ⇒ m (String, String)
 nameValue = do
     [name, value] ← readLine
     pure (name, value)
