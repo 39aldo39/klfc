@@ -68,7 +68,7 @@ instance Monoid PklParseLayout where
 pklLayout ∷ (Logger m, Parser m) ⇒ m PklParseLayout
 pklLayout = mconcat <$> many ((sectionName >>= section) <* many nonSectionLine)
   where
-    sectionName = char '[' *> manyTill anyChar (char ']') <* endLine
+    sectionName = char '[' *> manyTill anySingle (char ']') <* endLine
     section ∷ (Logger m, Parser m) ⇒ String → m PklParseLayout
     section "informations" = (\l → (∅) { parseInformation = l }) <$> informationsSection
     section "global" = globalSection
@@ -217,10 +217,10 @@ spacing ∷ Parser m ⇒ m String
 spacing = many (oneOf " \t")
 
 endLine ∷ Parser m ⇒ m String
-endLine = manyTill anyChar (try eol) <* emptyOrCommentLines
+endLine = manyTill anySingle (try eol) <* emptyOrCommentLines
 
 comment ∷ Parser m ⇒ m String
-comment = spacing *> char ';' *> manyTill anyChar (try eol)
+comment = spacing *> char ';' *> manyTill anySingle (try eol)
 
 emptyLine ∷ Parser m ⇒ m String
 emptyLine = spacing <* eol
@@ -231,4 +231,4 @@ emptyOrCommentLines = many (try emptyLine <|> comment)
 parsePklLayout ∷ Logger m ⇒ String → L.Text → Either String (m Layout)
 parsePklLayout fname =
     parse (runWriterT (emptyOrCommentLines *> layout <* eof)) fname >>>
-    bimap parseErrorPretty writer
+    bimap errorBundlePretty writer

@@ -46,7 +46,7 @@ xkbLine dir = pure (∅) <$ keySetting
     <|> pure (∅) <$ virtualModifiers
 
 groupName ∷ Parser m ⇒ m String
-groupName = keyDescription (string' "name") *> char '"' *> manyTill anyChar (char '"') <* ws <* char ';' <* ws
+groupName = keyDescription (string' "name") *> char '"' *> manyTill anySingle (char '"') <* ws <* char ';' <* ws
 
 key ∷ (Logger m, Parser m) ⇒ m (Maybe Key)
 key = do
@@ -170,7 +170,7 @@ parseSingletonKey xs = asum
   where xs' = "include \"" ⊕ xs ⊕ "\""
 
 keySetting ∷ Parser m ⇒ m ()
-keySetting = string' "key." *> manyTill anyChar (char ';') *> ws *> pure ()
+keySetting = string' "key." *> manyTill anySingle (char ';') *> ws *> pure ()
 
 modifierMap ∷ Parser m ⇒ m (String, [String])
 modifierMap = liftA2 (,)
@@ -190,7 +190,7 @@ ws1 ∷ Parser m ⇒ m ()
 ws1 = void (some singleSpace) <?> "white space"
 
 comment ∷ Parser m ⇒ m ()
-comment = void $ (string "//" <|> string "#") *> manyTill anyChar eol
+comment = void $ (string "//" <|> string "#") *> manyTill anySingle eol
 
 singleSpace ∷ Parser m ⇒ m ()
 singleSpace = void (some spaceChar) <|> comment <?> ""
@@ -213,7 +213,7 @@ getFileAndVariant fname = (dir </> file, variant)
 parseXkbLayoutVariant ∷ (Logger m, MonadIO m) ⇒ String → FilePath → L.Text → Either String (m Layout)
 parseXkbLayoutVariant variant fname =
     parse (many (layout dir) <* eof) fname >>>
-    over _Left parseErrorPretty >$>
+    over _Left errorBundlePretty >$>
     fromMaybe unknownVariant ∘ lookup variant >$>
     set (_info ∘ _name) (file ⧺ variant')
   where

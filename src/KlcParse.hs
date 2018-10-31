@@ -209,7 +209,7 @@ readLine = takeWhile (not ∘ isComment) <$> some (klcValue <* spacing) <* empty
     isComment _ = False
 
 klcValue ∷ Parser m ⇒ m String
-klcValue = try (char '"' *> manyTill anyChar (char '"')) <|> try (some (noneOf [' ','\t','\r','\n'])) <?> "klc value"
+klcValue = try (char '"' *> manyTill anySingle (char '"')) <|> try (some (noneOf [' ','\t','\r','\n'])) <?> "klc value"
 
 isHex ∷ Parser m ⇒ m Char
 isHex = (lookAhead ∘ try) (spacing *> satisfy ((∧) <$> isHexDigit <*> not ∘ isUpper))
@@ -218,10 +218,10 @@ spacing ∷ Parser m ⇒ m String
 spacing = many (oneOf [' ','\t'])
 
 comment ∷ Parser m ⇒ m String
-comment = spacing *> (string ";" <|> string "//") *> manyTill anyChar (try eol)
+comment = spacing *> (string ";" <|> string "//") *> manyTill anySingle (try eol)
 
 endLine ∷ Parser m ⇒ m String
-endLine = manyTill anyChar (try eol) <* emptyOrCommentLines
+endLine = manyTill anySingle (try eol) <* emptyOrCommentLines
 
 emptyLine ∷ Parser m ⇒ m String
 emptyLine = spacing <* eol
@@ -232,4 +232,4 @@ emptyOrCommentLines = many (try emptyLine <|> try comment)
 parseKlcLayout ∷ Logger m ⇒ String → L.Text → Either String (m Layout)
 parseKlcLayout fname =
     parse (runWriterT (emptyOrCommentLines *> layout <* eof)) fname >>>
-    bimap parseErrorPretty writer
+    bimap errorBundlePretty writer

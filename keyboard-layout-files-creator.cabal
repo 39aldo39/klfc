@@ -63,7 +63,7 @@ executable klfc
                    microlens-platform,
                    base-unicode-symbols,
                    containers-unicode-symbols,
-                   megaparsec >= 6 && <7,
+                   megaparsec >= 7,
                    filepath,
                    directory,
                    optparse-applicative,
