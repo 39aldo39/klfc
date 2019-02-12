@@ -38,7 +38,8 @@ fi
 
 setxkbmap \
     -I "$xkb_dir" \
-    -layout "$layout($variant)" \
+    -layout "$layout" \
+    -variant "$variant" \
     -keycodes "$keycodes" \
     -types "$types" \
     -print \

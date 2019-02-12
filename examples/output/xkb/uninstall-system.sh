@@ -45,6 +45,9 @@ else
 
   "$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/base.xml" "$layout"
   "$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout"
+
+  "$xkb_dir_from/scripts/remove-models-from-xml.py" "$xkb_dir_to/rules/base.xml" "$mods"
+  "$xkb_dir_from/scripts/remove-models-from-xml.py" "$xkb_dir_to/rules/evdev.xml" "$mods"
 fi
 
 if [ "$(id -u)" -eq 0 ]; then
