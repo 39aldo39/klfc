@@ -79,7 +79,7 @@ pklLayout = mconcat <$> many ((sectionName >>= section) <* many nonSectionLine)
               (\d → (∅) { parseDeadKeys = [(fromJust num, d)] }) <$> deadkeySection
         | otherwise = (∅) <$ tell ["unknown section ‘" ⊕ xs ⊕ "’"]
         where num = readMaybe (drop 7 xs) ∷ Maybe Int
-    nonSectionLine = lookAhead (noneOf "[") *> many (noneOf "\r\n") *> eol
+    nonSectionLine = lookAhead (noneOf ['[']) *> many (noneOf ['\r','\n']) *> eol
 
 informationsSection ∷ (Logger m, Parser m) ⇒ m Information
 informationsSection = mconcat <$> (many nameValue >>= traverse (uncurry field))
@@ -99,7 +99,7 @@ informationsSection = mconcat <$> (many nameValue >>= traverse (uncurry field))
 
 nameValue ∷ Parser m ⇒ m (String, String)
 nameValue = liftA2 (,)
-            (lookAhead (noneOf "[") *> some (noneOf "= \t"))
+            (lookAhead (noneOf ['[']) *> some (noneOf ['=',' ','\t']))
             (spacing *> char '=' *> spacing *> endLine)
 
 globalSection ∷ Parser m ⇒ m PklParseLayout
@@ -120,15 +120,15 @@ shiftstates xs =
 layoutSection ∷ (Logger m, Parser m) ⇒ m [Key]
 layoutSection = catMaybes <$> many (try key <|> Nothing <$ unknownLine)
   where
-    unknownLine = lookAhead (noneOf "[") *> eol
+    unknownLine = lookAhead (noneOf ['[']) *> eol
 
 key ∷ (Logger m, Parser m) ⇒ m (Maybe Key)
 key = runMaybeT $ do
-    pos ← parseScancode =<< lift (oneOf "sS" *> oneOf "cC" *> some hexDigitChar)
+    pos ← parseScancode =<< lift (oneOf ['s','S'] *> oneOf ['c','C'] *> some hexDigitChar)
     void ∘ lift $ spacing *> char '=' *> spacing
-    shortcutPos ← parseShortcutPos =<< lift (some (noneOf "\t\r\n") <* tab)
-    capslock ← parseCapslock =<< lift (some (noneOf "\t\r\n") <* tab)
-    letters ← traverse parseLetter ∘ takeWhile (not ∘ isComment) =<< lift (some (noneOf "\t\r\n") `sepBy` tab)
+    shortcutPos ← parseShortcutPos =<< lift (some (noneOf ['\t','\r','\n']) <* tab)
+    capslock ← parseCapslock =<< lift (some (noneOf ['\t','\r','\n']) <* tab)
+    letters ← traverse parseLetter ∘ takeWhile (not ∘ isComment) =<< lift (some (noneOf ['\t','\r','\n']) `sepBy` tab)
     void ∘ lift $ eol *> emptyOrCommentLines
     pure (Key pos (Just shortcutPos) [] letters (Just capslock))
   where
@@ -214,7 +214,7 @@ extendSection = many nameValue >>= traverse (uncurry field) <&> (\ks → (∅)
     field _ xs = Nothing <$ tell ["unknown letter ‘" ⊕ xs ⊕ "’"]
 
 spacing ∷ Parser m ⇒ m String
-spacing = many (oneOf " \t")
+spacing = many (oneOf [' ','\t'])
 
 endLine ∷ Parser m ⇒ m String
 endLine = manyTill anySingle (try eol) <* emptyOrCommentLines
