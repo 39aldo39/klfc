@@ -6,16 +6,20 @@ xkb_dir_to="/usr/share/X11/xkb"
 layout=""
 description=""
 mods=""
+description_mods=""
+variants=""
+description_variants=""
 
 OPTIND=1
 
-while getopts "i:o:l:d:m:" opt; do
+while getopts "i:o:l:d:m:v:" opt; do
   case "$opt" in
     i) xkb_dir_from="$OPTARG";;
     o) xkb_dir_to="$OPTARG";;
     l) layout="$OPTARG";;
     d) description="$OPTARG";;
     m) mods="$OPTARG";;
+    v) variants="$OPTARG";;
     *) exit 1;;
   esac
 done
@@ -48,8 +52,15 @@ else
   add_description "$xkb_dir_to/rules/base.lst" "$layout" "$description"
   add_description "$xkb_dir_to/rules/evdev.lst" "$layout" "$description"
 
-  "$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/base.xml" "$layout" "$description"
-  "$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout" "$description"
+  "$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/base.xml" "$layout"
+  "$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/base.xml" "$layout" "$description" "$variants" "$description_variants"
+  "$xkb_dir_from/scripts/remove-layout-from-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout"
+  "$xkb_dir_from/scripts/add-layout-to-xml.py" "$xkb_dir_to/rules/evdev.xml" "$layout" "$description" "$variants" "$description_variants"
+
+  "$xkb_dir_from/scripts/remove-models-from-xml.py" "$xkb_dir_to/rules/base.xml" "$mods"
+  "$xkb_dir_from/scripts/add-models-to-xml.py" "$xkb_dir_to/rules/base.xml" "$mods" "$description_mods"
+  "$xkb_dir_from/scripts/remove-models-from-xml.py" "$xkb_dir_to/rules/evdev.xml" "$mods"
+  "$xkb_dir_from/scripts/add-models-to-xml.py" "$xkb_dir_to/rules/evdev.xml" "$mods" "$description_mods"
 fi
 
 if [ "$(id -u)" -eq 0 ]; then

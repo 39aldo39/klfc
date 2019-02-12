@@ -6,7 +6,7 @@ module Xkb.XCompose where
 import BasePrelude
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
-import Util (ifNonEmpty, escape, privateChars, versionStr)
+import Util (ifNonEmpty, escapeWithQuotes, privateChars, versionStr)
 
 import Control.Monad.State (evalState)
 import Control.Monad.Writer (runWriter)
@@ -52,5 +52,5 @@ printCombinations ∷ [([Letter], String)] → [String]
 printCombinations = map (uncurry printCombination)
 
 printCombination ∷ [Letter] → String → String
-printCombination xs s = concatMap (\c → "<" ⊕ printKeysym c ⊕ "> ") xs ⊕ ": " ⊕ escape s
+printCombination xs s = concatMap (\c → "<" ⊕ printKeysym c ⊕ "> ") xs ⊕ ": " ⊕ escapeWithQuotes s
   where printKeysym = fst ∘ runWriter ∘ printLetter

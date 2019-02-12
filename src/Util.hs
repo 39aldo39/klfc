@@ -140,8 +140,11 @@ removeSubList ys xxs@(x:xs) =
 subsets ∷ Eq α ⇒ Set α → [Set α]
 subsets = map S.fromAscList ∘ subsequences ∘ S.toAscList
 
+escapeWithQuotes ∷ String → String
+escapeWithQuotes s = "\"" ⊕ escape s ⊕ "\""
+
 escape ∷ String → String
-escape = (:) '"' ∘ foldr escape' "\""
+escape = foldr escape' ""
   where
     escape' c
       | c ≤ '\DEL' = showLitChar c

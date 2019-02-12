@@ -134,43 +134,44 @@ output (Output Json stream) _ = ($ Json) >>>
     writeStream stream ∘ encodePretty' (Config 2 layoutOrd layoutDelims)
 output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
-    let name = replaceWith (not ∘ isAlphaNum) '_' $ view (_info ∘ _name) layout
+    let isAllowedChar c = isAlphaNum c || c ∈ "-_"
+    let name = replaceWith (not ∘ isAllowedChar) '_' $ view (_info ∘ _name) layout
     let description = replace '\n' ' ' $ fromMaybe (view (_info ∘ _fullName) layout) (view (_info ∘ _description) layout)
-    let mods = (\(Mod modName _) → replaceWith (not ∘ isAlphaNum) '_' modName) <$> view _mods layout
+    let mods = (\(Mod modName _) → replaceWith (not ∘ isAllowedChar) '_' modName) <$> view _mods layout
+    let descriptionMods = (\(Mod modName _) → replace '\n' ' ' modName) <$> view _mods layout
+    let variants = replaceWith (not ∘ isAllowedChar) '_' ∘ view (_info ∘ _name) ∘ variantToLayout <$> view _variants layout
+    let descriptionVariants = replace '\n' ' ' ∘ view (_info ∘ _name) ∘ variantToLayout <$> view _variants layout
     when (null name) (fail "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
+
     writeFileStream (dir </> "symbols" </> name) =<< runReaderT (printSymbols layout) xkbConfig
     writeFileStream' (dir </> "types" </> name) =<< runReaderT (printTypes layout) xkbConfig
     writeFileStream' (dir </> "keycodes" </> name) =<< printKeycodes layout
     writeFileStream' (dir </> "XCompose") (printXCompose layout)
-    let replaceLayout = replaceVar "layout" name
-    let replaceDescription = replaceVar "description" description
-    let replaceMods = replaceVar "mods" (intercalate " " mods)
-    sessionFile   ← liftIO $ B.readFile "xkb/run-session.sh" <|> pure defXkbSession
-    systemFile    ← liftIO $ B.readFile "xkb/install-system.sh" <|> pure defXkbSystem
-    usystemFile   ← liftIO $ B.readFile "xkb/uninstall-system.sh" <|> pure defXkbUSystem
-    xcomposeFile  ← liftIO $ B.readFile "xkb/scripts/install-xcompose.sh" <|> pure defXkbXCompose
-    uxcomposeFile ← liftIO $ B.readFile "xkb/scripts/uninstall-xcompose.sh" <|> pure defXkbUXCompose
-    xmlFile       ← liftIO $ B.readFile "xkb/scripts/add-layout-to-xml.py" <|> pure defXkbXml
-    removeXmlFile ← liftIO $ B.readFile "xkb/scripts/remove-layout-from-xml.py" <|> pure defXkbRemoveXml
-    functionsFile ← liftIO $ B.readFile "xkb/scripts/functions.sh" <|> pure defXkbFunctions
-    liftIO $ B.writeFile (dir </> "run-session.sh") (replaceLayout sessionFile)
-    liftIO $ B.writeFile (dir </> "install-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) systemFile)
-    liftIO $ B.writeFile (dir </> "uninstall-system.sh") ((replaceMods ∘ replaceDescription ∘ replaceLayout) usystemFile)
+
+    let replaceLayout = replaceVar "layout" [name]
+    let replaceDescription = replaceVar "description" [description]
+    let replaceMods = replaceVar "mods" mods
+    let replaceDescriptionMods = replaceVar "description_mods" descriptionMods
+    let replaceVariants = replaceVar "variants" variants
+    let replaceDescriptionVariants = replaceVar "description_variants" descriptionVariants
+    let replaceAll = replaceDescriptionVariants ∘ replaceVariants ∘ replaceDescriptionMods ∘ replaceMods ∘ replaceDescription ∘ replaceLayout
+
+    let copyXkbFile replaceFunc defFile path = liftIO $ do
+        file ← B.readFile ("xkb" </> path) <|> pure defFile
+        B.writeFile (dir </> path) (replaceFunc file)
+        makeExecutable (dir </> path)
+    copyXkbFile replaceLayout defXkbSession "run-session.sh"
+    copyXkbFile replaceAll defXkbSystem "install-system.sh"
+    copyXkbFile replaceAll defXkbUSystem "uninstall-system.sh"
     liftIO $ createDirectoryIfMissing True (dir </> "scripts")
-    liftIO $ B.writeFile (dir </> "scripts/install-xcompose.sh") (replaceLayout xcomposeFile)
-    liftIO $ B.writeFile (dir </> "scripts/uninstall-xcompose.sh") (replaceLayout uxcomposeFile)
-    liftIO $ B.writeFile (dir </> "scripts/add-layout-to-xml.py") xmlFile
-    liftIO $ B.writeFile (dir </> "scripts/remove-layout-from-xml.py") removeXmlFile
-    liftIO $ B.writeFile (dir </> "scripts/functions.sh") functionsFile
-    liftIO $ makeExecutable (dir </> "run-session.sh")
-    liftIO $ makeExecutable (dir </> "install-system.sh")
-    liftIO $ makeExecutable (dir </> "uninstall-system.sh")
-    liftIO $ makeExecutable (dir </> "scripts/install-xcompose.sh")
-    liftIO $ makeExecutable (dir </> "scripts/uninstall-xcompose.sh")
-    liftIO $ makeExecutable (dir </> "scripts/add-layout-to-xml.py")
-    liftIO $ makeExecutable (dir </> "scripts/remove-layout-from-xml.py")
-    liftIO $ makeExecutable (dir </> "scripts/functions.sh")
+    copyXkbFile replaceLayout defXkbXCompose "scripts/install-xcompose.sh"
+    copyXkbFile replaceLayout defXkbUXCompose "scripts/uninstall-xcompose.sh"
+    copyXkbFile id defXkbXml "scripts/add-layout-to-xml.py"
+    copyXkbFile id defXkbRemoveXml "scripts/remove-layout-from-xml.py"
+    copyXkbFile id defXkbFunctions "scripts/functions.sh"
+    copyXkbFile id defXkbModelsXml "scripts/add-models-to-xml.py"
+    copyXkbFile id defXkbRemoveModelsXml "scripts/remove-models-from-xml.py"
 output (Output Pkl Standard) _ = const (fail "PKL as output must be written to a directory")
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let name = view (_info ∘ _name) layout
@@ -216,7 +217,7 @@ output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout �
         forM_ ((∅) : view _mods layout) $ \layoutMod → do
             let layout' = applyModLayout layoutMod ∘ applyVariantLayout variant $ layout
             writeFileStream (fname layout') ∘ printKeylayout =<< toKeylayout keylayoutConfig layout'
-    let replaceLayout = replaceVar "layout" name
+    let replaceLayout = replaceVar "layout" [name]
     userFile   ← liftIO $ B.readFile "keylayout/install-user.sh"   <|> pure defKeylayoutUser
     systemFile ← liftIO $ B.readFile "keylayout/install-system.sh" <|> pure defKeylayoutSystem
     liftIO $ B.writeFile (dir </> "install-user.sh")   (replaceLayout userFile)
@@ -244,11 +245,11 @@ output (Output Ahk (File dir)) _ = ($ Ahk) >>> \layout → do
             let getOrigPos = applyInverseMod layoutMod
             writeFileStream (fname layout') ∘ printAhk =<< toAhk getOrigPos layout'
 
-replaceVar ∷ B.ByteString → String → B.ByteString → B.ByteString
-replaceVar var val = B8.unlines ∘ replace before after ∘ B8.lines
+replaceVar ∷ B.ByteString → [String] → B.ByteString → B.ByteString
+replaceVar var vals = B8.unlines ∘ replace before after ∘ B8.lines
   where
     before = var ⊕ "=\"\""
-    after  = var ⊕ "=" ⊕ T.encodeUtf8 (T.pack (escape val))
+    after  = var ⊕ "=\"" ⊕ T.encodeUtf8 (T.pack (intercalate "\n" (map escape vals))) ⊕ "\""
 
 makeExecutable ∷ FilePath → IO ()
 makeExecutable fname =
@@ -256,7 +257,8 @@ makeExecutable fname =
     setPermissions fname ∘ setOwnerExecutable True
 
 defPklFile,
-    defXkbSession, defXkbSystem, defXkbUSystem, defXkbXCompose, defXkbUXCompose, defXkbXml, defXkbRemoveXml, defXkbFunctions,
+    defXkbSession, defXkbSystem, defXkbUSystem, defXkbXCompose, defXkbUXCompose,
+    defXkbXml, defXkbRemoveXml, defXkbFunctions, defXkbModelsXml, defXkbRemoveModelsXml,
     defKeylayoutUser, defKeylayoutSystem ∷ B.ByteString
 defPklFile = $(embedFile "files/pkl/pkl.exe")
 defXkbSession   = $(embedFile "files/xkb/run-session.sh")
@@ -267,6 +269,8 @@ defXkbUXCompose = $(embedFile "files/xkb/scripts/uninstall-xcompose.sh")
 defXkbXml       = $(embedFile "files/xkb/scripts/add-layout-to-xml.py")
 defXkbRemoveXml = $(embedFile "files/xkb/scripts/remove-layout-from-xml.py")
 defXkbFunctions = $(embedFile "files/xkb/scripts/functions.sh")
+defXkbModelsXml = $(embedFile "files/xkb/scripts/add-models-to-xml.py")
+defXkbRemoveModelsXml = $(embedFile "files/xkb/scripts/remove-models-from-xml.py")
 defKeylayoutUser   = $(embedFile "files/keylayout/install-user.sh")
 defKeylayoutSystem = $(embedFile "files/keylayout/install-system.sh")
 
