@@ -181,7 +181,7 @@ virtualModifiers ∷ Parser m ⇒ m [String]
 virtualModifiers = string' "virtual_modifiers" *> ws *> xkbName `sepBy` comma <* char ';' <* ws
 
 xkbName ∷ Parser m ⇒ m String
-xkbName = some (alphaNumChar <|> oneOf ['_','+','-','<','>','(',')','"']) <* ws
+xkbName = some (alphaNumChar <|> oneOf ['_','+','-','<','>','(',')']) <* ws
 
 ws ∷ Parser m ⇒ m ()
 ws = void $ many singleSpace
