@@ -5,7 +5,7 @@
 
 module Xkb.Symbols where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode
 import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((∅), (⊕))
@@ -17,13 +17,14 @@ import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.State (State, state, evalState, get, modify)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (tell, runWriter)
+import Data.Foldable (toList)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Set as S
 import Lens.Micro.Platform (view, set, over, _1, _2, makeLenses)
 
 import Layout.Key (baseCharToLetter)
-import Layout.Layout (singletonKeyToKey, getLetterByPosAndShiftstate, getPosByEqAndShiftstate, variantToLayout)
+import Layout.Layout (singletonKeyToKey, getLetterByPosAndShiftstate, getPosByEqAndShiftstate)
 import qualified Layout.Modifier as M
 import Layout.Types
 import Lookup.Linux

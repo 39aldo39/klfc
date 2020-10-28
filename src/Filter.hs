@@ -12,10 +12,8 @@ import Data.List.Unicode ((∋), (∌))
 import Data.Monoid.Unicode ((⊕))
 import Util (HumanReadable(..), split)
 
-import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.Text as T
 import Data.Aeson (FromJSON, parseJSON, withText)
-import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 
 newtype Filter α = Filter { runFilter' ∷ α → All } deriving (Semigroup, Monoid)

@@ -3,7 +3,7 @@
 
 module Xkb.Types where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
@@ -12,6 +12,7 @@ import WithPlus (WithPlus(..))
 
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.Trans.Maybe (runMaybeT)
+import Data.Foldable (toList)
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as S

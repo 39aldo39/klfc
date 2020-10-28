@@ -46,7 +46,7 @@ module Layout.Layout
     , getPosByEqAndShiftstate
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Data.List.Unicode ((∖))
@@ -54,10 +54,10 @@ import Util (parseString, lensWithDefault', expectedKeys, combineOn, nubWithOn, 
 
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Data.Aeson
-import Data.Aeson.TH (deriveJSON, fieldLabelModifier, omitNothingFields)
+import Data.Aeson.TH (deriveJSON)
 import Data.Aeson.Types (Parser)
+import Data.Foldable (toList)
 import qualified Data.HashMap.Strict as HM
-import Data.List.NonEmpty (NonEmpty((:|)), nonEmpty)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T (Text, unpack)
 import Data.Text.Lazy.Builder (Builder)
@@ -189,7 +189,7 @@ unifyShiftlevels keys = (map (setLevels levels) keys, levels)
         nub ∘ concatMap (concatMap toList ∘ view _shiftlevels)
 
 shiftstatesToShiftlevels ∷ [Key] → [Shiftstate] → [Shiftlevel]
-shiftstatesToShiftlevels keys = maybe [] (shiftstatesToShiftlevels' keys ∘ (:[]) ∘ WithBar) ∘ nonEmpty
+shiftstatesToShiftlevels keys = maybe [] (shiftstatesToShiftlevels' keys ∘ (:[]) ∘ WithBar) ∘ NE.nonEmpty
 
 shiftstatesToShiftlevels' ∷ [Key] → [Shiftlevel] → [Shiftlevel]
 shiftstatesToShiftlevels' [] = id

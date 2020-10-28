@@ -9,7 +9,7 @@ module Keylayout
     , toKeylayout
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
@@ -20,6 +20,7 @@ import qualified WithPlus as WP (singleton)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (tell)
 import qualified Data.ByteString.Lazy as BL (ByteString)
+import Data.Foldable (toList)
 import Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.Text.Lazy as L (Text, pack, replace)

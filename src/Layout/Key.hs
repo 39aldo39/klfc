@@ -43,20 +43,18 @@ module Layout.Key
     , addCapslock
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode hiding ((∈), (∉))
 import Data.Foldable.Unicode ((∈), (∉))
 import Data.Monoid.Unicode ((∅), (⊕))
 import qualified Data.Set.Unicode as S
 import Util (HumanReadable(..), lensWithDefault, expectedKeys, (!?), (>$>), combineOn, combineWith, nubWithOn, getPrivateChar, split, mapMaybeM)
 
-import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.State (MonadState, state)
 import Control.Monad.Writer (runWriter)
 import Data.Aeson
-import Data.Functor.Identity (runIdentity)
-import Data.List.NonEmpty (NonEmpty((:|)), nonEmpty)
+import Data.Foldable (toList)
 import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -351,7 +349,7 @@ filterKeyOnShiftstatesM p key = do
     (ls, ms) ← unzip <$> mapMaybeSndM p' (view _letters key `zip` view _shiftlevels key)
     pure ∘ set _letters ls ∘ set _shiftlevels ms $ key
   where
-    p' = filterM p ∘ toList >$> fmap WithBar ∘ nonEmpty
+    p' = filterM p ∘ toList >$> fmap WithBar ∘ NE.nonEmpty
     mapMaybeSndM ∷ Monad m ⇒ (β → m (Maybe γ)) → [(α, β)] → m [(α, γ)]
     mapMaybeSndM f = mapMaybeM (fmap sequence ∘ traverse f)
 

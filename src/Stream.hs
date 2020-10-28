@@ -10,14 +10,12 @@ module Stream
     , writeFileStream'
     ) where
 
-import BasePrelude hiding (readFile, writeFile)
+import BasePrelude hiding (readFile, writeFile, hGetContents)
 import Prelude.Unicode
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.IOData (IOData, readFile, writeFile, hGetContents, hPut)
 import System.Directory (createDirectoryIfMissing, doesFileExist, doesDirectoryExist, listDirectory, removeFile, removeDirectory)
 import System.FilePath (takeDirectory)
-import System.IO (stdin, stdout)
 
 data Stream
     = Standard

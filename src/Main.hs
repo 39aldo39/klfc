@@ -4,13 +4,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE CPP #-}
 
-import BasePrelude hiding (option)
+import BasePrelude hiding (option, toList)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (show', replace, replaceWith, escape, filterOnIndex, versionStr, (>$>))
 
 import Control.Monad.Reader (runReaderT)
-import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Writer (WriterT, execWriterT, tell)
 import Data.Aeson (eitherDecode)
 import qualified Data.ByteString as B (ByteString, readFile, writeFile)
@@ -26,7 +25,6 @@ import Options.Applicative hiding (Mod)
 import qualified Options.Applicative (Mod)
 import System.Directory (getPermissions, setPermissions, setOwnerExecutable, createDirectoryIfMissing)
 import System.FilePath ((</>), (<.>), takeExtension)
-import System.IO (hPutStrLn, stderr)
 #ifdef mingw32_HOST_OS
 import System.Process (callCommand)
 #endif
@@ -38,7 +36,7 @@ import JsonPretty (Config(..), encodePretty')
 import Keylayout (KeylayoutConfig(..), printKeylayout, toKeylayout)
 import Klc (KlcConfig(..), printKlcData, toKlcData)
 import KlcParse (parseKlcLayout)
-import Layout.Layout (variantToLayout, isEmptyLayout, isEmptyVariant, layoutOrd, layoutDelims, applyModLayout, applyVariantLayout, removeEmptyLetters, unifyShiftstates)
+import Layout.Layout (isEmptyLayout, isEmptyVariant, layoutOrd, layoutDelims, applyModLayout, applyVariantLayout, removeEmptyLetters, unifyShiftstates)
 import Layout.Mod (isEmptyMod, applyInverseMod)
 import Layout.Types
 import Pkl (printPklData, toPklData, printLayoutData, toLayoutData)
@@ -102,19 +100,19 @@ input Xkb =
     parseWith (parseXkbLayoutVariant variant) (File fname)) >$> const
 input Pkl = parseWith parsePklLayout >$> const
 input Klc = parseWith parseKlcLayout >$> const
-input Keylayout = fail "importing from a keylayout file is not supported"
-input Tmk = fail "importing from a TMK file is not supported"
-input Ahk = fail "importing from a AHK file is not supported"
+input Keylayout = const ∘ liftIO $ fail "importing from a keylayout file is not supported"
+input Tmk = const ∘ liftIO $ fail "importing from a TMK file is not supported"
+input Ahk = const ∘ liftIO $ fail "importing from a AHK file is not supported"
 
 parseWith ∷ (Logger m, MonadIO m) ⇒ IOData α ⇒ (String → α → Either String (m β)) →
     Stream → m β
 parseWith parser stream = flip ($) stream $
     readStream >=>
     parser (toFname stream) >>>
-    either (fail ∘ ("parse fail in " ⊕) ∘ dropWhileEnd (≡'\n')) id
+    either (liftIO ∘ fail ∘ ("parse fail in " ⊕) ∘ dropWhileEnd (≡'\n')) id
 
 output ∷ (Logger m, MonadIO m) ⇒ Output → [ExtraOption] → (FileType → Layout) → m ()
-output (OutputAll Standard) _ = const (fail "everything as output must be written to a directory")
+output (OutputAll Standard) _ = const ∘ liftIO $ fail "everything as output must be written to a directory"
 output (OutputAll (File dir)) extraOptions = \layout → do
     let name = view (_info ∘ _name) ∘ layout
     let output' t fname
@@ -132,7 +130,7 @@ output (OutputAll (File dir)) extraOptions = \layout → do
     output' Ahk (dir </> "ahk")
 output (Output Json stream) _ = ($ Json) >>>
     writeStream stream ∘ encodePretty' (Config 2 layoutOrd layoutDelims)
-output (Output Xkb Standard) _ = const (fail "XKB as output must be written to a directory")
+output (Output Xkb Standard) _ = const ∘ liftIO $ fail "XKB as output must be written to a directory"
 output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let isAllowedChar c = isAlphaNum c || c ∈ "-_"
     let name = replaceWith (not ∘ isAllowedChar) '_' $ view (_info ∘ _name) layout
@@ -141,7 +139,7 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     let descriptionMods = (\(Mod modName _) → replace '\n' ' ' modName) <$> view _mods layout
     let variants = replaceWith (not ∘ isAllowedChar) '_' ∘ view (_info ∘ _name) ∘ variantToLayout <$> view _variants layout
     let descriptionVariants = replace '\n' ' ' ∘ view (_info ∘ _name) ∘ variantToLayout <$> view _variants layout
-    when (null name) (fail "the layout has an empty name when exported to XKB")
+    when (null name) (liftIO $ fail "the layout has an empty name when exported to XKB")
     let xkbConfig = liftA3 XkbConfig (XkbCustomShortcuts ∈) (XkbRedirectAll ∈) (XkbRedirectClearsExtend ∈) extraOptions
 
     writeFileStream (dir </> "symbols" </> name) =<< runReaderT (printSymbols layout) xkbConfig
@@ -172,10 +170,10 @@ output (Output Xkb (File dir)) extraOptions = ($ Xkb) >>> \layout → do
     copyXkbFile id defXkbFunctions "scripts/functions.sh"
     copyXkbFile id defXkbModelsXml "scripts/add-models-to-xml.py"
     copyXkbFile id defXkbRemoveModelsXml "scripts/remove-models-from-xml.py"
-output (Output Pkl Standard) _ = const (fail "PKL as output must be written to a directory")
+output (Output Pkl Standard) _ = const ∘ liftIO $ fail "PKL as output must be written to a directory"
 output (Output Pkl (File dir)) extraOptions = ($ Pkl) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (fail "the layout has an empty name when exported to PKL")
+    when (null name) (liftIO $ fail "the layout has an empty name when exported to PKL")
     let isCompact = PklCompact ∈ extraOptions
     today ← liftIO $ formatTime defaultTimeLocale "%F %T" <$> getCurrentTime
     let printedPklData l = printPklData isCompact <$> toPklData l l
@@ -198,7 +196,7 @@ output (Output Klc Standard) extraOptions = ($ Klc) >>>
     in  writeStream Standard ∘ printKlcData <=< flip runReaderT klcConfig ∘ toKlcData
 output (Output Klc (File dir)) extraOptions = ($ Klc) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (fail "the layout has an empty name when exported to KLC")
+    when (null name) (liftIO $ fail "the layout has an empty name when exported to KLC")
     let klcConfig = KlcConfig (KlcChainedDeads ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "klc"
     forM_ ((∅) : view _variants layout) $ \variant → do
@@ -210,7 +208,7 @@ output (Output Keylayout Standard) extraOptions = ($ Keylayout) >>>
     writeStream Standard ∘ printKeylayout
 output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (fail "the layout has an empty name when exported to keylayout")
+    when (null name) (liftIO $ fail "the layout has an empty name when exported to keylayout")
     let keylayoutConfig = KeylayoutConfig (KeylayoutCustomShortcuts ∈ extraOptions)
     let fname l = dir </> view (_info ∘ _name) l <.> "keylayout"
     forM_ ((∅) : view _variants layout) $ \variant → do
@@ -224,7 +222,7 @@ output (Output Keylayout (File dir)) extraOptions = ($ Keylayout) >>> \layout �
     liftIO $ B.writeFile (dir </> "install-system.sh") (replaceLayout systemFile)
     liftIO $ makeExecutable (dir </> "install-user.sh")
     liftIO $ makeExecutable (dir </> "install-system.sh")
-output (Output Tmk Standard) _ = const (fail "TMK as output must be written to a directory")
+output (Output Tmk Standard) _ = const ∘ liftIO $ fail "TMK as output must be written to a directory"
 output (Output Tmk (File dir)) _ = ($ Tmk) >>> \layout → do
     let name = view (_info ∘ _name) layout
     when (null name) (error "the layout has an empty name when exported to TMK")
@@ -237,7 +235,7 @@ output (Output Ahk Standard) _ = ($ Ahk) >>>
     writeStream Standard ∘ printAhk <=< toAhk id
 output (Output Ahk (File dir)) _ = ($ Ahk) >>> \layout → do
     let name = view (_info ∘ _name) layout
-    when (null name) (fail "the layout has an empty name when exported to AHK")
+    when (null name) (liftIO $ fail "the layout has an empty name when exported to AHK")
     let fname l = dir </> view (_info ∘ _name) l <.> "ahk"
     forM_ ((∅) : view _variants layout) $ \variant → do
         forM_ ((∅) : view _mods layout) $ \layoutMod → do
@@ -385,7 +383,7 @@ headerStr s = option disabled (value () ⊕ metavar s ⊕ hidden ⊕ helpDoc (pu
 streamOption ∷ Options.Applicative.Mod OptionFields Stream → Parser Stream
 streamOption = option (parseStream <$> str)
 
-parseList ∷ (Monad m, Read α) ⇒ String → m [α]
+parseList ∷ (MonadFail m, Read α) ⇒ String → m [α]
 parseList s = either fail pure $ readEither ("[" ⊕ s ⊕ "]")
 
 parseStream ∷ String → Stream

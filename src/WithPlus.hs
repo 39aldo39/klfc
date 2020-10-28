@@ -9,15 +9,15 @@ module WithPlus
     , parseString
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList, fromList)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅))
 import Util (HumanReadable, split)
 import qualified Util as HR (HumanReadable(..))
 
-import Control.Monad.Fail (MonadFail)
 import Data.Aeson (ToJSON, FromJSON, toJSON, parseJSON)
 import Data.Aeson.Types (Value(String, Array), typeMismatch)
+import Data.Foldable (toList)
 import Data.Set (Set)
 import qualified Data.Set as S (fromList, singleton)
 import qualified Data.Text as T (pack, unpack)

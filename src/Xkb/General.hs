@@ -3,7 +3,7 @@
 
 module Xkb.General where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
@@ -13,6 +13,7 @@ import qualified WithPlus as WP (singleton)
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.State (MonadState, evalState)
 import Control.Monad.Writer (tell)
+import Data.Foldable (toList)
 import Lens.Micro.Platform (view, over)
 
 import Layout.Key (letterToDeadKey, setNullChar, setInternalDeadNullChar, filterKeyOnShiftstatesM)

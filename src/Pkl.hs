@@ -10,7 +10,7 @@ module Pkl
     , toLayoutData
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode hiding ((∈), (∉))
 import Data.Monoid.Unicode ((⊕))
 import Data.Foldable.Unicode ((∈), (∉))
@@ -21,7 +21,8 @@ import Control.Monad.State (evalState)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriter, tell)
-import Lens.Micro.Platform (view, over, (<&>))
+import Data.Foldable (toList)
+import Lens.Micro.Platform (view, over)
 
 import Layout.Key (letterToDeadKey, setDeadNullChar, filterKeyOnShiftstatesM, toIndexedCustomDeadKey, addPresetDeadToDead)
 import Layout.Layout (addDefaultKeysWith, getDefaultKeys, unifyShiftstates, getLetterByPosAndShiftstate)

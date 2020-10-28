@@ -22,7 +22,7 @@ module Layout.Modifier
     , activatedBy
     ) where
 
-import BasePrelude hiding (Alt, Control, empty)
+import BasePrelude hiding (Alt, Control, empty, fromList)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
@@ -35,7 +35,6 @@ import qualified WithPlus as WP
 import qualified Control.Monad.Fail as Fail (fail)
 import Data.Aeson.Types (Parser, Object, parseJSON)
 import qualified Data.HashMap.Lazy as HM
-import Data.List.NonEmpty (NonEmpty((:|)))
 
 data Modifier
     = CapsLock

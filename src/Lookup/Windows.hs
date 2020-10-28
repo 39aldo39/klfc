@@ -17,7 +17,7 @@ module Lookup.Windows
     , modifierAndPklAction
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import qualified Data.Set.Unicode as S
@@ -25,6 +25,7 @@ import Util (lookupR, dec2bin)
 import WithPlus (WithPlus(..))
 import qualified WithPlus as WP (fromList)
 
+import Data.Foldable (toList)
 import qualified Data.Set as S
 
 import qualified Layout.Action as A

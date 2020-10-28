@@ -7,7 +7,7 @@ module Klc
     , toKlcData
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((⊕))
 import Util (HumanReadable(..), ifNonEmpty, concatMapM, tellMaybeT, privateChars, getPrivateChar, versionStr, (>$>))
@@ -17,6 +17,7 @@ import Control.Monad.State (MonadState, evalStateT)
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (WriterT, runWriter, execWriterT, tell)
+import Data.Foldable (toList)
 import Lens.Micro.Platform (view, over)
 
 import Layout.Key (letterToDeadKey, letterToLigatureString, setDeadNullChar, filterKeyOnShiftstatesM, presetDeadKeyToDeadKey, addPresetDeadToDead, baseCharToChar)

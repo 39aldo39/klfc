@@ -7,7 +7,7 @@ module Ahk
     , toAhk
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (show', toString, lookup', tellMaybeT, mapMaybeM, concatMapM, nubWithOnM, versionStr, (>$>))
@@ -15,6 +15,7 @@ import Util (show', toString, lookup', tellMaybeT, mapMaybeM, concatMapM, nubWit
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (tell)
 import qualified Data.ByteString.Lazy as BL (ByteString, pack)
+import Data.Foldable (toList)
 import qualified Data.Text.Lazy as L (pack)
 import qualified Data.Text.Lazy.Encoding as L (encodeUtf8)
 import Lens.Micro.Platform (view, over, _2, _head)

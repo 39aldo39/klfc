@@ -19,7 +19,6 @@ import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((⊕))
 import Util (HumanReadable(..), sequenceTuple)
 
-import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail
 import Data.Aeson (ToJSON, FromJSON, toJSON, parseJSON)
 import Data.Aeson.Types (Value(Array, Object), typeMismatch)

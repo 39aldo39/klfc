@@ -9,16 +9,14 @@ module PklParse
 import BasePrelude hiding (try)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
-import Util (parseString, lookupR, stripSuffix, tellMaybeT)
+import Util (parseString, lookupR, stripSuffix, tellMaybeT, whenNothing)
 import qualified WithPlus as WP (singleton)
 
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.Writer (runWriterT, writer, tell)
-import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Text.Lazy as L (Text)
-import Data.Void (Void)
-import Lens.Micro.Platform (set, (<&>))
+import Lens.Micro.Platform (set)
 import Text.Megaparsec hiding (Pos, many, some)
 import Text.Megaparsec.Char
 
@@ -178,9 +176,9 @@ parseLetter s' = maybe (LNothing <$ tell ["unknown letter ‘" ⊕ s' ⊕ "’"]
     parseDead _ = Nothing
     parseAction = fmap Action ∘ asum ∘ map (`lookupR` actionAndPklAction) ∘ ap [Simple] ∘ pure
 
-deadkeySection ∷ Parser m ⇒ m DeadKey
+deadkeySection ∷ (Logger m, Parser m) ⇒ m DeadKey
 deadkeySection = do
-    deadkeyMap ← many deadkeyValue
+    deadkeyMap ← catMaybes <$> many deadkeyValue
     let name = fromMaybe "" (listToMaybe deadkeyMap >>= resultToString ∘ snd)
     let c = maybe BaseNo BaseChar (listToMaybe name)
     pure (DeadKey name c deadkeyMap)
@@ -188,13 +186,13 @@ deadkeySection = do
     resultToString (OutString s) = Just s
     resultToString _ = Nothing
 
-deadkeyValue ∷ Parser m ⇒ m (Letter, ActionResult)
+deadkeyValue ∷ (Logger m, Parser m) ⇒ m (Maybe (Letter, ActionResult))
 deadkeyValue = do
     from ← readMaybe <$> many digitChar
     void $ spacing >> char '=' >> spacing
     to ← readMaybe <$> many digitChar
     void endLine
-    maybe (fail "could not parse deadkey") pure $
+    whenNothing (tell ["could not parse deadkey"]) $
         (,) <$> (Char ∘ chr <$> from) <*> ((OutString ∘ (:[]) ∘ chr) <$> to)
 
 extendSection ∷ (Logger m, Parser m) ⇒ m PklParseLayout

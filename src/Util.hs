@@ -12,7 +12,6 @@ import Prelude.Unicode
 import Data.List.Unicode ((∖))
 import Data.Monoid.Unicode ((⊕))
 
-import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as Fail (fail)
 import Control.Monad.State (MonadState, state)
 import Control.Monad.Trans.Maybe (MaybeT(..))
@@ -20,12 +19,10 @@ import Control.Monad.Writer.Class (MonadWriter, tell)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import qualified Data.HashMap.Strict as H
-import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import Data.Set (Set)
 import qualified Data.Set as S
 import qualified Data.Text as T
-import Data.Version (showVersion)
 import Lens.Micro.Platform (Lens')
 import Paths_keyboard_layout_files_creator (version)
 

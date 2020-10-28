@@ -11,11 +11,9 @@ import Prelude.Unicode
 import Data.Monoid.Unicode ((∅), (⊕))
 import Util (parseString, lookupR, whenNothing, (>$>))
 
-import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Writer (writer, runWriterT, tell)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.IO as L
-import Data.Void (Void)
 import Lens.Micro.Platform (set, over, _2, _Left)
 import System.Directory (doesFileExist)
 import System.FilePath ((</>), splitFileName)

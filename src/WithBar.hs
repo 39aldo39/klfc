@@ -9,15 +9,14 @@ module WithBar
     , parseString
     ) where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode
 import Util (HumanReadable, split, (>$>))
 import qualified Util as HR (HumanReadable(..))
 
-import Control.Monad.Fail (MonadFail)
 import Data.Aeson (ToJSON, FromJSON, toJSON, parseJSON, withText)
 import Data.Aeson.Types (Value(String))
-import Data.List.NonEmpty (NonEmpty)
+import Data.Foldable (toList)
 import qualified Data.Text as T
 
 newtype WithBar α = WithBar { getNonEmpty ∷ NonEmpty α }

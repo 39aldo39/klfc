@@ -5,7 +5,7 @@
 
 module Tmk where
 
-import BasePrelude
+import BasePrelude hiding (toList)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.List.Unicode ((∖))
@@ -17,7 +17,7 @@ import WithPlus (WithPlus(..))
 
 import Control.Monad.State (State, runState, get, gets, modify)
 import Control.Monad.Writer (tell)
-import Data.List.NonEmpty (NonEmpty(..))
+import Data.Foldable (toList)
 import qualified Data.List.NonEmpty as NE
 import Data.Map (Map)
 import qualified Data.Map as M
