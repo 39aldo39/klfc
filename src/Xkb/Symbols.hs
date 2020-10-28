@@ -73,7 +73,7 @@ printGroup groupNr (XkbGroup _ _ symbols actions vmods) =
       | otherwise = Just ("actions[Group" ⊕ show groupNr ⊕ "] = " ⊕ printActions actions)
     vmods'
       | null vmods = Nothing
-      | otherwise  = Just ∘ ("vmods=" ⊕) ∘ intercalate "," $ vmods
+      | otherwise  = Just ∘ ("vmods=" ⊕) ∘ intercalate "+" $ vmods
 
 printGroups ∷ [(Group, XkbGroup)] → State Group [String]
 printGroups = concatMapM (uncurry printGroup)
