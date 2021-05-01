@@ -26,6 +26,15 @@ It is written in Haskell and can be installed with the [Haskell toolchain](https
 With the Haskell toolchain installed, KLFC is built by executing `cabal install` inside the root directory of this project.
 This will create a binary `klfc` in `~/.cabal/bin/`.
 
+It is also possible to build from source with [nix](https://nixos.org) on any Linux distribution. This may be faster than using cabal since it can fetch binaries for many dependencies, skipping compiling them.
+To do that, first [install nix](https://nixos.org/download.html).
+
+After you have nix installed, you can run `nix-env -i -f .` from your copy of this repository to install KLFC.
+That will build KLFC and link it your nix profile, then you can use it from a regular shell afterwards.
+
+If you'd like to get a shell with `hoogle`, `cabal`, `niv`, `haskell-language-server` and more for working on the project, run `nix-shell`.
+From this shell, you can then use `cabal build`, `cabal run`, etc, as normal.
+
 Usage
 -----
 
@@ -116,3 +125,12 @@ FILE...                  Files to read (‘-’ for stdin). If multiple files ar
                          Use the shortcut positions from the ‘shortcutPos’
                          attributes for shortcuts in keylayout
 ```
+
+Nix maintenance information
+---------------------------
+
+The nix infrastructure in this project uses a pinned version of nixpkgs to ensure it will build consistently on any system.
+This needs updating occasionally.
+You can do `niv update` from within a nix-shell to accomplish this: it will update the file `nix/sources.json` with the latest version of nixpkgs.
+
+Check that it still builds with `nix-build`. This will produce a copy of `klfc` in `result/bin/klfc`.
