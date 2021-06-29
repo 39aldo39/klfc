@@ -83,6 +83,8 @@ klcLayout = many >$> mconcat $
     <|> set' _parseKeys <$> klcKeys
     <|> set' _parseLigatures <$> try ligatures
     <|> set' _parseDeadKeys <$> try deadKey
+    <|> (∅) <$ try descriptions
+    <|> (∅) <$ try languageNames
     <|> (∅) <$ try keyName
     <|> (∅) <$ try endKbd
     <|> (try nameValue >>= (uncurry field >$> set' _parseInformation))
@@ -93,6 +95,7 @@ klcLayout = many >$> mconcat $
     field ∷ Logger m ⇒ String → String → m Information
     field "COPYRIGHT" = pure ∘ set' _copyright ∘ Just
     field "COMPANY" = pure ∘ set' _company ∘ Just
+    field "LOCALENAME" = const (pure (∅))
     field "LOCALEID" = pure ∘ set' _localeId ∘ Just
     field "VERSION" = pure ∘ set' _version ∘ Just
     field f = const $ (∅) <$ tell ["unknown field ‘" ⊕ f ⊕ "’"]
@@ -159,14 +162,15 @@ ligatures = do
     ["LIGATURE"] ← readLine
     catMaybes <$> many (try ligature)
 
-ligature ∷ (Logger m, Parser m) ⇒ m (Maybe (Pos, Int, String))
-ligature = runMaybeT $ do
-    sc:i:chars ← lift readLine
+ligature ∷ (Logger m, Parser m, MonadFail m) ⇒ m (Maybe (Pos, Int, String))
+ligature = do
+    sc:i:chars ← readLine
     guard (not (null chars))
-    pos ← parseShortcutPos sc
-    i' ← maybe (tellMaybeT ["unknown index ‘" ⊕ i ⊕ "’"]) pure $ readMaybe ('0':'x':i)
-    s ← mapMaybe letterToChar <$> traverse parseLetter chars
-    pure (pos, i', s)
+    runMaybeT $ do
+        pos ← parseShortcutPos sc
+        i' ← maybe (tellMaybeT ["unknown index ‘" ⊕ i ⊕ "’"]) pure $ readMaybe ('0':'x':i)
+        s ← mapMaybe letterToChar <$> traverse parseLetter chars
+        pure (pos, i', s)
   where
     letterToChar (Char c) = Just c
     letterToChar _ = Nothing
@@ -188,6 +192,18 @@ keyName ∷ (Parser m, MonadFail m) ⇒ m [(String, String)]
 keyName = do
     ['K':'E':'Y':'N':'A':'M':'E':_] ← readLine
     many (try nameValue)
+
+descriptions ∷ (Parser m, MonadFail m) ⇒ m ()
+descriptions = do
+    ["DESCRIPTIONS"] ← readLine
+    many (some hexDigitChar *> spacing *> endLine)
+    pure ()
+
+languageNames ∷ (Parser m, MonadFail m) ⇒ m ()
+languageNames = do
+    ["LANGUAGENAMES"] ← readLine
+    many (some hexDigitChar *> spacing *> endLine)
+    pure ()
 
 endKbd ∷ (Parser m, MonadFail m) ⇒ m ()
 endKbd = do
