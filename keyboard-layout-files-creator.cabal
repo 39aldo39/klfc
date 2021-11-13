@@ -6,6 +6,21 @@ license-file:   LICENSE.txt
 build-type:     Simple
 cabal-version:  >=1.2
 
+Extra-source-files:
+  files/pkl/pkl.exe,
+  files/xkb/run-session.sh,
+  files/xkb/install-system.sh,
+  files/xkb/uninstall-system.sh,
+  files/xkb/scripts/install-xcompose.sh,
+  files/xkb/scripts/uninstall-xcompose.sh,
+  files/xkb/scripts/add-layout-to-xml.py,
+  files/xkb/scripts/remove-layout-from-xml.py,
+  files/xkb/scripts/functions.sh,
+  files/xkb/scripts/add-models-to-xml.py,
+  files/xkb/scripts/remove-models-from-xml.py,
+  files/keylayout/install-user.sh,
+  files/keylayout/install-system.sh
+
 executable klfc
   hs-source-dirs:  src
   main-is:         Main.hs
@@ -57,7 +72,7 @@ executable klfc
                    containers,
                    unordered-containers,
                    vector,
-                   aeson >= 0.8.1.0,
+                   aeson >= 0.8.1.0 && < 2,
                    time >= 1.5,
                    mtl,
                    microlens-platform,
