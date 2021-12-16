@@ -80,7 +80,7 @@ lensWithDefault guess setter getter f x =
     (\y → setter (Just y) x) <$> f (fromMaybe (guess x) (getter x))
 
 lensWithDefault' ∷ α → (Maybe α → σ → σ) → (σ → Maybe α) → Lens' σ α
-lensWithDefault' = lensWithDefault ∘ const
+lensWithDefault' x = lensWithDefault (const x)
 
 (!?) ∷ [α] → Int → Maybe α
 (!?) xs i =

@@ -9,7 +9,7 @@ module WithPlus
     , parseString
     ) where
 
-import BasePrelude hiding (toList, fromList)
+import BasePrelude hiding (toList, fromList, singleton)
 import Prelude.Unicode
 import Data.Monoid.Unicode ((∅))
 import Util (HumanReadable, split)
