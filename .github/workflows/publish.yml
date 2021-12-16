@@ -40,6 +40,7 @@ jobs:
 
       # Build
       - run: cabal install --installdir=.
+      - run: chmod +x klfc
 
       # Upload klfc
       - uses: actions/upload-artifact@v2
@@ -63,6 +64,7 @@ jobs:
 
       # Build
       - run: cabal install --installdir=.
+      - run: chmod +x klfc
 
       # Upload klfc
       - uses: actions/upload-artifact@v2
