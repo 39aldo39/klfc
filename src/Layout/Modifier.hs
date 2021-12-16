@@ -22,7 +22,7 @@ module Layout.Modifier
     , activatedBy
     ) where
 
-import BasePrelude hiding (Alt, Control, empty, fromList)
+import BasePrelude hiding (Alt, Control, empty, fromList, singleton)
 import Prelude.Unicode hiding ((∈))
 import Data.Foldable.Unicode ((∈))
 import Data.Monoid.Unicode ((∅), (⊕))
