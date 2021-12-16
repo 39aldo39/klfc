@@ -1,0 +1,76 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish-windows:
+    runs-on: windows-latest
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '9.0.1'
+
+      # Build
+      - run: cabal install --installdir=.
+
+      # Upload klfc.exe
+      - uses: actions/upload-artifact@v2
+        with:
+          name: klfc-windows
+          path: |
+            doc
+            examples
+            klfc.exe
+            LICENSE.txt
+            README.md
+
+  publish-macos:
+    runs-on: macos-latest
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '9.0.1'
+
+      # Build
+      - run: cabal install --installdir=.
+
+      # Upload klfc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: klfc-macos
+          path: |
+            doc
+            examples
+            klfc
+            LICENSE.txt
+            README.md
+
+  publish-linux:
+    runs-on: ubuntu-latest
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '9.0.1'
+
+      # Build
+      - run: cabal install --installdir=.
+
+      # Upload klfc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: klfc-linux
+          path: |
+            doc
+            examples
+            klfc
+            LICENSE.txt
+            README.md
