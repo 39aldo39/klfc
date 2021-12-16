@@ -196,13 +196,13 @@ keyName = do
 descriptions ∷ (Parser m, MonadFail m) ⇒ m ()
 descriptions = do
     ["DESCRIPTIONS"] ← readLine
-    many (some hexDigitChar *> spacing *> endLine)
+    void $ many (some hexDigitChar *> spacing *> endLine)
     pure ()
 
 languageNames ∷ (Parser m, MonadFail m) ⇒ m ()
 languageNames = do
     ["LANGUAGENAMES"] ← readLine
-    many (some hexDigitChar *> spacing *> endLine)
+    void $ many (some hexDigitChar *> spacing *> endLine)
     pure ()
 
 endKbd ∷ (Parser m, MonadFail m) ⇒ m ()
