@@ -937,7 +937,7 @@ currency = DeadKey "currency" (BaseChar '¤') ∘ fst ∘ runWriter $ stringMapT
     , ("y", "¥")
     ]
 greek ∷ DeadKey' Char PresetDeadKey
-greek = DeadKey "greek" BaseNo ∘ fst ∘ runWriter $ stringMapToActionMap "greek"
+greek = DeadKey "greek" (BaseChar 'µ') ∘ fst ∘ runWriter $ stringMapToActionMap "greek"
     [ ("A", "Α")
     , ("a", "α")
     , ("B", "Β")
