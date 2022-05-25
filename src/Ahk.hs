@@ -274,6 +274,7 @@ printKey' pos key = nubWithOnM toAhkLayer toExtendIds lettersAndShiftstates
 
 printAsSend ∷ Blind → Letter → Maybe String
 printAsSend _ (Char c) = Just (printf "{Blind}{U+%04x}" c ⊕ " ; " ⊕ [c])
+printAsSend _ (Unicode c) = Just (printf "{Blind}{U+%04x}" c)
 printAsSend _ (Ligature _ s) = Just ("{Blind}" ⊕ concatMap (printf "{U+%04x}") s ⊕ " ; " ⊕ s)
 printAsSend blind (Action a)
   | Just (Simple s) ← lookup a actionAndPklAction

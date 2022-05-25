@@ -288,6 +288,7 @@ printShortcutPos pos = maybe e pure (lookup pos posAndVkString)
 printLetter ∷ Logger m ⇒ IsExtend → Layout → Letter → m String
 printLetter isExtend _ (Char ' ') = pure (addBraces isExtend "space")
 printLetter _ _ (Char c) = pure [c]
+printLetter _ _ (Unicode c) = pure [c]
 printLetter _ _ (Ligature _ x) = pure x
 printLetter isExtend layout (Action a) =
     addBraces isExtend <$> actionToPkl layout a

@@ -203,6 +203,8 @@ printKey groupNr fullLayout key = runMaybeT $ do
 printLetter ∷ Logger m ⇒ Letter → m String
 printLetter (Char c) =
     pure $ fromMaybe (printf "U%04X" c) (lookup c charAndString)
+printLetter (Unicode c) =
+    pure $ printf "U%04X" c
 printLetter (Ligature (Just c) _) =
     printLetter (Char c)
 printLetter l@(Ligature Nothing _) =

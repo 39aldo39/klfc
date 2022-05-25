@@ -320,6 +320,7 @@ tmkLetterByMacro letters = TmkMacro mId <$> macro letters <*> pure []
     letterToString (Char c)
       | isAscii c ∧ isAlphaNum c = [c]
       | otherwise = "_" ⊕ fromMaybe (printf "U%04X" c) (lookup c charAndString) ⊕ "_"
+    letterToString (Unicode c) = printf "_U%04X_" c
     letterToString letter = "_" ⊕ toString letter ⊕ "_"
     macro =
         traverse getPosAndShiftlevel >=>

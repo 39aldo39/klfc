@@ -64,7 +64,8 @@ The letter in the nth position is activated when the nth shiftlevel in the corre
 
 A letter can be one of the following:
 
-* A single Unicode character, e.g. `a`.
+* A single Unicode character, e.g. `a` or `\u0061`.
+* A single Unicode character denoted by its code point, e.g. `U+0061`. Useful when the character does not appear well in text. It also forces the generated files to contain explicit code points, which can be useful when the normal character works incorrectly.
 * Multiple Unicode characters (a 'ligature'), e.g. `ĳ:ij` (that is, the single Unicode character `ĳ`, `U+0133` LATIN SMALL LIGATURE IJ, followed by a `:`, `i` and `j`). In XKB, a single base character is needed and can be provided before a colon. If no base character is applicable, the prefix `ligature:` or `lig:` can be used and a Unicode character from the private use area is used.
 * An action, e.g. `Backspace`. For a full list of available actions, see [lists/actions.md](lists/actions.md).
 * A modifier, e.g. `Shift`. For a full list of available modifiers, see [layout.md#shiftlevels](layout.md#shiftlevels).

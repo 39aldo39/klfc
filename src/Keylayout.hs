@@ -191,6 +191,7 @@ printPos pos = maybe e (pure ∘ show) (lookup pos posAndCode)
 
 printLetter ∷ Logger m ⇒ Letter → MaybeT m Attr
 printLetter (Char c) = pure (attr "output" [c])
+printLetter (Unicode c) = pure (attr "output" [c])
 printLetter (Ligature _ s) = pure (attr "output" s)
 printLetter (Dead dead) = printLetter (CustomDead Nothing (presetDeadKeyToDeadKey dead))
 printLetter (CustomDead _ (DeadKey name _ _)) = pure (attr "action" ("dead:" ⊕ name))
