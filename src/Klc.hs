@@ -206,6 +206,7 @@ printLetter ∷ Logger m ⇒ Letter → m String
 printLetter (Char c)
     | isAscii c ∧ isAlphaNum c = pure [c]
     | otherwise = pure (printf "%04x" c)
+printLetter (Unicode c) = pure (printf "%04x" c)
 printLetter (Ligature _ _) = pure "%%"
 printLetter (Dead d) = printLetter (CustomDead Nothing (presetDeadKeyToDeadKey d))
 printLetter l@(CustomDead _ (DeadKey _ baseChar _)) =

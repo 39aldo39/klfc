@@ -80,6 +80,7 @@ type DeadKey = DeadKey' Letter PresetDeadKey
 
 data Letter
     = Char Char
+    | Unicode Char
     | Ligature (Maybe Char) String
     | Action Action
     | Modifiers ModifierEffect [Modifier]
@@ -167,6 +168,7 @@ letterToLigatureString _               = Nothing
 
 letterToString ∷ Letter → String
 letterToString (Char x) = [x]
+letterToString (Unicode x) = printf "U+%04X" x
 letterToString (Ligature Nothing xs) = "lig:" ⊕ xs
 letterToString (Ligature (Just c) xs) = c:':':xs
 letterToString (Modifiers effect [modifier]) | defaultModifierEffect modifier ≡ effect = toString modifier
@@ -196,6 +198,7 @@ letterFromString s = maybe e pure ∘ asum ∘ fmap ($ s) $
     , stripPrefix "latch:" >=> modifiersWith Latch
     , stripPrefix "lock:" >=> modifiersWith Lock
     , char
+    , unicode
     , ligature
     , modifier
     , action
@@ -207,6 +210,8 @@ letterFromString s = maybe e pure ∘ asum ∘ fmap ($ s) $
     e = Fail.fail ("‘" ⊕ s ⊕ "’ is not a valid letter")
     char [x] = Just (Char x)
     char _   = Nothing
+    unicode ('U':'+':xs) = Unicode ∘ chr <$> readMaybe ("0x" ⊕ xs)
+    unicode _            = Nothing
     ligature (c:':':xs) = Just (Ligature (Just c) xs)
     ligature _          = Nothing
     ligature' = Ligature Nothing

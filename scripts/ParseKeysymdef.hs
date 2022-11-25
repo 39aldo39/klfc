@@ -16,7 +16,7 @@ type Parser = Parsec Void String
 main ∷ IO ()
 main =
     parseFromFile symLines "/usr/include/X11/keysymdef.h" >>=
-    either (print ∘ errorBundlePretty) (mapM_ (\(s,c) → putStrLn (replicate 4 ' ' ⧺ ", ('" ⧺ [c] ⧺ "', " ⧺ show s ⧺ ")")))
+    either (print ∘ errorBundlePretty) (mapM_ (\(s,c) → putStrLn (replicate 4 ' ' ⧺ ", ('" ⧺ charToString c ⧺ "', " ⧺ show s ⧺ ")")))
 
 symLine ∷ Parser [(String, Char)]
 symLine = (:[]) <$> liftA2 (,)
@@ -28,7 +28,14 @@ symLines ∷ Parser [(String, Char)]
 symLines = concat <$> many (try symLine <|> [] <$ manyTill anySingle eol)
 
 printLines ∷ [(String, Char)] → String
-printLines = unlines ∘ map (\(s, c) → "    , ('" ⧺ [c] ⧺ "', " ⧺ show s ⧺ ")")
+printLines = unlines ∘ map (\(s, c) → "    , ('" ⧺ charToString c ⧺ "', " ⧺ show s ⧺ ")")
+  where
 
 parseFromFile ∷ Parser α → String → IO (Either (ParseErrorBundle String Void) α)
 parseFromFile p fname = parse p "" <$> readFile fname
+
+charToString ∷ Char → String
+charToString '\'' = "\\\'"
+charToString '\\' = "\\\\"
+charToString '\173' = "\\173"
+charToString c = [c]
