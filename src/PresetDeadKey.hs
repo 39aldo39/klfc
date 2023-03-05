@@ -516,7 +516,7 @@ iota = DeadKey "iota" (BaseChar 'ͺ') ∘ fst ∘ runWriter $ stringMapToActionM
     , ("ῶ", "ῷ")
     ]
 belowdot ∷ DeadKey' Char PresetDeadKey
-belowdot = DeadKey "belowdot" (BaseChar '\x803') ∘ fst ∘ runWriter $ stringMapToActionMap "belowdot"
+belowdot = DeadKey "belowdot" (BaseChar '\x323') ∘ fst ∘ runWriter $ stringMapToActionMap "belowdot"
     [ ("A", "Ạ")
     , ("a", "ạ")
     , ("B", "Ḅ")
